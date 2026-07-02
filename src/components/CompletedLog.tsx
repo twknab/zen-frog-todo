@@ -37,7 +37,7 @@ export default function CompletedLog({ entries, onUpdateNote }: CompletedLogProp
           sx={{
             px: 1.5,
             py: 1,
-            borderRadius: 2,
+            borderRadius: "15px",
             border: "1px solid",
             borderColor: "divider",
           }}

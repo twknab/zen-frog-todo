@@ -81,6 +81,8 @@ None. All four user stories are independent of one another and build directly on
 
 **Checkpoint**: US4 is independently complete and testable.
 
+> ⚠️ **Regression noted 2026-07-02**: T009–T013 were implemented and verified working (see the earlier live-verification pass), but `src/components/SandCanvas.tsx` has since been substantially rewritten (dynamic `flexGrow` sizing, `ResizeObserver`, 5-prong rake lines) by work outside this session, and that rewrite dropped the rock tray, drop handling, rock rendering, and collision skip entirely. **US4 is currently NOT present in the codebase** despite the checkmarks above reflecting when it was last confirmed working. Leaving the historical checkmarks as-is for the record, but treat US4 as needing re-implementation against the current `SandCanvas.tsx` shape, not as done.
+
 ---
 
 ## Phase 7: Polish & Cross-Cutting Concerns

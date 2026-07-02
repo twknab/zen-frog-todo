@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { CelebrationProvider } from "@/components/Celebration";
 import { usePersistentState } from "@/lib/storage";
 import { createZenTheme, type ColorMode } from "./theme";
 
@@ -45,7 +46,7 @@ export default function ThemeRegistry({ children }: { children: ReactNode }) {
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          {children}
+          <CelebrationProvider>{children}</CelebrationProvider>
         </ThemeProvider>
       </ColorModeContext.Provider>
     </AppRouterCacheProvider>

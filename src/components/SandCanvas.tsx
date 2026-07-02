@@ -15,7 +15,7 @@ function pickColor() {
   return ZEN_COLORS[Math.floor(Math.random() * ZEN_COLORS.length)];
 }
 
-/** Draws one segment as three parallel offset lines — a rake's tines. */
+/** Draws one segment as five parallel offset lines — a rake's tines. */
 function drawProngs(ctx: CanvasRenderingContext2D, p0: Point, p1: Point, color: string) {
   const dx = p1.x - p0.x;
   const dy = p1.y - p0.y;
@@ -29,7 +29,7 @@ function drawProngs(ctx: CanvasRenderingContext2D, p0: Point, p1: Point, color: 
   ctx.lineCap = "round";
   ctx.globalAlpha = 0.75;
 
-  [-spacing, 0, spacing].forEach((offset) => {
+  [-2 * spacing, -spacing, 0, spacing, 2 * spacing].forEach((offset) => {
     ctx.beginPath();
     ctx.moveTo(p0.x + nx * offset, p0.y + ny * offset);
     ctx.lineTo(p1.x + nx * offset, p1.y + ny * offset);
@@ -39,12 +39,18 @@ function drawProngs(ctx: CanvasRenderingContext2D, p0: Point, p1: Point, color: 
   ctx.globalAlpha = 1;
 }
 
-export default function SandCanvas({ height = 220 }: { height?: number }) {
+// Below this, two points are treated as "the same spot" — caps how many
+// points a single stroke accumulates so later redraws (e.g. after a resize)
+// stay cheap no matter how long or slow the drag was.
+const MIN_POINT_DISTANCE = 2.5;
+
+export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Stroke[]>([]);
   const currentRef = useRef<Stroke | null>(null);
-  const sizeRef = useRef({ width: 0, height });
+  const sizeRef = useRef({ width: 0, height: minHeight });
+  const dragRectRef = useRef<DOMRect | null>(null);
 
   useEffect(() => {
     function redrawAll(ctx: CanvasRenderingContext2D) {
@@ -61,12 +67,28 @@ export default function SandCanvas({ height = 220 }: { height?: number }) {
       const container = containerRef.current;
       if (!canvas || !container) return;
 
+      // The canvas fills its container, whose height is driven by the parent
+      // card's flex layout — so Sand Mode grows to whatever space it's given.
       const rect = container.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      // Setting canvas.width/height wipes the bitmap, so redrawing every
+      // stored point is unavoidable — but a ResizeObserver can fire for
+      // sub-pixel layout noise (e.g. a sibling's text reflowing every
+      // second) with no real size change. Skip the clear+redraw when
+      // nothing actually changed; this was the main source of the raking
+      // lag, since it was re-running on essentially every tick.
+      const unchanged =
+        Math.abs(width - sizeRef.current.width) < 0.5 &&
+        Math.abs(height - sizeRef.current.height) < 0.5;
+      if (unchanged && canvas.width > 0) return;
+
       const dpr = window.devicePixelRatio || 1;
-      sizeRef.current = { width: rect.width, height };
-      canvas.width = Math.round(rect.width * dpr);
+      sizeRef.current = { width, height };
+      canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
-      canvas.style.width = `${rect.width}px`;
+      canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -75,12 +97,18 @@ export default function SandCanvas({ height = 220 }: { height?: number }) {
     }
 
     resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, [height]);
+
+    const container = containerRef.current;
+    const observer = new ResizeObserver(resize);
+    if (container) observer.observe(container);
+    return () => observer.disconnect();
+  }, [minHeight]);
 
   function getPoint(event: { clientX: number; clientY: number }): Point {
-    const rect = canvasRef.current!.getBoundingClientRect();
+    // Cached at pointerdown rather than re-measured on every pointermove —
+    // the canvas doesn't move mid-drag, and getBoundingClientRect() forces a
+    // layout reflow, which adds up fast at pointermove's event rate.
+    const rect = dragRectRef.current ?? canvasRef.current!.getBoundingClientRect();
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
@@ -93,6 +121,7 @@ export default function SandCanvas({ height = 220 }: { height?: number }) {
       // no-op — capture is a nice-to-have for drags that leave the canvas
     }
 
+    dragRectRef.current = canvas.getBoundingClientRect();
     const point = getPoint(event);
     const color = pickColor();
     currentRef.current = { points: [point], color };
@@ -111,6 +140,8 @@ export default function SandCanvas({ height = 220 }: { height?: number }) {
 
     const point = getPoint(event);
     const last = current.points[current.points.length - 1];
+    if (Math.hypot(point.x - last.x, point.y - last.y) < MIN_POINT_DISTANCE) return;
+
     const ctx = canvas.getContext("2d");
     if (ctx) drawProngs(ctx, last, point, current.color);
     current.points.push(point);
@@ -121,6 +152,7 @@ export default function SandCanvas({ height = 220 }: { height?: number }) {
       strokesRef.current.push(currentRef.current);
       currentRef.current = null;
     }
+    dragRectRef.current = null;
   }
 
   return (
@@ -128,8 +160,9 @@ export default function SandCanvas({ height = 220 }: { height?: number }) {
       ref={containerRef}
       sx={{
         width: "100%",
-        height,
-        borderRadius: 3,
+        flexGrow: 1,
+        minHeight,
+        borderRadius: "15px",
         backgroundColor: "action.hover",
         overflow: "hidden",
       }}

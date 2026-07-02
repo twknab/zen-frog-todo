@@ -1,7 +1,8 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { useCallback, useEffect, useRef } from "react";
+import { useTheme } from "@mui/material/styles";
+import { useCallback, useEffect, useId, useRef } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 type FocusDialProps = {
@@ -35,6 +36,18 @@ export default function FocusDial({
 }: FocusDialProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef(false);
+  const theme = useTheme();
+  // Strip colons React's useId emits — they break SVG url(#id) references.
+  const gradientId = `focus-dial-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+
+  // A rich, cool→warm sweep across the countdown ring so it reads at a glance
+  // and pops against the calm card — drawn from the themed palette, so it
+  // adapts to light/dark automatically.
+  const gradientStops = [
+    theme.palette.info.main,
+    theme.palette.primary.main,
+    theme.palette.secondary.main,
+  ];
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -127,6 +140,17 @@ export default function FocusDial({
           outline: "none",
         }}
       >
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            {gradientStops.map((color, index) => (
+              <stop
+                key={color}
+                offset={`${(index / (gradientStops.length - 1)) * 100}%`}
+                stopColor={color}
+              />
+            ))}
+          </linearGradient>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -142,15 +166,21 @@ export default function FocusDial({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="currentColor"
+          stroke={`url(#${gradientId})`}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          style={{ filter: `drop-shadow(0 0 6px ${theme.palette.primary.main}66)` }}
         />
         {interactive && (
-          <circle cx={handleX} cy={handleY} r={strokeWidth * 0.85} fill="currentColor" />
+          <circle
+            cx={handleX}
+            cy={handleY}
+            r={strokeWidth * 0.85}
+            fill={theme.palette.secondary.main}
+          />
         )}
       </svg>
       <Box

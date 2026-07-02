@@ -15,15 +15,35 @@ function getAudioContextClass(): typeof AudioContext | undefined {
 }
 
 /**
+ * A single shared AudioContext reused for every sound effect.
+ *
+ * Creating a fresh AudioContext per sound (as an earlier version did) is an
+ * anti-pattern: each one spins up a real audio hardware thread, and browsers
+ * cap the number of live contexts (~6 in Chrome). Rapid raking created one
+ * context per click, which piled up past that cap and stalled the page. One
+ * lazily-created, never-closed context avoids all of that — individual sounds
+ * are just cheap, short-lived nodes created on it and garbage-collected when
+ * they finish playing.
+ */
+let sharedContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  const AudioContextClass = getAudioContextClass();
+  if (!AudioContextClass) return null;
+  if (!sharedContext) sharedContext = new AudioContextClass();
+  // Browsers start the context suspended until a user gesture; resume on use.
+  if (sharedContext.state === "suspended") void sharedContext.resume();
+  return sharedContext;
+}
+
+/**
  * Synthesizes a soft two-note bell via the Web Audio API rather than
  * shipping an audio asset — keeps the app fully local/offline (constitution
  * Principle III) with no licensing concerns.
  */
 export function playChime(variant: ChimeVariant = "focus-complete") {
-  const AudioContextClass = getAudioContextClass();
-  if (!AudioContextClass) return;
-
-  const ctx = new AudioContextClass();
+  const ctx = getAudioContext();
+  if (!ctx) return;
   const now = ctx.currentTime;
 
   CHIME_NOTES[variant].forEach((frequency, index) => {
@@ -43,8 +63,6 @@ export function playChime(variant: ChimeVariant = "focus-complete") {
     oscillator.start(start);
     oscillator.stop(start + 1.9);
   });
-
-  setTimeout(() => ctx.close(), 2200);
 }
 
 /**
@@ -53,10 +71,9 @@ export function playChime(variant: ChimeVariant = "focus-complete") {
  * playChime.
  */
 export function playRake() {
-  const AudioContextClass = getAudioContextClass();
-  if (!AudioContextClass) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
 
-  const ctx = new AudioContextClass();
   const durationSeconds = 0.22;
   const bufferSize = Math.floor(ctx.sampleRate * durationSeconds);
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -82,8 +99,6 @@ export function playRake() {
   gain.connect(ctx.destination);
   noise.start();
   noise.stop(ctx.currentTime + durationSeconds + 0.02);
-
-  setTimeout(() => ctx.close(), 500);
 }
 
 export type AmbientLoop = {
@@ -92,14 +107,13 @@ export type AmbientLoop = {
 
 /**
  * A continuous, gently swelling filtered-noise loop — a stand-in for wind or
- * rain during a focus session. Synthesized rather than sampled, same
- * offline/no-licensing reasoning as playChime/playRake.
+ * rain during a focus session. Shares the same AudioContext as the other
+ * effects; stopping tears down only this loop's own nodes, never the context.
  */
 export function startAmbientLoop(): AmbientLoop | null {
-  const AudioContextClass = getAudioContextClass();
-  if (!AudioContextClass) return null;
+  const ctx = getAudioContext();
+  if (!ctx) return null;
 
-  const ctx = new AudioContextClass();
   const bufferSeconds = 4;
   const bufferSize = Math.floor(ctx.sampleRate * bufferSeconds);
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -139,18 +153,24 @@ export function startAmbientLoop(): AmbientLoop | null {
   noise.start();
   lfo.start();
 
+  const activeCtx = ctx;
   let stopped = false;
   function stop() {
     if (stopped) return;
     stopped = true;
-    const releaseStart = ctx.currentTime;
+    const releaseStart = activeCtx.currentTime;
     gain.gain.cancelScheduledValues(releaseStart);
     gain.gain.setValueAtTime(gain.gain.value, releaseStart);
     gain.gain.linearRampToValueAtTime(0, releaseStart + 0.6);
+    // Stop only this loop's nodes; the shared context stays alive for reuse.
     setTimeout(() => {
       noise.stop();
       lfo.stop();
-      ctx.close();
+      noise.disconnect();
+      lfo.disconnect();
+      gain.disconnect();
+      filter.disconnect();
+      lfoGain.disconnect();
     }, 700);
   }
 

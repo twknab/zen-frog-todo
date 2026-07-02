@@ -20,7 +20,9 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
 import FocusTimer from "@/components/FocusTimer";
 import SandCanvas from "@/components/SandCanvas";
@@ -30,8 +32,6 @@ import { useTasks } from "@/lib/tasks";
 import { useColorMode } from "@/theme/ThemeRegistry";
 
 type CardAccent = "primary" | "secondary" | "info" | "warning" | "success" | "error";
-
-type DashboardMode = "frog" | "flow";
 
 type DashboardMode = "frog" | "flow";
 
@@ -50,6 +50,11 @@ export default function Home() {
     reorderTasks,
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
+  const celebrate = useCelebration();
+
+  // Focus Mode strips the dashboard down to just the frog and the timer; the
+  // surviving cards animate to fill the space the rest leave behind.
+  const isFocus = mode === "frog";
 
   return (
     <Box
@@ -78,36 +83,58 @@ export default function Home() {
               Frog Garden
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Swallow the frog first. Let the rest flow naturallyo.
+              Swallow the frog first. Let the rest flow naturally.
             </Typography>
           </Box>
         </Stack>
 
-        <ToggleButtonGroup
-          value={mode}
-          exclusive
-          onChange={(_, next: DashboardMode | null) => next && setMode(next)}
-          aria-label="Dashboard mode"
-          size="small"
-        >
-          <ToggleButton value="flow" aria-label="Flow mode">
-            Flow Mode
-          </ToggleButton>
-          <ToggleButton value="frog" aria-label="Focus mode">
-            Focus Mode
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <ToggleButtonGroup
+            value={mode}
+            exclusive
+            onChange={(_, next: DashboardMode | null) => next && setMode(next)}
+            aria-label="Dashboard mode"
+            size="small"
+          >
+            <ToggleButton value="flow" aria-label="Flow mode">
+              Flow Mode
+            </ToggleButton>
+            <ToggleButton value="frog" aria-label="Focus mode">
+              Focus Mode
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          <Tooltip title={colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+            <IconButton
+              onClick={toggleColorMode}
+              aria-label={
+                colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"
+              }
+              sx={{ color: "text.secondary" }}
+            >
+              {colorMode === "dark" ? (
+                <LightModeOutlinedIcon />
+              ) : (
+                <DarkModeOutlinedIcon />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Stack>
       </Stack>
 
       <Box
         sx={{
           display: "grid",
           gap: 3,
-          gridTemplateColumns: { xs: "1fr", md: "repeat(4, 1fr)" },
-          gridTemplateAreas: {
-            xs: `"frog" "garden" "tasks" "timer" "reflection"`,
-            md: `"frog frog garden garden" "tasks timer garden garden" "tasks reflection reflection reflection"`,
-          },
+          gridTemplateColumns: isFocus
+            ? { xs: "1fr", md: "repeat(2, 1fr)" }
+            : { xs: "1fr", md: "repeat(4, 1fr)" },
+          gridTemplateAreas: isFocus
+            ? { xs: `"frog" "timer"`, md: `"frog timer"` }
+            : {
+                xs: `"frog" "timer" "tasks" "garden" "reflection"`,
+                md: `"frog frog garden garden" "timer timer garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
+              },
         }}
       >
         <BentoCard area="frog" accent="primary">
@@ -125,7 +152,13 @@ export default function Home() {
             <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
               <Checkbox
                 checked={frogTask.completed}
-                onChange={() => toggleTaskCompleted(frogTask.id)}
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                  }
+                  toggleTaskCompleted(frogTask.id);
+                }}
               />
               <Typography
                 variant="h5"
@@ -145,40 +178,49 @@ export default function Home() {
           )}
         </BentoCard>
 
-        <BentoCard area="garden" accent="secondary">
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <WavesOutlinedIcon color="info" />
-            <Typography variant="h6" component="h2">
-              Sand Mode
-            </Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            Rake a little. No pattern is wrong.
-          </Typography>
-          <SandCanvas />
-        </BentoCard>
+        <AnimatePresence>
+          {!isFocus && (
+            <BentoCard key="garden" area="garden" accent="info" fill animatePresence>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                <WavesOutlinedIcon color="info" />
+                <Typography variant="h6" component="h2">
+                  Sand Mode
+                </Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Rake a little. No pattern is wrong.
+              </Typography>
+              <Box sx={{ flexGrow: 1, minHeight: 220, display: "flex" }}>
+                <SandCanvas />
+              </Box>
+            </BentoCard>
+          )}
+        </AnimatePresence>
 
-        <BentoCard area="tasks">
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <CheckCircleOutlineIcon color="primary" />
-            <Typography variant="h6" component="h2">
-              Task list
-            </Typography>
-          </Stack>
-          <TaskListCard
-            tasks={otherTasks}
-            locked={mode === "frog"}
-            onUpdateTitle={updateTaskTitle}
-            onAddTask={addTask}
-            onSetFrog={setFrogTaskId}
-            onToggleCompleted={toggleTaskCompleted}
-            onReorder={reorderTasks}
-          />
-        </BentoCard>
+        <AnimatePresence>
+          {!isFocus && (
+            <BentoCard key="tasks" area="tasks" accent="secondary" animatePresence>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                <CheckCircleOutlineIcon color="secondary" />
+                <Typography variant="h6" component="h2">
+                  Task list
+                </Typography>
+              </Stack>
+              <TaskListCard
+                tasks={otherTasks}
+                onUpdateTitle={updateTaskTitle}
+                onAddTask={addTask}
+                onSetFrog={setFrogTaskId}
+                onToggleCompleted={toggleTaskCompleted}
+                onReorder={reorderTasks}
+              />
+            </BentoCard>
+          )}
+        </AnimatePresence>
 
-        <BentoCard area="timer">
+        <BentoCard area="timer" accent="warning">
           <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <TimerOutlinedIcon color="primary" />
+            <TimerOutlinedIcon color="warning" />
             <Typography variant="h6" component="h2">
               Focus
             </Typography>
@@ -186,40 +228,53 @@ export default function Home() {
           <FocusTimer />
         </BentoCard>
 
-        <BentoCard area="reflection">
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <EditNoteOutlinedIcon color="primary" />
-            <Typography variant="h6" component="h2">
-              Close the day
-            </Typography>
-          </Stack>
-          <TextField
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="One line on how today went — tomorrow's frog is already waiting."
-            multiline
-            minRows={2}
-            fullWidth
-            variant="standard"
-            slotProps={{ input: { disableUnderline: true } }}
-          />
-          <Typography variant="caption" color="text.secondary">
-            Saved automatically as you type.
-          </Typography>
-        </BentoCard>
+        <AnimatePresence>
+          {!isFocus && (
+            <BentoCard key="reflection" area="reflection" accent="success" animatePresence>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                <EditNoteOutlinedIcon color="success" />
+                <Typography variant="h6" component="h2">
+                  Close the day
+                </Typography>
+              </Stack>
+              <TextField
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="One line on how today went — tomorrow's frog is already waiting."
+                multiline
+                minRows={2}
+                fullWidth
+                variant="standard"
+                slotProps={{ input: { disableUnderline: true } }}
+              />
+            </BentoCard>
+          )}
+        </AnimatePresence>
       </Box>
 
-      <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
-        <CardContent sx={{ p: 0 }}>
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <HistoryOutlinedIcon color="primary" />
-            <Typography variant="h6" component="h2">
-              Completed
-            </Typography>
-          </Stack>
-          <CompletedLog entries={completedLog} onUpdateNote={updateCompletedNote} />
-        </CardContent>
-      </Card>
+      <AnimatePresence>
+        {!isFocus && (
+          <motion.div
+            key="completed"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
+              <CardContent sx={{ p: 0 }}>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                  <HistoryOutlinedIcon color="primary" />
+                  <Typography variant="h6" component="h2">
+                    Completed
+                  </Typography>
+                </Stack>
+                <CompletedLog entries={completedLog} onUpdateNote={updateCompletedNote} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }
@@ -227,22 +282,51 @@ export default function Home() {
 function BentoCard({
   area,
   accent,
+  fill = false,
+  animatePresence = false,
   children,
 }: {
   area: string;
-  accent?: "primary" | "secondary";
+  accent?: CardAccent;
+  /** When true, the card and its content stretch to fill the grid cell. */
+  fill?: boolean;
+  /** When true, fade/scale in and out (for cards hidden in Focus Mode). */
+  animatePresence?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <Card
-      sx={{
-        gridArea: area,
-        p: { xs: 2.5, md: 3 },
-        borderTop: accent ? "3px solid" : undefined,
-        borderTopColor: accent ? `${accent}.main` : undefined,
-      }}
+    <motion.div
+      layout
+      initial={animatePresence ? { opacity: 0, scale: 0.92 } : false}
+      animate={animatePresence ? { opacity: 1, scale: 1 } : undefined}
+      exit={animatePresence ? { opacity: 0, scale: 0.92 } : undefined}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      style={{ gridArea: area, minWidth: 0, display: "flex", flexDirection: "column" }}
     >
-      <CardContent sx={{ p: 0 }}>{children}</CardContent>
-    </Card>
+      <Card
+        sx={{
+          flexGrow: 1,
+          height: "100%",
+          p: { xs: 2.5, md: 3 },
+          borderTop: accent ? "3px solid" : undefined,
+          borderTopColor: accent ? `${accent}.main` : undefined,
+          ...(fill && { display: "flex", flexDirection: "column" }),
+        }}
+      >
+        <CardContent
+          sx={{
+            p: 0,
+            ...(fill && {
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }),
+          }}
+        >
+          {children}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

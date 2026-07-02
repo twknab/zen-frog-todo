@@ -7,7 +7,8 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import type { DragEvent, KeyboardEvent } from "react";
+import type { ChangeEvent, DragEvent, KeyboardEvent } from "react";
+import { useCelebration } from "@/components/Celebration";
 import type { Task } from "@/lib/tasks";
 
 type TaskListCardProps = {
@@ -31,6 +32,15 @@ export default function TaskListCard({
 }: TaskListCardProps) {
   const [draft, setDraft] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const celebrate = useCelebration();
+
+  function handleToggle(id: string, event: ChangeEvent<HTMLInputElement>) {
+    if (event.target.checked) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
+    onToggleCompleted(id);
+  }
 
   function submitDraft() {
     if (!draft.trim()) return;
@@ -70,7 +80,7 @@ export default function TaskListCard({
             alignItems: "center",
             px: 1,
             py: 0.5,
-            borderRadius: 2,
+            borderRadius: "15px",
             border: "1px solid",
             borderColor: "divider",
             filter: locked ? "blur(3px)" : "none",
@@ -86,7 +96,7 @@ export default function TaskListCard({
           />
           <Checkbox
             checked={task.completed}
-            onChange={() => onToggleCompleted(task.id)}
+            onChange={(event) => handleToggle(task.id, event)}
             size="small"
           />
           <TextField
