@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import { useEffect, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import { useSandReset } from "@/lib/sand";
 import { playRake } from "@/lib/sound";
 
 type Point = { x: number; y: number };
@@ -51,6 +52,17 @@ export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) 
   const currentRef = useRef<Stroke | null>(null);
   const sizeRef = useRef({ width: 0, height: minHeight });
   const dragRectRef = useRef<DOMRect | null>(null);
+  const { sandResetToken } = useSandReset();
+
+  // Clear the raked sand whenever the shared reset token bumps — from the mini
+  // reset button or from "start a new day". (On mount the canvas is already
+  // empty, so the initial run is a harmless no-op.)
+  useEffect(() => {
+    strokesRef.current = [];
+    currentRef.current = null;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, sizeRef.current.width, sizeRef.current.height);
+  }, [sandResetToken]);
 
   useEffect(() => {
     function redrawAll(ctx: CanvasRenderingContext2D) {

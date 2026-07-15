@@ -2,6 +2,7 @@
 
 import Box from "@mui/material/Box";
 import { motion, useReducedMotion } from "framer-motion";
+import Lottie from "lottie-react";
 import {
   createContext,
   useCallback,
@@ -10,9 +11,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import confettiData from "@/assets/lottie/confetti.json";
+import ribbonData from "@/assets/lottie/ribbon.json";
 
-/** Fire a small celebratory burst at a viewport coordinate. */
-type Celebrate = (x: number, y: number) => void;
+/** Fire a celebratory animation at a viewport coordinate. */
+type CelebrationKind = "frog" | "task";
+type Celebrate = (x: number, y: number, kind?: CelebrationKind) => void;
 
 const CelebrationContext = createContext<Celebrate>(() => {});
 
@@ -20,41 +24,38 @@ export function useCelebration(): Celebrate {
   return useContext(CelebrationContext);
 }
 
-type Particle = { dx: number; dy: number; size: number; color: string };
-type Burst = { id: number; x: number; y: number; particles: Particle[] };
+type Celebration = { id: number; x: number; y: number; kind: CelebrationKind };
 
-// Muted zen palette — same tones as the theme/sand, so the burst feels calm
-// and of-a-piece rather than like party confetti (constitution Principle I/II).
+// A ribbon flourish greets the day's frog; confetti marks the rest. The ribbon
+// is square (400×400); the confetti is wider (940×752) so we keep its aspect.
+const SIZES: Record<CelebrationKind, { w: number; h: number }> = {
+  frog: { w: 280, h: 280 },
+  task: { w: 320, h: 256 },
+};
+
 const PALETTE = ["#6B8F71", "#B98C5B", "#7A93A6", "#C79A4B", "#8FB49A"];
-const PARTICLE_COUNT = 12;
-const BURST_MS = 900;
+// Safety net: remove a celebration even if Lottie's onComplete never fires
+// (e.g. a backgrounded tab pausing rAF). Longer than the longest clip (~3.2s).
+const MAX_MS = 4200;
 
 export function CelebrationProvider({ children }: { children: ReactNode }) {
-  const [bursts, setBursts] = useState<Burst[]>([]);
+  const [items, setItems] = useState<Celebration[]>([]);
   const nextId = useRef(0);
   const reduceMotion = useReducedMotion();
 
-  const celebrate = useCallback<Celebrate>((x, y) => {
-    const id = nextId.current;
-    nextId.current += 1;
-    // Randomize particle spray here, in the event handler — never during
-    // render (React purity rule); each burst's shape is then fixed data.
-    const particles: Particle[] = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
-      const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
-      const distance = 34 + Math.random() * 46;
-      return {
-        dx: Math.cos(angle) * distance,
-        dy: Math.sin(angle) * distance,
-        size: 7 + Math.random() * 7,
-        color: PALETTE[i % PALETTE.length],
-      };
-    });
-    setBursts((current) => [...current, { id, x, y, particles }]);
-    // Self-cleaning: particles have finished fading well before this.
-    window.setTimeout(() => {
-      setBursts((current) => current.filter((burst) => burst.id !== id));
-    }, BURST_MS + 100);
+  const remove = useCallback((id: number) => {
+    setItems((current) => current.filter((c) => c.id !== id));
   }, []);
+
+  const celebrate = useCallback<Celebrate>(
+    (x, y, kind = "task") => {
+      const id = nextId.current;
+      nextId.current += 1;
+      setItems((current) => [...current, { id, x, y, kind }]);
+      window.setTimeout(() => remove(id), MAX_MS);
+    },
+    [remove],
+  );
 
   return (
     <CelebrationContext.Provider value={celebrate}>
@@ -69,65 +70,62 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
           zIndex: (theme) => theme.zIndex.tooltip + 1,
         }}
       >
-        {bursts.map((burst) => (
-          <BurstView key={burst.id} burst={burst} reduceMotion={!!reduceMotion} />
-        ))}
+        {items.map((item) =>
+          reduceMotion ? (
+            <SoftRing key={item.id} item={item} onDone={() => remove(item.id)} />
+          ) : (
+            <LottieBurst key={item.id} item={item} onDone={() => remove(item.id)} />
+          ),
+        )}
       </Box>
     </CelebrationContext.Provider>
   );
 }
 
-function BurstView({ burst, reduceMotion }: { burst: Burst; reduceMotion: boolean }) {
-  const particles = burst.particles;
-
-  // Reduced motion: a single soft ring instead of a spray of particles.
-  if (reduceMotion) {
-    return (
-      <motion.div
-        initial={{ opacity: 0.5, scale: 0.3 }}
-        animate={{ opacity: 0, scale: 1.7 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        style={{
-          position: "absolute",
-          left: burst.x,
-          top: burst.y,
-          width: 48,
-          height: 48,
-          marginLeft: -24,
-          marginTop: -24,
-          borderRadius: "50%",
-          border: `2px solid ${PALETTE[0]}`,
-        }}
-      />
-    );
-  }
-
+function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }) {
+  const { w, h } = SIZES[item.kind];
   return (
-    <>
-      {particles.map((particle, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 1, scale: 0.4, x: burst.x, y: burst.y }}
-          animate={{
-            opacity: 0,
-            scale: 1,
-            x: burst.x + particle.dx,
-            y: burst.y + particle.dy,
-          }}
-          transition={{ duration: BURST_MS / 1000, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: particle.size,
-            height: particle.size,
-            marginLeft: -particle.size / 2,
-            marginTop: -particle.size / 2,
-            borderRadius: "50%",
-            backgroundColor: particle.color,
-          }}
-        />
-      ))}
-    </>
+    <div
+      style={{
+        position: "absolute",
+        left: item.x,
+        top: item.y,
+        width: w,
+        height: h,
+        marginLeft: -w / 2,
+        marginTop: -h / 2,
+      }}
+    >
+      <Lottie
+        animationData={item.kind === "frog" ? ribbonData : confettiData}
+        loop={false}
+        autoplay
+        onComplete={onDone}
+        style={{ width: "100%", height: "100%" }}
+      />
+    </div>
+  );
+}
+
+// Reduced motion: a single soft ring instead of a full animation (Principle IV).
+function SoftRing({ item, onDone }: { item: Celebration; onDone: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0.5, scale: 0.3 }}
+      animate={{ opacity: 0, scale: 1.7 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      onAnimationComplete={onDone}
+      style={{
+        position: "absolute",
+        left: item.x,
+        top: item.y,
+        width: 48,
+        height: 48,
+        marginLeft: -24,
+        marginTop: -24,
+        borderRadius: "50%",
+        border: `2px solid ${PALETTE[0]}`,
+      }}
+    />
   );
 }

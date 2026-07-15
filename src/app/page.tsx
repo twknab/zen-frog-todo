@@ -24,7 +24,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
@@ -34,8 +34,10 @@ import FocusTimer from "@/components/FocusTimer";
 import NewDayAction from "@/components/NewDayAction";
 import SandCanvas from "@/components/SandCanvas";
 import TaskListCard from "@/components/TaskListCard";
+import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
+import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
 import { useTasks } from "@/lib/tasks";
@@ -71,6 +73,9 @@ export default function Home() {
     useBonsai();
   const [now, setNow] = useState<Date>(EPOCH);
   const [devMode, setDevMode] = usePersistentState("frog-garden:dev-mode-v1", false);
+  const { resetSand } = useSandReset();
+  const [sandSpin, setSandSpin] = useState(0);
+  const reduceMotion = useReducedMotion();
 
   // Dev tools edit the REAL, persisted tree state — so the tree looks identical
   // whether Dev is on or off, and dev changes stick after toggling out.
@@ -218,7 +223,7 @@ export default function Home() {
                 onChange={(event) => {
                   if (event.target.checked) {
                     const rect = event.currentTarget.getBoundingClientRect();
-                    celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                    celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "frog");
                   }
                   toggleTaskCompleted(frogTask.id);
                 }}
@@ -249,6 +254,25 @@ export default function Home() {
                 <Typography variant="h6" component="h2">
                   Sand Mode
                 </Typography>
+                <Tooltip title="Smooth the sand">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      resetSand();
+                      setSandSpin((s) => s + 1);
+                    }}
+                    aria-label="Reset the sand"
+                    sx={{ ml: "auto", color: "text.secondary" }}
+                  >
+                    <motion.span
+                      animate={reduceMotion ? undefined : { rotate: sandSpin * -360 }}
+                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ display: "inline-flex" }}
+                    >
+                      <RestartAltOutlinedIcon fontSize="small" />
+                    </motion.span>
+                  </IconButton>
+                </Tooltip>
               </Stack>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 Rake a little to calm your mind.

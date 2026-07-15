@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { deriveBonsai, useBonsai } from "./bonsai";
 import { useFocusStats } from "./focusStats";
+import { useSandReset } from "./sand";
 import { usePersistentState } from "./storage";
 import { useTasks, type CompletedLogEntry, type Task } from "./tasks";
 
@@ -211,6 +212,7 @@ export function useNewDay() {
   const { events: bonsaiEvents, idleOffsetHours, resetBonsai } = useBonsai();
   const { completedSessions, resetSessions } = useFocusStats();
   const [reflection, setReflection] = usePersistentState(REFLECTION_KEY, "");
+  const { resetSand } = useSandReset();
 
   const startNewDay = useCallback(() => {
     // `now` computed outside any state updater (keeps updaters pure).
@@ -249,6 +251,7 @@ export function useNewDay() {
     setReflection("");
     resetBonsai();
     resetSessions();
+    resetSand(); // smooth the sand for the fresh day
   }, [
     bonsaiEvents,
     idleOffsetHours,
@@ -260,6 +263,7 @@ export function useNewDay() {
     setReflection,
     resetBonsai,
     resetSessions,
+    resetSand,
   ]);
 
   return { archive, startNewDay };
