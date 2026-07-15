@@ -4,12 +4,18 @@ import { useCallback } from "react";
 import { usePersistentState } from "./storage";
 
 /**
- * The bonsai is a DAILY momentum indicator: it starts each day as a small shrub
- * and grows with the day's work (a completed task = 1 leaf, a focus session = 3),
- * up to a bounded full canopy. Idle time within the active window wilts it — 3
- * leaves per idle hour — so a neglected day shrinks the tree back toward the
- * shrub, and doing work restores the day's earned leaves. Its "life" is scoped
- * to roughly one day's work. See specs/006-growing-bonsai.
+ * The bonsai is a per-day-cycle momentum indicator: it starts as a small shrub
+ * and grows with the cycle's work (a completed task = 1 leaf, a focus session =
+ * 3), up to a bounded full canopy. Idle time within the active window wilts it —
+ * 3 leaves per idle hour — so neglect shrinks the tree back toward the shrub,
+ * and doing work restores the earned leaves.
+ *
+ * Scope (revised for specs/007-new-day-archive, FR-006b): growth is scoped to
+ * the manual "day cycle" — it accumulates over ALL stored growth events (which
+ * are cleared when the user starts a new day) rather than resetting at calendar
+ * midnight. `resetBonsai()` (called by "start a new day") is the sole reset.
+ * Wilt is unchanged — still active-hours only. See specs/006-growing-bonsai for
+ * the original daily model this supersedes.
  */
 
 export const BONSAI_STAGES = [
@@ -86,15 +92,6 @@ export function activeIdleHours(from: string | null, to: Date): number {
   return total;
 }
 
-function isSameLocalDay(iso: string, now: Date): boolean {
-  const d = new Date(iso);
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
 export type GrowthEvent = { at: string; leaves: number };
 
 export type BonsaiInput = {
@@ -116,13 +113,15 @@ export type BonsaiResult = {
 };
 
 /**
- * Derive the bonsai's current shape from today's growth events minus idle wilt.
- * Growth is scoped to the local day, so each day starts as a shrub; wilt sheds
+ * Derive the bonsai's current shape from the cycle's growth events minus idle
+ * wilt. Growth accumulates over ALL stored events (the events are cleared when
+ * the user starts a new day — see specs/007-new-day-archive), so the tree holds
+ * its growth across calendar midnights until a manual close. Wilt sheds
  * WILT_LEAVES_PER_HOUR per active-idle hour and clears when work resumes.
  */
 export function deriveBonsai({ events, now, idleOffsetHours = 0 }: BonsaiInput): BonsaiResult {
-  const grownToday = Math.min(
-    events.reduce((sum, e) => (isSameLocalDay(e.at, now) ? sum + e.leaves : sum), 0),
+  const grown = Math.min(
+    events.reduce((sum, e) => sum + e.leaves, 0),
     MAX_LEAVES,
   );
 
@@ -130,14 +129,14 @@ export function deriveBonsai({ events, now, idleOffsetHours = 0 }: BonsaiInput):
   const idleHours = activeIdleHours(lastAt, now) + Math.max(0, idleOffsetHours);
   const wilt = Math.floor(idleHours) * WILT_LEAVES_PER_HOUR;
 
-  const leaves = Math.max(0, grownToday - wilt);
+  const leaves = Math.max(0, grown - wilt);
   const blossoms = leaves >= 15 ? Math.min(6, leaves - 14) : 0;
 
   return {
     stage: BONSAI_STAGES[stageIndexFromLeaves(leaves)],
     leaves,
     blossoms,
-    isWilting: wilt > 0 && leaves < grownToday,
+    isWilting: wilt > 0 && leaves < grown,
   };
 }
 
@@ -150,12 +149,16 @@ type BonsaiState = {
 };
 
 const DEFAULT_STATE: BonsaiState = { events: [], idleOffsetHours: 0 };
-const PRUNE_AGE_MS = 2 * 24 * 60 * 60 * 1000; // keep ~2 days of events
+// Growth is now cleared on "start a new day" (not by calendar age), so events
+// are bounded by a generous count cap for storage safety only. The displayed
+// sum caps at MAX_LEAVES regardless, so this never affects the rendered tree.
+const MAX_EVENTS = 500;
 
 /**
  * The bonsai's own persisted state: a timestamped log of leaves earned plus a
- * simulated-idle offset. Today's entries drive growth; the most recent entry
- * (and the offset) anchor idle wilt. Self-contained, so every consumer stays
+ * simulated-idle offset. All stored entries drive growth (cleared on "start a
+ * new day"); the most recent entry (and the offset) anchor idle wilt. The
+ * offset is cleared on any growth. Self-contained, so every consumer stays
  * in sync via usePersistentState's same-key broadcast. The dev tools mutate
  * THIS real state (and it persists) rather than layering a throwaway preview.
  */
@@ -169,19 +172,19 @@ export function useBonsai() {
     (leaves: number) => {
       // Timestamp computed outside the updater (the updater must stay pure).
       const atISO = new Date().toISOString();
-      const cutoff = Date.now() - PRUNE_AGE_MS;
-      setState((current) => ({
-        ...current,
+      setState((current) => {
         // Doing any work resets the whole idle clock: the new event's
         // timestamp clears real idle, and we also clear the simulated offset
         // so completing ANYTHING restores the tree's full color (no lingering
         // wilt from a prior idle stretch, real or dev-simulated).
-        idleOffsetHours: 0,
-        events: [
-          ...current.events.filter((e) => new Date(e.at).getTime() >= cutoff),
-          { at: atISO, leaves },
-        ],
-      }));
+        const events = [...current.events, { at: atISO, leaves }];
+        return {
+          ...current,
+          idleOffsetHours: 0,
+          // Keep only the most recent MAX_EVENTS as a storage safety net.
+          events: events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events,
+        };
+      });
     },
     [setState],
   );

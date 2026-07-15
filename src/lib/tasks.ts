@@ -23,11 +23,7 @@ type TasksState = {
 };
 
 const DEFAULT_STATE: TasksState = {
-  tasks: [
-    { id: "seed-1", title: "Reply to Priya", completed: false },
-    { id: "seed-2", title: "Water the plants", completed: false },
-    { id: "seed-3", title: "Draft Q3 notes", completed: false },
-  ],
+  tasks: [],
   frogTaskId: null,
 };
 
@@ -107,6 +103,18 @@ export function useTasks() {
     setState((current) => ({ ...current, frogTaskId: id }));
   }
 
+  // "Start a new day" (spec 007): keep unfinished tasks for the fresh day, drop
+  // the completed ones (they've been archived), clear the frog so it's re-chosen,
+  // and clear the completed-log (its entries live in the day's archive now).
+  function startNewDay() {
+    setState((current) => ({
+      ...current,
+      tasks: current.tasks.filter((task) => !task.completed),
+      frogTaskId: null,
+    }));
+    setCompletedLog([]);
+  }
+
   function reorderTasks(draggedId: string, targetId: string) {
     if (draggedId === targetId) return;
     setState((current) => {
@@ -137,5 +145,6 @@ export function useTasks() {
     updateCompletedNote,
     setFrogTaskId,
     reorderTasks,
+    startNewDay,
   };
 }

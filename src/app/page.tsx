@@ -30,6 +30,7 @@ import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
 import FocusTimer from "@/components/FocusTimer";
+import NewDayAction from "@/components/NewDayAction";
 import SandCanvas from "@/components/SandCanvas";
 import TaskListCard from "@/components/TaskListCard";
 import { deriveBonsai, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
@@ -360,6 +361,7 @@ export default function Home() {
                 variant="standard"
                 slotProps={{ input: { disableUnderline: true } }}
               />
+              <NewDayAction />
             </BentoCard>
           )}
         </AnimatePresence>

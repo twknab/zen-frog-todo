@@ -24,8 +24,15 @@ export function useFocusStats() {
     }));
   }, [setState]);
 
+  // Reset to a per-day count when the user starts a new day (spec 007, FR-006a):
+  // the on-screen "focus sessions completed" reflects only the current day.
+  const resetSessions = useCallback(() => {
+    setState((current) => ({ ...current, completedSessions: 0 }));
+  }, [setState]);
+
   return {
     completedSessions: state.completedSessions,
     recordSessionComplete,
+    resetSessions,
   };
 }

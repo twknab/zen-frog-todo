@@ -1,5 +1,14 @@
 # Data Model: The Growing Bonsai
 
+> **Amendment (2026-07-15, superseded by feature 007):** The daily-momentum model below auto-reset
+> the bonsai each *calendar* day. Feature `007-new-day-archive` changes this: the bonsai now grows
+> per **close-cycle** — it accumulates in response to accomplishments until the user manually
+> "starts a new day," and `resetBonsai()` (called by that action) is the sole reset. Growth is no
+> longer filtered to "today" in `deriveBonsai`; it sums all stored events (which are cleared on
+> close). **Wilt is unchanged** — still active-hours (business-hours) only. See
+> `specs/007-new-day-archive/` (FR-006b, research Decision 11). Read the sections below with this
+> scoping change in mind.
+
 ## Persisted state
 
 ### BonsaiState (new)
