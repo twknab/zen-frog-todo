@@ -67,29 +67,26 @@ export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) 
       const container = containerRef.current;
       if (!canvas || !container) return;
 
-      // The canvas fills its container, whose height is driven by the parent
-      // card's flex layout — so Sand Mode grows to whatever space it's given.
-      const rect = container.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
+      // The canvas is absolutely positioned to fill the container (see JSX), so
+      // its drawable size is the container's content box. Measuring clientWidth/
+      // clientHeight (integers, no border/padding) and driving the bitmap off
+      // that guarantees the canvas always covers every edge — fixing a gap where
+      // a stale measurement left dead, un-rakeable strips on the right/bottom.
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width === 0 || height === 0) return;
 
-      // Setting canvas.width/height wipes the bitmap, so redrawing every
-      // stored point is unavoidable — but a ResizeObserver can fire for
-      // sub-pixel layout noise (e.g. a sibling's text reflowing every
-      // second) with no real size change. Skip the clear+redraw when
-      // nothing actually changed; this was the main source of the raking
-      // lag, since it was re-running on essentially every tick.
+      // Setting canvas.width/height wipes the bitmap, so redrawing every stored
+      // point is unavoidable — but a ResizeObserver can fire for sub-pixel noise
+      // with no real size change. Skip the clear+redraw when nothing changed.
       const unchanged =
-        Math.abs(width - sizeRef.current.width) < 0.5 &&
-        Math.abs(height - sizeRef.current.height) < 0.5;
+        width === sizeRef.current.width && height === sizeRef.current.height;
       if (unchanged && canvas.width > 0) return;
 
       const dpr = window.devicePixelRatio || 1;
       sizeRef.current = { width, height };
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -159,6 +156,7 @@ export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) 
     <Box
       ref={containerRef}
       sx={{
+        position: "relative",
         width: "100%",
         flexGrow: 1,
         minHeight,
@@ -173,7 +171,15 @@ export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) 
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        style={{ display: "block", touchAction: "none", cursor: "crosshair" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          display: "block",
+          touchAction: "none",
+          cursor: "crosshair",
+        }}
       />
     </Box>
   );

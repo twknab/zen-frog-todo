@@ -9,24 +9,32 @@ import SelfImprovementOutlinedIcon from "@mui/icons-material/SelfImprovementOutl
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import WavesOutlinedIcon from "@mui/icons-material/WavesOutlined";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
 import FocusTimer from "@/components/FocusTimer";
 import SandCanvas from "@/components/SandCanvas";
 import TaskListCard from "@/components/TaskListCard";
+import { deriveBonsai, useBonsaiActivity } from "@/lib/bonsai";
+import { useFocusStats } from "@/lib/focusStats";
+import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
 import { useTasks } from "@/lib/tasks";
 import { useColorMode } from "@/theme/ThemeRegistry";
@@ -34,6 +42,11 @@ import { useColorMode } from "@/theme/ThemeRegistry";
 type CardAccent = "primary" | "secondary" | "info" | "warning" | "success" | "error";
 
 type DashboardMode = "frog" | "flow";
+
+// A fixed reference for SSR/first paint so the initial render is deterministic
+// (no `new Date()` in render → no hydration mismatch, no purity-lint issue).
+// The real "now" is set after mount in an effect.
+const EPOCH = new Date(0);
 
 export default function Home() {
   const { mode: colorMode, toggleColorMode } = useColorMode();
@@ -51,10 +64,54 @@ export default function Home() {
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
   const celebrate = useCelebration();
+  const { completedSessions, recordSessionComplete } = useFocusStats();
+  const { lastActivityAt, markActivity } = useBonsaiActivity();
+  const [now, setNow] = useState<Date>(EPOCH);
+  const [devMode, setDevMode] = usePersistentState("frog-garden:dev-mode-v1", false);
+  // Simulated idle is EPHEMERAL (in-memory) — never persisted. This guarantees
+  // the dev tree matches the real tree on load, and only diverges when you
+  // explicitly click "Simulate +3h idle" within the session.
+  const [simIdleHours, setSimIdleHours] = useState(0);
+
+  // Toggling Dev must never change the real tree — clear any simulated idle so
+  // enabling Dev always starts from the true state (wilt only when explicitly simulated).
+  function toggleDevMode(on: boolean) {
+    setSimIdleHours(0);
+    setDevMode(on);
+  }
+
+  // Dev-only: fake a completed focus session so the "session done" growth
+  // (3 leaves + chime) can be demoed without running a 25-minute timer.
+  function devCompleteFocusSession() {
+    recordSessionComplete();
+    markActivity();
+    playChime("focus-complete");
+  }
 
   // Focus Mode strips the dashboard down to just the frog and the timer; the
   // surviving cards animate to fill the space the rest leave behind.
   const isFocus = mode === "frog";
+
+  // Set the real clock after mount, and refresh it whenever growth-affecting
+  // inputs change, so wilt is recomputed against the current time without a
+  // background ticker (research Decision 3).
+  useEffect(() => {
+    // Syncing the external wall-clock into state after mount (SSR-safe) and
+    // refreshing it when growth inputs change — a legitimate external-sync,
+    // not a cascading render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(new Date());
+  }, [completedLog.length, completedSessions, lastActivityAt]);
+
+  // Bonsai stage is a pure derived view of existing data (completed tasks +
+  // focus sessions) minus active-window idle wilt.
+  const bonsai = deriveBonsai({
+    completedCount: completedLog.length,
+    focusSessions: completedSessions,
+    lastActivityAt,
+    now,
+    extraIdleHours: devMode ? simIdleHours : 0,
+  });
 
   return (
     <Box
@@ -119,6 +176,19 @@ export default function Home() {
               )}
             </IconButton>
           </Tooltip>
+
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={devMode}
+                onChange={(event) => toggleDevMode(event.target.checked)}
+              />
+            }
+            label="Dev"
+            slotProps={{ typography: { variant: "caption", color: "text.secondary" } }}
+            sx={{ ml: 0 }}
+          />
         </Stack>
       </Stack>
 
@@ -127,13 +197,13 @@ export default function Home() {
           display: "grid",
           gap: 3,
           gridTemplateColumns: isFocus
-            ? { xs: "1fr", md: "repeat(2, 1fr)" }
+            ? { xs: "1fr", md: "repeat(3, 1fr)" }
             : { xs: "1fr", md: "repeat(4, 1fr)" },
           gridTemplateAreas: isFocus
-            ? { xs: `"frog" "timer"`, md: `"frog timer"` }
+            ? { xs: `"bonsai" "frog" "timer"`, md: `"frog bonsai timer"` }
             : {
-                xs: `"frog" "timer" "tasks" "garden" "reflection"`,
-                md: `"frog frog garden garden" "timer timer garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
+                xs: `"frog" "timer" "bonsai" "garden" "tasks" "reflection"`,
+                md: `"frog frog garden garden" "timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
               },
         }}
       >
@@ -225,7 +295,61 @@ export default function Home() {
               Focus
             </Typography>
           </Stack>
-          <FocusTimer />
+          <FocusTimer fast={devMode} />
+        </BentoCard>
+
+        {/* Bonsai lives in BOTH modes — front-and-center in Focus Mode. */}
+        <BentoCard area="bonsai" accent="success" fill>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+            <SpaOutlinedIcon color="success" />
+            <Typography variant="h6" component="h2">
+              Bonsai
+            </Typography>
+          </Stack>
+          <Stack sx={{ alignItems: "center", justifyContent: "center", flexGrow: 1 }}>
+            <BonsaiTree
+              stage={bonsai.stage}
+              leaves={bonsai.leaves}
+              blossoms={bonsai.blossoms}
+              isWilting={bonsai.isWilting}
+              size={isFocus ? 260 : 240}
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
+              Grows as you finish tasks and focus sessions.
+            </Typography>
+            {devMode && (
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ mt: 1.5, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  onClick={devCompleteFocusSession}
+                >
+                  Complete focus session
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  onClick={() => setSimIdleHours((h) => h + 3)}
+                >
+                  Simulate +3h idle
+                </Button>
+                <Button
+                  size="small"
+                  variant="text"
+                  color="inherit"
+                  onClick={() => setSimIdleHours(0)}
+                >
+                  Reset
+                </Button>
+              </Stack>
+            )}
+          </Stack>
         </BentoCard>
 
         <AnimatePresence>

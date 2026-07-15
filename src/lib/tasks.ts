@@ -1,5 +1,6 @@
 "use client";
 
+import { useBonsaiActivity } from "./bonsai";
 import { usePersistentState } from "./storage";
 
 export type Task = {
@@ -43,6 +44,7 @@ export function useTasks() {
     "frog-garden:completed-log-v1",
     [],
   );
+  const { markActivity } = useBonsaiActivity();
 
   function addTask(title: string) {
     const trimmed = title.trim();
@@ -83,6 +85,8 @@ export function useTasks() {
         },
         ...entries,
       ]);
+      // Growth-affecting activity → feed the bonsai + reset its wilt clock.
+      markActivity();
     }
   }
 

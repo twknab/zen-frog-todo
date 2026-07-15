@@ -7,6 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import FocusDial from "./FocusDial";
+import { useBonsaiActivity } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
 import { playChime, startAmbientLoop } from "@/lib/sound";
 
@@ -23,13 +24,19 @@ function formatClock(totalSeconds: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export default function FocusTimer() {
+export default function FocusTimer({ fast = false }: { fast?: boolean }) {
   const [workMinutes, setWorkMinutes] = useState(DEFAULT_WORK_MINUTES);
   const [phase, setPhase] = useState<Phase>("idle");
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [ambientOn, setAmbientOn] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const endTimeRef = useRef<number | null>(null);
   const { completedSessions, recordSessionComplete } = useFocusStats();
+  const { markActivity } = useBonsaiActivity();
+
+  // Dev "fast timer": a work "minute" lasts 1 second so the whole finish flow
+  // (work → complete → break → done) is reachable in a few seconds for demos.
+  const secondsPerMinute = fast ? 1 : 60;
 
   // Ambient wind follows the toggle alone — once on, it keeps playing across
   // phase changes (work → break → done) and only stops when toggled off.
@@ -39,17 +46,27 @@ export default function FocusTimer() {
     return () => loop?.stop();
   }, [ambientOn]);
 
-  // Pure tick — no side effects here, so it stays safe under React's
-  // dev-mode double-invocation of updater functions.
+  // Countdown is derived from a target end-timestamp, NOT by counting interval
+  // ticks — so it stays accurate even when the browser throttles/pauses timers
+  // in a backgrounded tab (start a session, switch away to work, come back: the
+  // remaining time is correct). The interval just refreshes the display; the
+  // visibilitychange listener snaps it the instant the tab is refocused.
   useEffect(() => {
     if (phase !== "working" && phase !== "break") return;
 
-    intervalRef.current = setInterval(() => {
-      setSecondsLeft((current) => Math.max(0, current - 1));
-    }, 1000);
+    function sync() {
+      const end = endTimeRef.current;
+      if (end == null) return;
+      setSecondsLeft(Math.max(0, Math.round((end - Date.now()) / 1000)));
+    }
+
+    sync();
+    intervalRef.current = setInterval(sync, 500);
+    document.addEventListener("visibilitychange", sync);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", sync);
     };
   }, [phase]);
 
@@ -60,14 +77,18 @@ export default function FocusTimer() {
     if ((phase !== "working" && phase !== "break") || secondsLeft > 0) return;
 
     playChime(phase === "working" ? "focus-complete" : "break-complete");
-    if (phase === "working") recordSessionComplete();
+    if (phase === "working") {
+      recordSessionComplete();
+      markActivity(); // growth-affecting activity → feeds the bonsai
+    }
     // Reacting to secondsLeft crossing zero to advance a state machine —
     // intentional, and guarded above so it fires exactly once per crossing.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhase(phase === "working" ? "work-done" : "break-done");
-  }, [phase, secondsLeft, recordSessionComplete]);
+  }, [phase, secondsLeft, recordSessionComplete, markActivity]);
 
-  const totalSeconds = phase === "break" ? BREAK_MINUTES * 60 : workMinutes * 60;
+  const totalSeconds =
+    phase === "break" ? BREAK_MINUTES * secondsPerMinute : workMinutes * secondsPerMinute;
   const fraction =
     phase === "idle"
       ? workMinutes / MAX_WORK_MINUTES
@@ -76,17 +97,22 @@ export default function FocusTimer() {
         : 0;
 
   function startFocus() {
-    setSecondsLeft(workMinutes * 60);
+    const duration = workMinutes * secondsPerMinute;
+    endTimeRef.current = Date.now() + duration * 1000;
+    setSecondsLeft(duration);
     setPhase("working");
   }
 
   function acknowledgeAndStartBreak() {
-    setSecondsLeft(BREAK_MINUTES * 60);
+    const duration = BREAK_MINUTES * secondsPerMinute;
+    endTimeRef.current = Date.now() + duration * 1000;
+    setSecondsLeft(duration);
     setPhase("break");
   }
 
   function reset() {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    endTimeRef.current = null;
     setPhase("idle");
     setSecondsLeft(0);
   }
