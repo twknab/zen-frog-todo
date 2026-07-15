@@ -5,12 +5,15 @@ The **single seam** all archive persistence flows through (`src/lib/dayArchive.t
 ## Repository surface (v1 — localStorage-backed)
 
 ```ts
-// Pure read/write over the archive collection.
+// Pure read of the archive collection (non-reactive callers).
 function readArchive(): ArchivedDay[];
 // newest-first; [] if none or on parse failure (never throws to caller)
 
-function appendArchivedDay(day: ArchivedDay): ArchivedDay[];
-// prepend `day`, prune to MAX_ARCHIVED_DAYS (drop oldest), persist, return new array
+// Pure append: prepend `day`, prune to MAX_ARCHIVED_DAYS (drop oldest), return new array.
+// Persistence is applied by the caller via the usePersistentState setter (see below),
+// so the write broadcasts to `useArchive()` consumers — this is why the pure prune step
+// and the persist step are separated rather than combined into one appendArchivedDay().
+function prependAndPrune(archive: ArchivedDay[], day: ArchivedDay): ArchivedDay[];
 
 // Reactive read for components (wraps usePersistentState on ARCHIVE_KEY).
 function useArchive(): ArchivedDay[];
@@ -18,7 +21,7 @@ function useArchive(): ArchivedDay[];
 
 **Guarantees**
 - `readArchive()` is total: malformed/absent storage yields `[]`, never an exception.
-- `appendArchivedDay()` enforces the retention bound (`MAX_ARCHIVED_DAYS`) atomically with the write.
+- The append path (`prependAndPrune` + the `useNewDay` persistent setter) enforces the retention bound (`MAX_ARCHIVED_DAYS`) atomically with the write, and the write broadcasts to `useArchive()` consumers.
 - Ordering is newest-first and stable.
 - No network, ever.
 

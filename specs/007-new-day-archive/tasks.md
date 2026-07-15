@@ -164,3 +164,13 @@ Task: "Add new-day reset (drop completed / keep unfinished / clear frog + clear 
 - All archive persistence stays behind `dayArchive.ts` (future-DB seam — see plan.md).
 - T003 modifies feature 006's bonsai model; an amendment note lives in `specs/006-growing-bonsai/data-model.md`.
 - Commit after each task or logical group; keep the constitution gates (a11y, calm-UX, theming) in view for any visual task.
+
+---
+
+## Phase 7: Convergence
+
+> Appended by `/speckit-converge` (2026-07-15). All FR/SC/user-story scope is implemented
+> and verified; this captures one minor contract-vs-code trace gap so `specs/` stays an
+> accurate record (no functional impact).
+
+- [x] T018 Reconcile the archive repository surface in `src/lib/dayArchive.ts` with `contracts/archive-repository.md`: the contract specifies a single `appendArchivedDay(day)` that prepends, prunes to `MAX_ARCHIVED_DAYS`, and persists, but the implementation splits this into the pure `prependAndPrune(archive, day)` helper plus the `useNewDay` hook's persistent setter (done this way so writes broadcast to `useArchive` consumers). Either expose an `appendArchivedDay` matching the contract, or update the contract doc to describe the pure-helper + hook-setter split. per contracts/archive-repository.md (partial)
