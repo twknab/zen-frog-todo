@@ -202,7 +202,7 @@ export default function Home() {
               🐸
             </span>
             <Chip
-              label={mode === "frog" ? "Today's frog" : "Suggested next"}
+              label="Largest Task"
               color="primary"
               size="small"
             />
@@ -247,7 +247,7 @@ export default function Home() {
                 </Typography>
               </Stack>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                Rake a little. No pattern is wrong.
+                Rake a little to calm your mind.
               </Typography>
               <Box sx={{ flexGrow: 1, minHeight: 220, display: "flex" }}>
                 <SandCanvas />
