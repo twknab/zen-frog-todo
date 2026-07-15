@@ -25,6 +25,7 @@ export type BonsaiStage = (typeof BONSAI_STAGES)[number];
 // --- Tuning constants (all the calibration knobs live here) --------------
 export const TASK_LEAVES = 1; // leaves grown per completed task
 export const SESSION_LEAVES = 3; // leaves grown per focus session (> task)
+export const FROG_LEAVES = 5; // completing the day's frog — the whole point — grows most
 export const MAX_LEAVES = 24; // full mature canopy (bounded)
 export const WILT_LEAVES_PER_HOUR = 3; // leaves shed per active-idle hour
 export const ACTIVE_START = 8; // wilt-active window start (local hour)

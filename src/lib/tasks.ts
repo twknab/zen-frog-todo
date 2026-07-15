@@ -1,6 +1,6 @@
 "use client";
 
-import { TASK_LEAVES, useBonsai } from "./bonsai";
+import { FROG_LEAVES, TASK_LEAVES, useBonsai } from "./bonsai";
 import { usePersistentState } from "./storage";
 
 export type Task = {
@@ -86,7 +86,8 @@ export function useTasks() {
         ...entries,
       ]);
       // Growth-affecting activity → grow the bonsai + reset its wilt clock.
-      recordGrowth(TASK_LEAVES);
+      // Swallowing the frog is the whole point, so it grows the tree more.
+      recordGrowth(id === state.frogTaskId ? FROG_LEAVES : TASK_LEAVES);
     }
   }
 
