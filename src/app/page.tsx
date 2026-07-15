@@ -29,6 +29,7 @@ import { useEffect, useState } from "react";
 import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
+import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import NewDayAction from "@/components/NewDayAction";
 import SandCanvas from "@/components/SandCanvas";
@@ -150,6 +151,8 @@ export default function Home() {
               Focus Mode
             </ToggleButton>
           </ToggleButtonGroup>
+
+          <ExportMenu />
 
           <Tooltip title={colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
             <IconButton

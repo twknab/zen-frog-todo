@@ -66,9 +66,9 @@ Single Next.js web app; source at `src/` (repo root). Paths below are exact.
 
 **Independent Test**: With ≥1 archived day (seed one via US1 or storage), open the header menu, pick a day, and confirm a `frog-garden-<date>.json` downloads as valid JSON faithfully representing that day — with no network request.
 
-- [ ] T009 [P] [US2] Add export helpers to `src/lib/dayArchive.ts`: `downloadJson(filename, data)` (pretty-printed `Blob` + temporary `<a download>` click + object-URL revoke, no network), `buildSingleDayExport(day)`, and `archiveFilename(day, sameDateCount)` (date; append `-HHmm` when the date is duplicated). Matches `contracts/`.
-- [ ] T010 [US2] Create `src/components/ExportMenu.tsx`: a header `IconButton` opening a re-themed MUI `Menu` that lists archived days from `useArchive()` (label by date; add a time when a date is duplicated — see `closedAt`), shows a calm empty-state when none, and exports the selected day via `buildSingleDayExport` + `downloadJson`. Keyboard + SR accessible. Depends on T002, T009.
-- [ ] T011 [US2] Mount `ExportMenu` in the header of `src/app/page.tsx`, near the theme/Dev controls. Depends on T010.
+- [x] T009 [P] [US2] Add export helpers to `src/lib/dayArchive.ts`: `downloadJson(filename, data)` (pretty-printed `Blob` + temporary `<a download>` click + object-URL revoke, no network), `buildSingleDayExport(day)`, and `archiveFilename(day, sameDateCount)` (date; append `-HHmm` when the date is duplicated). Matches `contracts/`.
+- [x] T010 [US2] Create `src/components/ExportMenu.tsx`: a header `IconButton` opening a re-themed MUI `Menu` that lists archived days from `useArchive()` (label by date; add a time when a date is duplicated — see `closedAt`), shows a calm empty-state when none, and exports the selected day via `buildSingleDayExport` + `downloadJson`. Keyboard + SR accessible. Depends on T002, T009.
+- [x] T011 [US2] Mount `ExportMenu` in the header of `src/app/page.tsx`, near the theme/Dev controls. Depends on T010.
 
 **Checkpoint**: Single-day export works; US1 + US2 both function independently.
 
@@ -80,8 +80,8 @@ Single Next.js web app; source at `src/` (repo root). Paths below are exact.
 
 **Independent Test**: Choose "Export everything" and confirm one `frog-garden-all-<date>.json` downloads with distinct `archive` and `live` top-level keys; verify it still works (with `"archive": []`) when nothing is archived.
 
-- [ ] T012 [P] [US3] Add `buildFullExport(archive, live)` to `src/lib/dayArchive.ts`, gathering the live state (`tasks`, `frogTaskId`, `completedLog`, `reflection`, `focusSessions`, bonsai `leaves`+`stage`) with `archive`/`live` separation and `schemaVersion` per `contracts/export-format.md`.
-- [ ] T013 [US3] Add an "Export everything" item to `src/components/ExportMenu.tsx` → `frog-garden-all-<date>.json` via `buildFullExport` + `downloadJson`; ensure it works with an empty archive. Depends on T012, T010.
+- [x] T012 [P] [US3] Add `buildFullExport(archive, live)` to `src/lib/dayArchive.ts`, gathering the live state (`tasks`, `frogTaskId`, `completedLog`, `reflection`, `focusSessions`, bonsai `leaves`+`stage`) with `archive`/`live` separation and `schemaVersion` per `contracts/export-format.md`.
+- [x] T013 [US3] Add an "Export everything" item to `src/components/ExportMenu.tsx` → `frog-garden-all-<date>.json` via `buildFullExport` + `downloadJson`; ensure it works with an empty archive. Depends on T012, T010.
 
 **Checkpoint**: All three stories independently functional.
 

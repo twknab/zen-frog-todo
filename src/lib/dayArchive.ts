@@ -107,6 +107,96 @@ export function useArchive(): ArchivedDay[] {
   return archive;
 }
 
+// --- Export helpers (client-side JSON download, no network) ----------------
+
+/** Wrap one archived day as a self-describing single-day export document. */
+export function buildSingleDayExport(day: ArchivedDay): SingleDayExport {
+  return { schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), kind: "day", day };
+}
+
+/**
+ * Filename for a single day: `frog-garden-<date>.json`, with an `-HHmm` suffix
+ * when more than one entry shares that date (so downloads never collide).
+ */
+export function archiveFilename(day: ArchivedDay, sameDateCount: number): string {
+  if (sameDateCount > 1) {
+    const d = new Date(day.closedAt);
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `frog-garden-${day.date}-${hh}${mm}.json`;
+  }
+  return `frog-garden-${day.date}.json`;
+}
+
+/** Human-readable menu label: the date, plus a time only when the date repeats. */
+export function archiveEntryLabel(day: ArchivedDay, sameDateCount: number): string {
+  const d = new Date(day.closedAt);
+  const dateLabel = d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  if (sameDateCount > 1) {
+    const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return `${dateLabel}, ${timeLabel}`;
+  }
+  return dateLabel;
+}
+
+/** Wrap the whole archive + current live state as a full-dump export document. */
+export function buildFullExport(archive: ArchivedDay[], live: FullExport["live"]): FullExport {
+  return { schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), kind: "full", archive, live };
+}
+
+/** Filename for the full dump: `frog-garden-all-<date>.json`. */
+export function fullExportFilename(now: Date): string {
+  return `frog-garden-all-${localDateString(now)}.json`;
+}
+
+/**
+ * Returns a callback that exports EVERYTHING — all archived days plus the
+ * current live state — as one JSON file. Live state is gathered lazily at click
+ * time (not every render) from the domain stores. Works with an empty archive.
+ */
+export function useExportEverything(): () => void {
+  const [archive] = usePersistentState<ArchivedDay[]>(ARCHIVE_KEY, []);
+  const { tasks, frogTaskId, completedLog } = useTasks();
+  const { events, idleOffsetHours } = useBonsai();
+  const { completedSessions } = useFocusStats();
+  const [reflection] = usePersistentState(REFLECTION_KEY, "");
+
+  return useCallback(() => {
+    const now = new Date();
+    const derived = deriveBonsai({ events, now, idleOffsetHours });
+    const live: FullExport["live"] = {
+      tasks,
+      frogTaskId,
+      completedLog,
+      reflection,
+      focusSessions: completedSessions,
+      bonsai: { leaves: derived.leaves, stage: derived.stage },
+    };
+    downloadJson(fullExportFilename(now), buildFullExport(archive, live));
+  }, [archive, tasks, frogTaskId, completedLog, events, idleOffsetHours, completedSessions, reflection]);
+}
+
+/**
+ * Download `data` as a pretty-printed JSON file, entirely on-device: build a
+ * Blob, click a temporary object-URL anchor, then revoke the URL. No network.
+ */
+export function downloadJson(filename: string, data: unknown): void {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 // --- The "start a new day" orchestration ----------------------------------
 
 /**

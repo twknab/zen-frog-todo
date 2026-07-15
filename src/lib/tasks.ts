@@ -137,6 +137,7 @@ export function useTasks() {
   return {
     tasks,
     frogTask,
+    frogTaskId: state.frogTaskId,
     otherTasks,
     completedLog,
     addTask,
