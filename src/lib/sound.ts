@@ -126,9 +126,12 @@ export function startAmbientLoop(): AmbientLoop | null {
   noise.buffer = buffer;
   noise.loop = true;
 
+  // Cutoff in the audible mid-band (not 500Hz) so there's energy small
+  // laptop/desktop speakers can actually reproduce — a pure low rumble is
+  // inaudible on speakers but fine on headphones (which reproduce lows).
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 500;
+  filter.frequency.value = 1400;
 
   const gain = ctx.createGain();
   gain.gain.value = 0;
@@ -138,7 +141,7 @@ export function startAmbientLoop(): AmbientLoop | null {
   const lfo = ctx.createOscillator();
   lfo.frequency.value = 0.15;
   const lfoGain = ctx.createGain();
-  lfoGain.gain.value = 0.02;
+  lfoGain.gain.value = 0.05;
   lfo.connect(lfoGain);
   lfoGain.connect(gain.gain);
 
@@ -148,7 +151,7 @@ export function startAmbientLoop(): AmbientLoop | null {
 
   const now = ctx.currentTime;
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.06, now + 1.5);
+  gain.gain.linearRampToValueAtTime(0.15, now + 1.5);
 
   noise.start();
   lfo.start();

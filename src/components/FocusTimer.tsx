@@ -1,13 +1,15 @@
 "use client";
 
 import AirOutlinedIcon from "@mui/icons-material/AirOutlined";
+import PauseOutlinedIcon from "@mui/icons-material/PauseOutlined";
+import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import FocusDial from "./FocusDial";
-import { useBonsaiActivity } from "@/lib/bonsai";
+import { SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
 import { playChime, startAmbientLoop } from "@/lib/sound";
 
@@ -32,7 +34,7 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const endTimeRef = useRef<number | null>(null);
   const { completedSessions, recordSessionComplete } = useFocusStats();
-  const { markActivity } = useBonsaiActivity();
+  const { recordGrowth } = useBonsai();
 
   // Dev "fast timer": a work "minute" lasts 1 second so the whole finish flow
   // (work → complete → break → done) is reachable in a few seconds for demos.
@@ -79,13 +81,13 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
     playChime(phase === "working" ? "focus-complete" : "break-complete");
     if (phase === "working") {
       recordSessionComplete();
-      markActivity(); // growth-affecting activity → feeds the bonsai
+      recordGrowth(SESSION_LEAVES); // a finished session grows the bonsai
     }
     // Reacting to secondsLeft crossing zero to advance a state machine —
     // intentional, and guarded above so it fires exactly once per crossing.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhase(phase === "working" ? "work-done" : "break-done");
-  }, [phase, secondsLeft, recordSessionComplete, markActivity]);
+  }, [phase, secondsLeft, recordSessionComplete, recordGrowth]);
 
   const totalSeconds =
     phase === "break" ? BREAK_MINUTES * secondsPerMinute : workMinutes * secondsPerMinute;
@@ -144,17 +146,27 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
         }
       />
 
-      <IconButton
-        size="small"
-        onClick={() => setAmbientOn((current) => !current)}
-        color={ambientOn ? "primary" : "default"}
-        aria-pressed={ambientOn}
-        aria-label={
-          ambientOn ? "Turn off ambient nature sound" : "Turn on ambient nature sound"
-        }
-      >
-        <AirOutlinedIcon fontSize="small" />
-      </IconButton>
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+        <AirOutlinedIcon
+          fontSize="small"
+          sx={{ color: ambientOn ? "primary.main" : "text.disabled" }}
+        />
+        <IconButton
+          size="small"
+          onClick={() => setAmbientOn((current) => !current)}
+          color={ambientOn ? "primary" : "default"}
+          aria-pressed={ambientOn}
+          aria-label={
+            ambientOn ? "Pause ambient nature sound" : "Play ambient nature sound"
+          }
+        >
+          {ambientOn ? (
+            <PauseOutlinedIcon fontSize="small" />
+          ) : (
+            <PlayArrowOutlinedIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Stack>
 
       <Typography variant="caption" color="text.secondary">
         {completedSessions === 1

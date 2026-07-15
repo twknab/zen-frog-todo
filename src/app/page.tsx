@@ -32,7 +32,7 @@ import CompletedLog from "@/components/CompletedLog";
 import FocusTimer from "@/components/FocusTimer";
 import SandCanvas from "@/components/SandCanvas";
 import TaskListCard from "@/components/TaskListCard";
-import { deriveBonsai, useBonsaiActivity } from "@/lib/bonsai";
+import { deriveBonsai, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
@@ -64,13 +64,13 @@ export default function Home() {
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
   const celebrate = useCelebration();
-  const { completedSessions, recordSessionComplete } = useFocusStats();
-  const { lastActivityAt, markActivity } = useBonsaiActivity();
+  const { recordSessionComplete } = useFocusStats();
+  const { events: bonsaiEvents, recordGrowth } = useBonsai();
   const [now, setNow] = useState<Date>(EPOCH);
   const [devMode, setDevMode] = usePersistentState("frog-garden:dev-mode-v1", false);
   // Simulated idle is EPHEMERAL (in-memory) — never persisted. This guarantees
   // the dev tree matches the real tree on load, and only diverges when you
-  // explicitly click "Simulate +3h idle" within the session.
+  // explicitly click "Simulate +1h idle" within the session.
   const [simIdleHours, setSimIdleHours] = useState(0);
 
   // Toggling Dev must never change the real tree — clear any simulated idle so
@@ -84,7 +84,7 @@ export default function Home() {
   // (3 leaves + chime) can be demoed without running a 25-minute timer.
   function devCompleteFocusSession() {
     recordSessionComplete();
-    markActivity();
+    recordGrowth(SESSION_LEAVES);
     playChime("focus-complete");
   }
 
@@ -92,23 +92,21 @@ export default function Home() {
   // surviving cards animate to fill the space the rest leave behind.
   const isFocus = mode === "frog";
 
-  // Set the real clock after mount, and refresh it whenever growth-affecting
-  // inputs change, so wilt is recomputed against the current time without a
-  // background ticker (research Decision 3).
+  // Set the real clock after mount, and refresh it whenever anything that
+  // affects the tree changes — growth events, or the dev toggle/sim — so the
+  // bonsai always re-derives against the current time (and reflects Dev being
+  // turned off) without a background ticker.
   useEffect(() => {
-    // Syncing the external wall-clock into state after mount (SSR-safe) and
-    // refreshing it when growth inputs change — a legitimate external-sync,
-    // not a cascading render.
+    // Syncing the external wall-clock into state after mount (SSR-safe) —
+    // a legitimate external-sync, not a cascading render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
-  }, [completedLog.length, completedSessions, lastActivityAt]);
+  }, [bonsaiEvents, devMode, simIdleHours]);
 
-  // Bonsai stage is a pure derived view of existing data (completed tasks +
-  // focus sessions) minus active-window idle wilt.
+  // The bonsai is derived from today's growth events minus active-window idle
+  // wilt (see src/lib/bonsai.ts). Dev simulated-idle only applies while Dev is on.
   const bonsai = deriveBonsai({
-    completedCount: completedLog.length,
-    focusSessions: completedSessions,
-    lastActivityAt,
+    events: bonsaiEvents,
     now,
     extraIdleHours: devMode ? simIdleHours : 0,
   });
@@ -335,9 +333,9 @@ export default function Home() {
                   size="small"
                   variant="outlined"
                   color="inherit"
-                  onClick={() => setSimIdleHours((h) => h + 3)}
+                  onClick={() => setSimIdleHours((h) => h + 1)}
                 >
-                  Simulate +3h idle
+                  Simulate +1h idle
                 </Button>
                 <Button
                   size="small"

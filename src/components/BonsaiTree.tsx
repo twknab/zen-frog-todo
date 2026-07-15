@@ -62,7 +62,7 @@ export default function BonsaiTree({
         transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
       };
 
-  const isSeedling = stage === "seedling" || leaves <= 0;
+  const isShrub = stage === "shrub" || leaves <= 0;
   const shownLeaves = LEAF_POSITIONS.slice(0, Math.min(leaves, MAX_LEAVES));
   const shownBlossoms = BLOSSOM_SLOTS.slice(0, blossoms);
 
@@ -85,17 +85,29 @@ export default function BonsaiTree({
         <rect x="40" y="156" width="80" height="10" rx="4" fill={potRim} />
         <ellipse cx="80" cy="162" rx="34" ry="6" fill={soilFill} />
 
-        {isSeedling ? (
+        {isShrub ? (
+          // Starting state: a small bushy shrub near the soil — a living base
+          // to grow from, never an empty pot.
           <g>
-            <path
-              d="M80 162 Q79 146 80 132"
-              stroke={leafTone.dark}
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
-            />
-            <ellipse cx="72" cy="134" rx="9" ry="5" fill={leafTone.main} transform="rotate(-30 72 134)" />
-            <ellipse cx="88" cy="130" rx="9" ry="5" fill={leafTone.light} transform="rotate(30 88 130)" />
+            {[
+              { x: 80, y: 150, a: 0 },
+              { x: 68, y: 152, a: -22 },
+              { x: 92, y: 152, a: 22 },
+            ].map((stem) => (
+              <path
+                key={`${stem.x}-${stem.y}`}
+                d={`M80 162 Q${stem.x} 156 ${stem.x} ${stem.y}`}
+                stroke={leafTone.dark}
+                strokeWidth="2.5"
+                fill="none"
+                strokeLinecap="round"
+              />
+            ))}
+            <ellipse cx="80" cy="146" rx="10" ry="6" fill={leafTone.main} />
+            <ellipse cx="67" cy="150" rx="9" ry="5.5" fill={leafTone.dark} transform="rotate(-24 67 150)" />
+            <ellipse cx="93" cy="150" rx="9" ry="5.5" fill={leafTone.light} transform="rotate(24 93 150)" />
+            <ellipse cx="74" cy="142" rx="8" ry="5" fill={leafTone.light} />
+            <ellipse cx="87" cy="142" rx="8" ry="5" fill={leafTone.main} />
           </g>
         ) : (
           <g>
