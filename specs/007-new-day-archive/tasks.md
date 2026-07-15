@@ -91,10 +91,10 @@ Single Next.js web app; source at `src/` (repo root). Paths below are exact.
 
 **Purpose**: Constitution gates (a11y, calm-UX, theming) and end-to-end validation.
 
-- [ ] T014 [P] Accessibility + reduced-motion pass on `src/components/NewDayAction.tsx` and `src/components/ExportMenu.tsx`: full keyboard operation (Tab/Enter/Esc), screen-reader labels, and `prefers-reduced-motion` reduced/instant transitions (FR-017, FR-018).
-- [ ] T015 [P] Verify calm, non-judgmental copy and zen-theme styling (WCAG AA contrast, light + dark) for all new controls; no scoreboard/streak language, no "you did nothing" on empty days (FR-016, Principles I/II/V).
-- [ ] T016 Verify no network request occurs on close or any export, and that exported files are valid, well-formed JSON matching `contracts/export-format.md` (SC-004, SC-005).
-- [ ] T017 Run all `quickstart.md` scenarios in the browser preview — including a check that leaving the app idle past midnight does **not** auto-archive or auto-reset the board (FR-003), and that the bonsai persists its growth across a midnight until a manual close (FR-006b); ensure `tsc --noEmit` and `eslint src --max-warnings=0` are clean.
+- [x] T014 [P] Accessibility + reduced-motion pass on `src/components/NewDayAction.tsx` and `src/components/ExportMenu.tsx`: full keyboard operation (Tab/Enter/Esc), screen-reader labels, and `prefers-reduced-motion` reduced/instant transitions (FR-017, FR-018).
+- [x] T015 [P] Verify calm, non-judgmental copy and zen-theme styling (WCAG AA contrast, light + dark) for all new controls; no scoreboard/streak language, no "you did nothing" on empty days (FR-016, Principles I/II/V).
+- [x] T016 Verify no network request occurs on close or any export, and that exported files are valid, well-formed JSON matching `contracts/export-format.md` (SC-004, SC-005).
+- [x] T017 Run all `quickstart.md` scenarios in the browser preview — including a check that leaving the app idle past midnight does **not** auto-archive or auto-reset the board (FR-003), and that the bonsai persists its growth across a midnight until a manual close (FR-006b); ensure `tsc --noEmit` and `eslint src --max-warnings=0` are clean.
 
 ---
 
