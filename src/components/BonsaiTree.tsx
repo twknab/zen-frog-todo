@@ -3,7 +3,14 @@
 import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { bonsaiStageLabel, MAX_LEAVES, type BonsaiStage } from "@/lib/bonsai";
+import {
+  BASELINE_FROGS,
+  bonsaiStageLabel,
+  MAX_FROGS,
+  MAX_LEAVES,
+  SQUIRREL_MIN,
+  type BonsaiStage,
+} from "@/lib/bonsai";
 
 type BonsaiTreeProps = {
   stage: BonsaiStage;
@@ -11,6 +18,7 @@ type BonsaiTreeProps = {
   blossoms: number;
   isWilting?: boolean;
   size?: number;
+  frogs?: number;
 };
 
 const CANOPY = { cx: 80, cy: 92 };
@@ -40,12 +48,45 @@ const GRASS = [
   { x: 110, h: 17, tilt: -3 },
 ];
 
+// Deterministic 0..1 hash of an index — a stable stand-in for randomness so the
+// critter scatter is identical on server + client (no hydration mismatch).
+function seeded(i: number, salt: number): number {
+  const v = Math.sin((i + 1) * 12.9898 + salt * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+// Frog friends gather on the ground around the pot base. Computed once; frog `i`
+// always sits in slot `i`, so the crowd grows additively without reshuffling.
+// Slot 0 is the original lone frog's spot (the baseline).
+const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
+  if (i === 0) return { x: 30, y: 187, scale: 1 };
+  return {
+    x: 12 + seeded(i, 1) * 136, // 12..148 across the ground band
+    y: 186 + seeded(i, 2) * 13, // 186..199, clustered at the base
+    scale: 0.68 + seeded(i, 3) * 0.5, // 0.68..1.18 depth variation
+  };
+});
+
+// The squirrel's own fixed spot (distinct from the frog slots, not counted in
+// the frog cap). It only visits occasionally — see squirrelVisible.
+const SQUIRREL_SLOT = { x: 134, y: 189, scale: 1.15 };
+
+// Occasional + deterministic: present only once the crowd is established and
+// when a seeded hash of the count lands, so it pops in and out as frogs change
+// but is stable for any given count (no per-render randomness → never flickers).
+function squirrelVisible(frogCount: number): boolean {
+  if (frogCount < SQUIRREL_MIN) return false;
+  const v = Math.sin(frogCount * 91.7) * 43758.5453;
+  return v - Math.floor(v) < 0.3;
+}
+
 export default function BonsaiTree({
   stage,
   leaves,
   blossoms,
   isWilting = false,
   size = 180,
+  frogs = BASELINE_FROGS,
 }: BonsaiTreeProps) {
   const theme = useTheme();
   const reduce = useReducedMotion();
@@ -61,7 +102,7 @@ export default function BonsaiTree({
   const woodFill = theme.palette.secondary.dark;
   const blossomFill = theme.palette.error.light;
 
-  // Fade-in only (no scale): a leaf is never stranded invisible if the
+  // Fade-in only (no scale): a leaf/frog is never stranded invisible if the
   // animation is interrupted (e.g. a backgrounded tab pausing rAF).
   const appear = reduce
     ? { initial: false as const, animate: {}, exit: {}, transition: { duration: 0 } }
@@ -74,6 +115,8 @@ export default function BonsaiTree({
 
   const frogFill = theme.palette.primary.light;
   const eyeFill = theme.palette.text.primary;
+  const squirrelBody = theme.palette.secondary.dark;
+  const squirrelTail = theme.palette.secondary.main;
 
   const isShrub = stage === "shrub" || leaves <= 0;
   const shownLeaves = LEAF_POSITIONS.slice(0, Math.min(leaves, MAX_LEAVES));
@@ -83,108 +126,138 @@ export default function BonsaiTree({
   // The tree scales up as it fills in, so the mature stage is notably big.
   const treeScale = 0.9 + (Math.min(leaves, MAX_LEAVES) / MAX_LEAVES) * 0.45;
 
+  // Frogs are bounded and always show at least the baseline lone frog.
+  const frogCount = Math.max(BASELINE_FROGS, Math.min(frogs, MAX_FROGS));
+  const shownFrogs = FROG_POSITIONS.slice(0, frogCount);
+  const showSquirrel = squirrelVisible(frogCount);
+
+  // Wilt dims only the living tree/pot layer — the frog friends and squirrel
+  // stay full-color, since they mark work already done and never wilt.
+  const wiltStyle = {
+    opacity: isWilting ? 0.75 : 1,
+    filter: isWilting ? "saturate(0.6)" : "none",
+    transition: "opacity 600ms ease, filter 600ms ease",
+  } as const;
+
   return (
     <Box
       role="img"
       aria-label={bonsaiStageLabel(stage)}
-      sx={{
-        width: size,
-        height: size,
-        maxWidth: "100%",
-        opacity: isWilting ? 0.75 : 1,
-        filter: isWilting ? "saturate(0.6)" : "none",
-        transition: "opacity 600ms ease, filter 600ms ease",
-      }}
+      sx={{ width: size, height: size, maxWidth: "100%" }}
     >
       <svg width="100%" height="100%" viewBox="0 0 160 200" aria-hidden="true">
-        {/* Pot + soil — always present */}
-        <path d="M44 162 L116 162 L108 196 L52 196 Z" fill={potFill} />
-        <rect x="40" y="156" width="80" height="10" rx="4" fill={potRim} />
-        <ellipse cx="80" cy="162" rx="34" ry="6" fill={soilFill} />
+        {/* Living layer — pot, soil, grass, tree — dims when wilting. */}
+        <g style={wiltStyle}>
+          {/* Pot + soil — always present */}
+          <path d="M44 162 L116 162 L108 196 L52 196 Z" fill={potFill} />
+          <rect x="40" y="156" width="80" height="10" rx="4" fill={potRim} />
+          <ellipse cx="80" cy="162" rx="34" ry="6" fill={soilFill} />
 
-        {/* Grass sprigs around the pot base — grow in as the tree does */}
-        <AnimatePresence>
-          {shownGrass.map((blade) => (
-            <motion.path
-              key={blade.x}
-              d={`M${blade.x} 196 Q${blade.x + blade.tilt * 0.5} ${196 - blade.h * 0.6} ${blade.x + blade.tilt} ${196 - blade.h}`}
-              stroke={leafTone.main}
-              strokeWidth={2}
-              strokeLinecap="round"
-              fill="none"
-              {...appear}
-            />
-          ))}
-        </AnimatePresence>
-
-        {/* A little frog friend beside the pot */}
-        <g transform="translate(30 187)">
-          <ellipse cx={0} cy={4} rx={9} ry={6} fill={frogFill} />
-          <ellipse cx={-4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
-          <ellipse cx={4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
-          <circle cx={-4} cy={-1.5} r={1.2} fill={eyeFill} />
-          <circle cx={4} cy={-1.5} r={1.2} fill={eyeFill} />
-          <path d="M-4 5 Q0 8 4 5" stroke={eyeFill} strokeWidth={1} fill="none" strokeLinecap="round" />
-        </g>
-
-        {/* The tree itself scales up around its base as it matures */}
-        <g transform={`translate(80 162) scale(${treeScale}) translate(-80 -162)`}>
-        {isShrub ? (
-          // Starting state: a small bushy shrub near the soil — a living base
-          // to grow from, never an empty pot.
-          <g>
-            {[
-              { x: 80, y: 150, a: 0 },
-              { x: 68, y: 152, a: -22 },
-              { x: 92, y: 152, a: 22 },
-            ].map((stem) => (
-              <path
-                key={`${stem.x}-${stem.y}`}
-                d={`M80 162 Q${stem.x} 156 ${stem.x} ${stem.y}`}
-                stroke={leafTone.dark}
-                strokeWidth="2.5"
-                fill="none"
+          {/* Grass sprigs around the pot base — grow in as the tree does */}
+          <AnimatePresence>
+            {shownGrass.map((blade) => (
+              <motion.path
+                key={blade.x}
+                d={`M${blade.x} 196 Q${blade.x + blade.tilt * 0.5} ${196 - blade.h * 0.6} ${blade.x + blade.tilt} ${196 - blade.h}`}
+                stroke={leafTone.main}
+                strokeWidth={2}
                 strokeLinecap="round"
+                fill="none"
+                {...appear}
               />
             ))}
-            <ellipse cx="80" cy="146" rx="10" ry="6" fill={leafTone.main} />
-            <ellipse cx="67" cy="150" rx="9" ry="5.5" fill={leafTone.dark} transform="rotate(-24 67 150)" />
-            <ellipse cx="93" cy="150" rx="9" ry="5.5" fill={leafTone.light} transform="rotate(24 93 150)" />
-            <ellipse cx="74" cy="142" rx="8" ry="5" fill={leafTone.light} />
-            <ellipse cx="87" cy="142" rx="8" ry="5" fill={leafTone.main} />
+          </AnimatePresence>
+
+          {/* The tree itself scales up around its base as it matures */}
+          <g transform={`translate(80 162) scale(${treeScale}) translate(-80 -162)`}>
+            {isShrub ? (
+              // Starting state: a small bushy shrub near the soil — a living base
+              // to grow from, never an empty pot.
+              <g>
+                {[
+                  { x: 80, y: 150, a: 0 },
+                  { x: 68, y: 152, a: -22 },
+                  { x: 92, y: 152, a: 22 },
+                ].map((stem) => (
+                  <path
+                    key={`${stem.x}-${stem.y}`}
+                    d={`M80 162 Q${stem.x} 156 ${stem.x} ${stem.y}`}
+                    stroke={leafTone.dark}
+                    strokeWidth="2.5"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                ))}
+                <ellipse cx="80" cy="146" rx="10" ry="6" fill={leafTone.main} />
+                <ellipse cx="67" cy="150" rx="9" ry="5.5" fill={leafTone.dark} transform="rotate(-24 67 150)" />
+                <ellipse cx="93" cy="150" rx="9" ry="5.5" fill={leafTone.light} transform="rotate(24 93 150)" />
+                <ellipse cx="74" cy="142" rx="8" ry="5" fill={leafTone.light} />
+                <ellipse cx="87" cy="142" rx="8" ry="5" fill={leafTone.main} />
+              </g>
+            ) : (
+              <g>
+                {/* Trunk */}
+                <path d="M76 162 Q73 126 80 112 Q87 126 84 162 Z" fill={woodFill} />
+                {/* Leaves — one per completion, filling the canopy outward */}
+                <AnimatePresence>
+                  {shownLeaves.map((leaf, i) => (
+                    <motion.circle key={i} cx={leaf.x} cy={leaf.y} r={9} fill={leafTone[leaf.tone]} {...appear} />
+                  ))}
+                </AnimatePresence>
+                {/* Blossoms once flowering */}
+                <AnimatePresence>
+                  {shownBlossoms.map((slot) => (
+                    <motion.circle
+                      key={`b${slot}`}
+                      cx={LEAF_POSITIONS[slot].x}
+                      cy={LEAF_POSITIONS[slot].y}
+                      r={4}
+                      fill={blossomFill}
+                      {...appear}
+                    />
+                  ))}
+                </AnimatePresence>
+              </g>
+            )}
           </g>
-        ) : (
-          <g>
-            {/* Trunk */}
-            <path d="M76 162 Q73 126 80 112 Q87 126 84 162 Z" fill={woodFill} />
-            {/* Leaves — one per completion, filling the canopy outward */}
-            <AnimatePresence>
-              {shownLeaves.map((leaf, i) => (
-                <motion.circle
-                  key={i}
-                  cx={leaf.x}
-                  cy={leaf.y}
-                  r={9}
-                  fill={leafTone[leaf.tone]}
-                  {...appear}
-                />
-              ))}
-            </AnimatePresence>
-            {/* Blossoms once flowering */}
-            <AnimatePresence>
-              {shownBlossoms.map((slot) => (
-                <motion.circle
-                  key={`b${slot}`}
-                  cx={LEAF_POSITIONS[slot].x}
-                  cy={LEAF_POSITIONS[slot].y}
-                  r={4}
-                  fill={blossomFill}
-                  {...appear}
-                />
-              ))}
-            </AnimatePresence>
-          </g>
-        )}
+        </g>
+
+        {/* Critter layer — frog friends + the occasional squirrel. Outside the
+            wilt styling, so they stay full-color even when the tree wilts. */}
+        <g>
+          <AnimatePresence>
+            {shownFrogs.map((p, i) => (
+              <motion.g key={i} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
+                <ellipse cx={0} cy={4} rx={9} ry={6} fill={frogFill} />
+                <ellipse cx={-4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
+                <ellipse cx={4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
+                <circle cx={-4} cy={-1.5} r={1.2} fill={eyeFill} />
+                <circle cx={4} cy={-1.5} r={1.2} fill={eyeFill} />
+                <path d="M-4 5 Q0 8 4 5" stroke={eyeFill} strokeWidth={1} fill="none" strokeLinecap="round" />
+              </motion.g>
+            ))}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {showSquirrel && (
+              <motion.g
+                key="squirrel"
+                transform={`translate(${SQUIRREL_SLOT.x} ${SQUIRREL_SLOT.y}) scale(${SQUIRREL_SLOT.scale})`}
+                {...appear}
+              >
+                {/* bushy tail */}
+                <path d="M6 3 Q17 -4 11 -14 Q7 -19 2 -15 Q8 -10 4 -1 Z" fill={squirrelTail} />
+                {/* body */}
+                <ellipse cx={0} cy={1} rx={5.5} ry={7} fill={squirrelBody} />
+                {/* head */}
+                <circle cx={-3} cy={-6} r={3.4} fill={squirrelBody} />
+                {/* ear */}
+                <circle cx={-5} cy={-9} r={1.4} fill={squirrelBody} />
+                {/* eye */}
+                <circle cx={-4} cy={-6.2} r={0.9} fill={eyeFill} />
+              </motion.g>
+            )}
+          </AnimatePresence>
         </g>
       </svg>
     </Box>

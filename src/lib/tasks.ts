@@ -1,6 +1,6 @@
 "use client";
 
-import { FROG_LEAVES, TASK_LEAVES, useBonsai } from "./bonsai";
+import { FROG_FROGS, FROG_LEAVES, TASK_FROGS, TASK_LEAVES, useBonsai } from "./bonsai";
 import { usePersistentState } from "./storage";
 
 export type Task = {
@@ -81,9 +81,14 @@ export function useTasks() {
         },
         ...entries,
       ]);
-      // Growth-affecting activity → grow the bonsai + reset its wilt clock.
-      // Swallowing the frog is the whole point, so it grows the tree more.
-      recordGrowth(id === state.frogTaskId ? FROG_LEAVES : TASK_LEAVES);
+      // Growth-affecting activity → grow the bonsai + reset its wilt clock,
+      // and spawn frog friends. Swallowing the frog is the whole point, so it
+      // grows the tree most (5 leaves) and brings the most frogs (3).
+      const isFrog = id === state.frogTaskId;
+      recordGrowth(
+        isFrog ? FROG_LEAVES : TASK_LEAVES,
+        isFrog ? FROG_FROGS : TASK_FROGS,
+      );
     }
   }
 

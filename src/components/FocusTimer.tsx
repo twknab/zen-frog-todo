@@ -9,7 +9,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import FocusDial from "./FocusDial";
-import { SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
+import { SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
 import { playChime, startAmbientLoop } from "@/lib/sound";
 
@@ -81,7 +81,7 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
     playChime(phase === "working" ? "focus-complete" : "break-complete");
     if (phase === "working") {
       recordSessionComplete();
-      recordGrowth(SESSION_LEAVES); // a finished session grows the bonsai
+      recordGrowth(SESSION_LEAVES, SESSION_FROGS); // a finished session grows the bonsai + brings frogs
     }
     // Reacting to secondsLeft crossing zero to advance a state machine —
     // intentional, and guarded above so it fires exactly once per crossing.

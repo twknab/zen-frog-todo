@@ -34,7 +34,7 @@ import FocusTimer from "@/components/FocusTimer";
 import NewDayAction from "@/components/NewDayAction";
 import SandCanvas from "@/components/SandCanvas";
 import TaskListCard from "@/components/TaskListCard";
-import { deriveBonsai, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
+import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
@@ -76,7 +76,7 @@ export default function Home() {
   // whether Dev is on or off, and dev changes stick after toggling out.
   function devCompleteFocusSession() {
     recordSessionComplete();
-    recordGrowth(SESSION_LEAVES);
+    recordGrowth(SESSION_LEAVES, SESSION_FROGS);
     playChime("focus-complete");
   }
 
@@ -305,6 +305,7 @@ export default function Home() {
               leaves={bonsai.leaves}
               blossoms={bonsai.blossoms}
               isWilting={bonsai.isWilting}
+              frogs={bonsai.frogs}
               size={isFocus ? 260 : 240}
             />
             <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>

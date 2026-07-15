@@ -36,6 +36,15 @@ export const MAX_LEAVES = 24; // full mature canopy (bounded)
 export const WILT_LEAVES_PER_HOUR = 3; // leaves shed per active-idle hour
 export const ACTIVE_START = 8; // wilt-active window start (local hour)
 export const ACTIVE_END = 17; // wilt-active window end (local hour)
+
+// Frog friends (specs/008-frog-friends): each completion also spawns frogs that
+// gather around the pot. Weights differ from leaves; frogs never wilt.
+export const TASK_FROGS = 1; // frogs per completed regular task
+export const SESSION_FROGS = 2; // frogs per focus session
+export const FROG_FROGS = 3; // frogs per completing the day's frog
+export const MAX_FROGS = 20; // full crowd, including the baseline (bounded)
+export const BASELINE_FROGS = 1; // the lone frog always present (index 0)
+export const SQUIRREL_MIN = 6; // min crowd before a squirrel may appear
 // -------------------------------------------------------------------------
 
 // Named stages are milestones over the leaf count — used for the silhouette
@@ -92,7 +101,7 @@ export function activeIdleHours(from: string | null, to: Date): number {
   return total;
 }
 
-export type GrowthEvent = { at: string; leaves: number };
+export type GrowthEvent = { at: string; leaves: number; frogs: number };
 
 export type BonsaiInput = {
   events: GrowthEvent[];
@@ -110,6 +119,8 @@ export type BonsaiResult = {
   leaves: number;
   blossoms: number;
   isWilting: boolean;
+  /** Frogs to show gathered around the pot (baseline..MAX_FROGS); never wilts. */
+  frogs: number;
 };
 
 /**
@@ -132,11 +143,20 @@ export function deriveBonsai({ events, now, idleOffsetHours = 0 }: BonsaiInput):
   const leaves = Math.max(0, grown - wilt);
   const blossoms = leaves >= 15 ? Math.min(6, leaves - 14) : 0;
 
+  // Frogs accumulate from the same events (frog weight per event) but never
+  // wilt — they mark work actually done this cycle. Floored at the baseline,
+  // capped at MAX_FROGS. `?? 0` keeps pre-frogs stored events safe on upgrade.
+  const frogs = Math.min(
+    MAX_FROGS,
+    BASELINE_FROGS + events.reduce((sum, e) => sum + (e.frogs ?? 0), 0),
+  );
+
   return {
     stage: BONSAI_STAGES[stageIndexFromLeaves(leaves)],
     leaves,
     blossoms,
     isWilting: wilt > 0 && leaves < grown,
+    frogs,
   };
 }
 
@@ -169,7 +189,7 @@ export function useBonsai() {
   );
 
   const recordGrowth = useCallback(
-    (leaves: number) => {
+    (leaves: number, frogs: number) => {
       // Timestamp computed outside the updater (the updater must stay pure).
       const atISO = new Date().toISOString();
       setState((current) => {
@@ -177,7 +197,7 @@ export function useBonsai() {
         // timestamp clears real idle, and we also clear the simulated offset
         // so completing ANYTHING restores the tree's full color (no lingering
         // wilt from a prior idle stretch, real or dev-simulated).
-        const events = [...current.events, { at: atISO, leaves }];
+        const events = [...current.events, { at: atISO, leaves, frogs }];
         return {
           ...current,
           idleOffsetHours: 0,
