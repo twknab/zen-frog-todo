@@ -65,23 +65,13 @@ export default function Home() {
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
   const celebrate = useCelebration();
   const { recordSessionComplete } = useFocusStats();
-  const { events: bonsaiEvents, recordGrowth } = useBonsai();
+  const { events: bonsaiEvents, idleOffsetHours, recordGrowth, addIdleHours, resetBonsai } =
+    useBonsai();
   const [now, setNow] = useState<Date>(EPOCH);
   const [devMode, setDevMode] = usePersistentState("frog-garden:dev-mode-v1", false);
-  // Simulated idle is EPHEMERAL (in-memory) — never persisted. This guarantees
-  // the dev tree matches the real tree on load, and only diverges when you
-  // explicitly click "Simulate +1h idle" within the session.
-  const [simIdleHours, setSimIdleHours] = useState(0);
 
-  // Toggling Dev must never change the real tree — clear any simulated idle so
-  // enabling Dev always starts from the true state (wilt only when explicitly simulated).
-  function toggleDevMode(on: boolean) {
-    setSimIdleHours(0);
-    setDevMode(on);
-  }
-
-  // Dev-only: fake a completed focus session so the "session done" growth
-  // (3 leaves + chime) can be demoed without running a 25-minute timer.
+  // Dev tools edit the REAL, persisted tree state — so the tree looks identical
+  // whether Dev is on or off, and dev changes stick after toggling out.
   function devCompleteFocusSession() {
     recordSessionComplete();
     recordGrowth(SESSION_LEAVES);
@@ -101,14 +91,15 @@ export default function Home() {
     // a legitimate external-sync, not a cascading render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
-  }, [bonsaiEvents, devMode, simIdleHours]);
+  }, [bonsaiEvents, idleOffsetHours]);
 
   // The bonsai is derived from today's growth events minus active-window idle
-  // wilt (see src/lib/bonsai.ts). Dev simulated-idle only applies while Dev is on.
+  // wilt, plus any persisted simulated-idle offset (applied always — see
+  // src/lib/bonsai.ts). No dev-only overlay: the tree is the real state.
   const bonsai = deriveBonsai({
     events: bonsaiEvents,
     now,
-    extraIdleHours: devMode ? simIdleHours : 0,
+    idleOffsetHours,
   });
 
   return (
@@ -180,7 +171,7 @@ export default function Home() {
               <Switch
                 size="small"
                 checked={devMode}
-                onChange={(event) => toggleDevMode(event.target.checked)}
+                onChange={(event) => setDevMode(event.target.checked)}
               />
             }
             label="Dev"
@@ -333,7 +324,7 @@ export default function Home() {
                   size="small"
                   variant="outlined"
                   color="inherit"
-                  onClick={() => setSimIdleHours((h) => h + 1)}
+                  onClick={() => addIdleHours(1)}
                 >
                   Simulate +1h idle
                 </Button>
@@ -341,7 +332,7 @@ export default function Home() {
                   size="small"
                   variant="text"
                   color="inherit"
-                  onClick={() => setSimIdleHours(0)}
+                  onClick={resetBonsai}
                 >
                   Reset
                 </Button>

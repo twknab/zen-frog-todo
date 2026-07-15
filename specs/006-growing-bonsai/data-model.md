@@ -77,15 +77,18 @@ All calibration lives here so tuning is a one-file change.
 
 ## Developer tooling (not a shipped user feature)
 
-A header **Dev** toggle (persisted at `frog-garden:dev-mode-v1`) reveals test controls:
-- **Complete focus session** — calls `recordSessionComplete()` + `markActivity()` (+ a completion chime), demoing a finished session's growth (+3 leaves) without running a 25-minute timer.
-- **Simulate +3h idle** — increments an **in-memory** (ephemeral, non-persisted) hour counter, fed into `deriveBonsai` as `extraIdleHours`, so wilt can be exercised on demand regardless of the real clock/active window.
-- **Reset** — zeroes the simulated idle.
-- Dev also puts the **Focus timer in fast mode** (`fast` prop): a work "minute" lasts 1 second, so the whole finish flow (work → complete → break) is reachable in seconds for demos.
+A header **Dev** toggle (persisted at `frog-garden:dev-mode-v1`) reveals controls that edit the
+**real, persisted tree state** (`bonsai-v3`) — there is no separate "dev preview," so the tree
+looks identical whether Dev is on or off, and every dev change persists after toggling out and
+across reloads:
+- **Complete focus session** — `recordSessionComplete()` + `recordGrowth(3)` (+ chime): a real +3-leaf growth event, without running a 25-minute timer.
+- **Simulate +1h idle** — `addIdleHours(1)`: permanently adds one hour to the persisted `idleOffsetHours` (−3 leaves). Applied always (not dev-gated), so it's real state, not an overlay.
+- **Reset** — `resetBonsai()`: clears events + offset back to a fresh shrub.
+- Dev also puts the **Focus timer in fast mode** (`fast` prop): a work "minute" lasts 1 second, so the finish flow (work → complete → break) is reachable in seconds for demos.
 
-Simulated idle is **ephemeral and reset to 0 on any Dev toggle**, so enabling/disabling Dev never
-changes the real tree (fixes a bug where a stale, persisted simulated-idle value re-wilted the
-tree on load/enable — 2026-07-02). Development aid only; hidden unless the toggle is on.
+Because the offset is part of the persisted state and applied unconditionally, toggling Dev only
+shows/hides the buttons — it never changes the tree (this replaced an earlier ephemeral overlay
+whose value was discarded on toggle, causing the in-dev and out-of-dev trees to diverge).
 
 ### Timer robustness (2026-07-02)
 

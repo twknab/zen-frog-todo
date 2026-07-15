@@ -99,8 +99,12 @@ export type GrowthEvent = { at: string; leaves: number };
 export type BonsaiInput = {
   events: GrowthEvent[];
   now: Date;
-  /** Dev-only: extra idle hours to simulate wilt without waiting. */
-  extraIdleHours?: number;
+  /**
+   * Extra, already-elapsed idle hours added on top of real idle. Persisted
+   * (see BonsaiState.idleOffsetHours) and applied always — the dev "simulate
+   * idle" tool edits this real value; it is 0 in normal use.
+   */
+  idleOffsetHours?: number;
 };
 
 export type BonsaiResult = {
@@ -115,14 +119,14 @@ export type BonsaiResult = {
  * Growth is scoped to the local day, so each day starts as a shrub; wilt sheds
  * WILT_LEAVES_PER_HOUR per active-idle hour and clears when work resumes.
  */
-export function deriveBonsai({ events, now, extraIdleHours = 0 }: BonsaiInput): BonsaiResult {
+export function deriveBonsai({ events, now, idleOffsetHours = 0 }: BonsaiInput): BonsaiResult {
   const grownToday = Math.min(
     events.reduce((sum, e) => (isSameLocalDay(e.at, now) ? sum + e.leaves : sum), 0),
     MAX_LEAVES,
   );
 
   const lastAt = events.length > 0 ? events[events.length - 1].at : null;
-  const idleHours = activeIdleHours(lastAt, now) + Math.max(0, extraIdleHours);
+  const idleHours = activeIdleHours(lastAt, now) + Math.max(0, idleOffsetHours);
   const wilt = Math.floor(idleHours) * WILT_LEAVES_PER_HOUR;
 
   const leaves = Math.max(0, grownToday - wilt);
@@ -136,22 +140,28 @@ export function deriveBonsai({ events, now, extraIdleHours = 0 }: BonsaiInput): 
   };
 }
 
-// --- Persisted growth events (this feature's only stored state) ----------
+// --- Persisted tree state (this feature's only stored state) -------------
 
-type BonsaiState = { events: GrowthEvent[] };
+type BonsaiState = {
+  events: GrowthEvent[];
+  /** Extra elapsed idle hours (dev-simulated). Real, persisted state. */
+  idleOffsetHours: number;
+};
 
+const DEFAULT_STATE: BonsaiState = { events: [], idleOffsetHours: 0 };
 const PRUNE_AGE_MS = 2 * 24 * 60 * 60 * 1000; // keep ~2 days of events
 
 /**
- * The bonsai's own record of growth-affecting activity: a timestamped log of
- * leaves earned. Today's entries drive growth; the most recent entry anchors
- * the idle-wilt clock. Self-contained (doesn't read the task/focus stores), so
- * every consumer stays in sync via usePersistentState's same-key broadcast.
+ * The bonsai's own persisted state: a timestamped log of leaves earned plus a
+ * simulated-idle offset. Today's entries drive growth; the most recent entry
+ * (and the offset) anchor idle wilt. Self-contained, so every consumer stays
+ * in sync via usePersistentState's same-key broadcast. The dev tools mutate
+ * THIS real state (and it persists) rather than layering a throwaway preview.
  */
 export function useBonsai() {
   const [state, setState] = usePersistentState<BonsaiState>(
-    "frog-garden:bonsai-v2",
-    { events: [] },
+    "frog-garden:bonsai-v3",
+    DEFAULT_STATE,
   );
 
   const recordGrowth = useCallback(
@@ -160,6 +170,7 @@ export function useBonsai() {
       const atISO = new Date().toISOString();
       const cutoff = Date.now() - PRUNE_AGE_MS;
       setState((current) => ({
+        ...current,
         events: [
           ...current.events.filter((e) => new Date(e.at).getTime() >= cutoff),
           { at: atISO, leaves },
@@ -169,5 +180,27 @@ export function useBonsai() {
     [setState],
   );
 
-  return { events: state.events, recordGrowth };
+  // Dev: permanently add simulated idle hours to the real tree state.
+  const addIdleHours = useCallback(
+    (hours: number) => {
+      setState((current) => ({
+        ...current,
+        idleOffsetHours: Math.max(0, current.idleOffsetHours + hours),
+      }));
+    },
+    [setState],
+  );
+
+  // Dev: reset the real tree back to a fresh shrub.
+  const resetBonsai = useCallback(() => {
+    setState({ events: [], idleOffsetHours: 0 });
+  }, [setState]);
+
+  return {
+    events: state.events,
+    idleOffsetHours: state.idleOffsetHours,
+    recordGrowth,
+    addIdleHours,
+    resetBonsai,
+  };
 }
