@@ -172,6 +172,11 @@ export function useBonsai() {
       const cutoff = Date.now() - PRUNE_AGE_MS;
       setState((current) => ({
         ...current,
+        // Doing any work resets the whole idle clock: the new event's
+        // timestamp clears real idle, and we also clear the simulated offset
+        // so completing ANYTHING restores the tree's full color (no lingering
+        // wilt from a prior idle stretch, real or dev-simulated).
+        idleOffsetHours: 0,
         events: [
           ...current.events.filter((e) => new Date(e.at).getTime() >= cutoff),
           { at: atISO, leaves },
