@@ -358,7 +358,7 @@ export default function Home() {
               <TextField
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="One line on how today went — tomorrow's frog is already waiting."
+                placeholder="How did today go and what did we learn? Remember every day we have different capacity, needs and goals so don't beat yourself up if you didn't get everything done. Get some rest. Tomorrow is a new day to crush it."
                 multiline
                 minRows={2}
                 fullWidth
