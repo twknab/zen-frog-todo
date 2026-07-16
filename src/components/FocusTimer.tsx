@@ -19,6 +19,7 @@ const MIN_WORK_MINUTES = 5;
 const MAX_WORK_MINUTES = 60;
 const DEFAULT_WORK_MINUTES = 25;
 const BREAK_MINUTES = 5;
+const SECONDS_PER_MINUTE = 60;
 
 function formatClock(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -26,7 +27,7 @@ function formatClock(totalSeconds: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export default function FocusTimer({ fast = false }: { fast?: boolean }) {
+export default function FocusTimer() {
   const [workMinutes, setWorkMinutes] = useState(DEFAULT_WORK_MINUTES);
   const [phase, setPhase] = useState<Phase>("idle");
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -35,10 +36,6 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
   const endTimeRef = useRef<number | null>(null);
   const { completedSessions, recordSessionComplete } = useFocusStats();
   const { recordGrowth } = useBonsai();
-
-  // Dev "fast timer": a work "minute" lasts 1 second so the whole finish flow
-  // (work → complete → break → done) is reachable in a few seconds for demos.
-  const secondsPerMinute = fast ? 1 : 60;
 
   // Ambient wind follows the toggle alone — once on, it keeps playing across
   // phase changes (work → break → done) and only stops when toggled off.
@@ -90,7 +87,7 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
   }, [phase, secondsLeft, recordSessionComplete, recordGrowth]);
 
   const totalSeconds =
-    phase === "break" ? BREAK_MINUTES * secondsPerMinute : workMinutes * secondsPerMinute;
+    phase === "break" ? BREAK_MINUTES * SECONDS_PER_MINUTE : workMinutes * SECONDS_PER_MINUTE;
   const fraction =
     phase === "idle"
       ? workMinutes / MAX_WORK_MINUTES
@@ -99,14 +96,14 @@ export default function FocusTimer({ fast = false }: { fast?: boolean }) {
         : 0;
 
   function startFocus() {
-    const duration = workMinutes * secondsPerMinute;
+    const duration = workMinutes * SECONDS_PER_MINUTE;
     endTimeRef.current = Date.now() + duration * 1000;
     setSecondsLeft(duration);
     setPhase("working");
   }
 
   function acknowledgeAndStartBreak() {
-    const duration = BREAK_MINUTES * secondsPerMinute;
+    const duration = BREAK_MINUTES * SECONDS_PER_MINUTE;
     endTimeRef.current = Date.now() + duration * 1000;
     setSecondsLeft(duration);
     setPhase("break");

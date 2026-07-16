@@ -93,7 +93,12 @@ across reloads:
 - **Complete focus session** — `recordSessionComplete()` + `recordGrowth(3)` (+ chime): a real +3-leaf growth event, without running a 25-minute timer.
 - **Simulate +1h idle** — `addIdleHours(1)`: permanently adds one hour to the persisted `idleOffsetHours` (−3 leaves). Applied always (not dev-gated), so it's real state, not an overlay.
 - **Reset** — `resetBonsai()`: clears events + offset back to a fresh shrub.
-- Dev also puts the **Focus timer in fast mode** (`fast` prop): a work "minute" lasts 1 second, so the finish flow (work → complete → break) is reachable in seconds for demos.
+
+> **Amendment (2026-07-15):** Dev mode previously also put the Focus timer in a "fast mode"
+> (`fast` prop — a work "minute" lasted 1 second). This was removed: turning on Dev silently made
+> the real timer 60× faster, which read as a bug. The **Complete focus session** button above
+> already covers demoing the finish flow without waiting, so the timer now always runs in real
+> minutes. `FocusTimer` no longer takes a `fast` prop.
 
 Because the offset is part of the persisted state and applied unconditionally, toggling Dev only
 shows/hides the buttons — it never changes the tree (this replaced an earlier ephemeral overlay

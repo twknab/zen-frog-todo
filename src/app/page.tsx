@@ -312,7 +312,7 @@ export default function Home() {
               Focus
             </Typography>
           </Stack>
-          <FocusTimer fast={devMode} />
+          <FocusTimer />
         </BentoCard>
 
         {/* Bonsai lives in BOTH modes — front-and-center in Focus Mode. */}
