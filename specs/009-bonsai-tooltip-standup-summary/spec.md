@@ -14,6 +14,7 @@
 
 - Q: How should the summary handle a large number of tasks? → A: No cap (Option A) — the current unarchived batch is inherently bounded to roughly a day or a few days' worth of work (a daily log), not weeks or a lifetime board, since the app's existing "start a new day" action periodically resets it.
 - Q: How should completed bullets be ordered within the "done" list? → A: Chronological, oldest-first, in the order tasks were completed (Option A) — reads as a natural narrated account.
+- Q: What should the two group headings/labels say? → A: "What I did" / "What's next" (Option B) — first-person, standup-style phrasing.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -47,7 +48,7 @@ A user who completed several tasks (each with an optional note about what they d
 
 1. **Given** the user has completed at least one task today with a note, **When** they view the bottom of the page, **Then** a "Standup Summary" section lists that task, showing its title and note text as a bullet.
 2. **Given** the user completes a task that has no note (blank), **When** the Standup Summary section refreshes, **Then** the task still appears in the summary, represented by its title alone (never silently omitted).
-3. **Given** the user has one or more tasks still open (not completed), **When** they view the Standup Summary section, **Then** it briefly lists those open tasks separately from the completed ones (e.g., under a "still in progress" or "not yet done" grouping), so the summary reflects the full current batch of work rather than only what's finished.
+3. **Given** the user has one or more tasks still open (not completed), **When** they view the Standup Summary section, **Then** it briefly lists those open tasks under a "What's next" grouping, separate from the "What I did" grouping of completed tasks, so the summary reflects the full current batch of work rather than only what's finished.
 4. **Given** the user has completed no tasks and has no open tasks either, **When** they view the Standup Summary section, **Then** it shows calm, non-judgmental placeholder copy (no "you haven't done anything" or similar shaming language) rather than an empty gap or error.
 5. **Given** the Standup Summary section is currently visible with existing entries, **When** the user completes another task, **Then** the section updates to include the new entry (and drop that task from the open list) without requiring a page reload or manual refresh action.
 6. **Given** the user navigates the page via keyboard/screen reader, **When** they reach the Standup Summary section, **Then** its heading and list content are properly structured and announced (heading level, list semantics).
@@ -81,12 +82,12 @@ A user who completed several tasks (each with an optional note about what they d
 - **FR-010**: System MUST include every completed task in the summary, representing tasks with a blank/whitespace-only note by title alone rather than omitting them.
 - **FR-011**: System MUST regenerate the Standup Summary automatically whenever a task is newly marked complete (moving it from the open portion to the done portion), without requiring a manual "generate" or "refresh" action.
 - **FR-012**: When there are no completed tasks and no open tasks to summarize, the Standup Summary section MUST show calm, non-judgmental placeholder copy consistent with the app's tone (no shaming or guilt language).
-- **FR-013**: The Standup Summary section's heading and list structure MUST be properly labeled for assistive technology (correct heading level, list semantics), with the done and still-open portions distinguishable (e.g., via separate sub-headings or grouped lists).
+- **FR-013**: The Standup Summary section's heading and list structure MUST be properly labeled for assistive technology (correct heading level, list semantics), with the two portions presented under the sub-headings "What I did" (completed) and "What's next" (still open).
 - **FR-014**: The Standup Summary section MUST list every done and open item without an artificial cap or truncation; this is acceptable because the underlying data is naturally bounded to the current unarchived batch (a day or a few days' worth), not long-term history.
 
 ### Key Entities
 
-- **Completed Task Entry**: A record of a finished task used as the source material for a "done" standup bullet — includes the task's title, its free-text note (may be blank), and the timestamp it was completed. Scoped to today's not-yet-archived completions. Already exists in the app today; this feature reads from it rather than introducing a new record type.
+- **Completed Task Entry**: A record of a finished task used as the source material for a "done" standup bullet — includes the task's title, its free-text note (may be blank), and the timestamp it was completed. Scoped to the current, not-yet-archived batch of completions. Already exists in the app today; this feature reads from it rather than introducing a new record type.
 - **Open Task**: A task that has not yet been marked complete — used as the source material for a "still open" standup bullet, represented by title only. Already exists in the app's task list today.
 - **Standup Summary**: A derived, read-only view — not separately persisted user data — that groups and formats Completed Task Entries and Open Tasks into a bulleted recap of the current batch of work. Recomputed whenever its underlying task data changes.
 

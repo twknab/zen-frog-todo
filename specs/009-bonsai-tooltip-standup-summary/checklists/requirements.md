@@ -31,5 +31,6 @@
 
 ## Notes
 
-- FR-008's clarification is resolved: the Standup Summary scope is today's not-yet-archived batch of work — completed tasks (with notes) plus currently open tasks (briefly, title only) — not a history across archived days. Reflected in FR-008/FR-008a and the Assumptions section.
-- All checklist items pass. Ready for `/speckit-clarify` (recommended, to probe remaining UX/edge-case ambiguities) or `/speckit-plan`.
+- FR-008's clarification is resolved: the Standup Summary scope is the current, not-yet-archived batch of work — completed tasks (with notes) plus currently open tasks (briefly, title only) — not a history across archived days. Reflected in FR-008/FR-008a and the Assumptions section.
+- 2026-07-17 clarification session resolved three further UX/testability ambiguities (list sizing/cap, completion ordering, group heading copy) — see spec.md `## Clarifications`. All checklist items still pass.
+- Ready for `/speckit-plan`.
