@@ -13,6 +13,7 @@
 ### Session 2026-07-17
 
 - Q: How should the summary handle a large number of tasks? → A: No cap (Option A) — the current unarchived batch is inherently bounded to roughly a day or a few days' worth of work (a daily log), not weeks or a lifetime board, since the app's existing "start a new day" action periodically resets it.
+- Q: How should completed bullets be ordered within the "done" list? → A: Chronological, oldest-first, in the order tasks were completed (Option A) — reads as a natural narrated account.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -75,6 +76,7 @@ A user who completed several tasks (each with an optional note about what they d
 - **FR-007**: System MUST provide a "Standup Summary" section positioned at the bottom of the main page, below the existing Completed-tasks section.
 - **FR-008**: System MUST populate the Standup Summary's "done" portion from the current, not-yet-archived batch of completed tasks' titles and notes — everything completed since the last day-reset (typically a day or a few days' worth) — not from historical archived days. The summary represents the current batch of work in progress, not an exhaustive history.
 - **FR-008a**: System MUST populate the Standup Summary's "still open" portion from tasks that are not yet completed, listed briefly (title only — open tasks don't carry notes), so the summary conveys the full current picture (what's done and what's left) rather than completions alone.
+- **FR-008b**: The "done" portion MUST list completed tasks in chronological order by completion time, oldest first.
 - **FR-009**: System MUST generate the Standup Summary entirely on-device from existing local data, with no calls to an external AI/summarization service and no data leaving the device.
 - **FR-010**: System MUST include every completed task in the summary, representing tasks with a blank/whitespace-only note by title alone rather than omitting them.
 - **FR-011**: System MUST regenerate the Standup Summary automatically whenever a task is newly marked complete (moving it from the open portion to the done portion), without requiring a manual "generate" or "refresh" action.
