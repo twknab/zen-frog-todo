@@ -27,7 +27,7 @@ Both props are the same values `page.tsx` already holds from `useTasks()` — no
 
 3. **Empty state** — if both `completedLog` and the open-task filter are empty, render a single calm, non-shaming placeholder message instead of either heading (FR-012). Exact copy is an implementation detail for `/speckit-tasks`, but MUST NOT imply the user has failed to do anything (Principle I).
 
-4. **Structure** — the component's own section heading ("Standup Summary") is `h2` (matching the `variant="h6" component="h2"` convention every other section header uses); "What I did" / "What's next" are `h3` sub-headings when both are present. Each list uses real list markup (`<ul>`/`<li>` or MUI `List`/`ListItem`) so screen readers announce list length/position (FR-013).
+4. **Structure** — matching the `CompletedLog` precedent, the outer "Standup Summary" `h2` heading + icon (`Stack` + `Typography variant="h6" component="h2"`) is rendered in `page.tsx`, not inside `StandupSummary` itself. `StandupSummary` renders only its internal structure: "What I did" / "What's next" as `h3` sub-headings when both are present, each with real list markup (`<ul>`/`<li>` or MUI `List`/`ListItem`) so screen readers announce list length/position (FR-013).
 
 5. **No side effects** — `StandupSummary` reads props and renders; it does not call any setter, does not persist anything, and does not make any network/AI call (FR-009). It is a pure function of its props.
 
