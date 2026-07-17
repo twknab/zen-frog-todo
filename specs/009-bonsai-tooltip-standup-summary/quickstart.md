@@ -35,6 +35,7 @@ Both must be clean before manual verification (project convention — no automat
 5. Complete the remaining open task. **Expect**: the Standup Summary updates automatically (no reload, no manual refresh) — "What's next" no longer shows it, "What I did" gains it in the correct chronological (oldest-first) position.
 6. Toggle to Focus mode. **Expect**: the Standup Summary section hides/shows exactly like the "Completed" section does (same visibility convention).
 7. With a screen reader, navigate into the Standup Summary section. **Expect**: proper heading levels ("Standup Summary" as a section heading, "What I did"/"What's next" as sub-headings) and real list semantics (item count/position announced).
+8. Add and complete roughly 15-20 tasks (some with notes, some without), leaving a few open. **Expect**: every completed task appears under "What I did" and every open task appears under "What's next" — no truncation, no "+N more" indicator, no internal scrollbar cutting off items (FR-014).
 
 ## Scenario 3 — Standup Summary, empty states (Edge Cases)
 

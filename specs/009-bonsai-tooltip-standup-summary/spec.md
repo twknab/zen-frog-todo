@@ -89,7 +89,7 @@ A user who completed several tasks (each with an optional note about what they d
 
 - **Completed Task Entry**: A record of a finished task used as the source material for a "done" standup bullet — includes the task's title, its free-text note (may be blank), and the timestamp it was completed. Scoped to the current, not-yet-archived batch of completions. Already exists in the app today; this feature reads from it rather than introducing a new record type.
 - **Open Task**: A task that has not yet been marked complete — used as the source material for a "still open" standup bullet, represented by title only. Already exists in the app's task list today.
-- **Standup Summary**: A derived, read-only view — not separately persisted user data — that groups and formats Completed Task Entries and Open Tasks into a bulleted recap of the current batch of work. Recomputed whenever its underlying task data changes.
+- **Standup Summary**: A derived, read-only view — not separately persisted user data — that groups and formats Completed Task Entries and Open Tasks into a bulleted recap of the current batch of work. Recomputed whenever its underlying task data changes. Presented under the UI labels "What I did" (Completed Task Entries) and "What's next" (Open Tasks), per the clarification session.
 
 ## Success Criteria *(mandatory)*
 
@@ -97,7 +97,7 @@ A user who completed several tasks (each with an optional note about what they d
 
 - **SC-001**: 100% of the time, no static caption text is visible under the bonsai tree by default — the area is visually clear except for the tree itself.
 - **SC-002**: A user can reveal the bonsai's explanatory text via mouse, keyboard, or touch in under 2 seconds of interaction, with no more than one action (hover/focus/tap the icon).
-- **SC-003**: 100% of completed tasks with notes recorded on a given day appear in the Standup Summary without any manual step from the user.
+- **SC-003**: 100% of completed tasks in the current batch — regardless of whether they have a note — appear in the Standup Summary without any manual step from the user.
 - **SC-004**: A user can read a complete, ready-to-say-aloud standup recap directly from the Standup Summary section without needing to open or re-read individual tasks.
 - **SC-005**: The Standup Summary section updates to reflect a newly completed task within the same interaction that marks the task complete (no separate refresh needed).
 - **SC-006**: Both new UI affordances (bonsai info icon, Standup Summary section) are fully operable using keyboard-only navigation and are correctly announced by screen readers, verified with zero critical accessibility issues.
