@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- One [NEEDS CLARIFICATION] marker remains: FR-008, on whether the Standup Summary scope is "today only" or "today + a window of recently archived days." This is a scope-defining decision (data source + UI shape), not a detail with a safe default — routed to `/speckit-clarify` rather than guessed.
-- Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`.
+- FR-008's clarification is resolved: the Standup Summary scope is today's not-yet-archived batch of work — completed tasks (with notes) plus currently open tasks (briefly, title only) — not a history across archived days. Reflected in FR-008/FR-008a and the Assumptions section.
+- All checklist items pass. Ready for `/speckit-clarify` (recommended, to probe remaining UX/edge-case ambiguities) or `/speckit-plan`.
