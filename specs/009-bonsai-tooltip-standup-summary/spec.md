@@ -8,6 +8,12 @@
 
 **Input**: User description: "Two related additions to the Zen Frog Todo app: (1) move the descriptive caption under the bonsai tree into a tooltip triggered by an info icon next to the Bonsai heading, so it stops visually competing with the artwork; (2) add a 'Standup Summary' section at the bottom of the page that auto-generates a bulleted, plain-language recap of completed tasks (using their notes), regenerating automatically whenever a task is completed, built deterministically on-device with no external AI/network calls."
 
+## Clarifications
+
+### Session 2026-07-17
+
+- Q: How should the summary handle a large number of tasks? → A: No cap (Option A) — the current unarchived batch is inherently bounded to roughly a day or a few days' worth of work (a daily log), not weeks or a lifetime board, since the app's existing "start a new day" action periodically resets it.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Read the bonsai's meaning without it crowding the artwork (Priority: P1)
@@ -50,7 +56,7 @@ A user who completed several tasks (each with an optional note about what they d
 ### Edge Cases
 
 - What happens if a completed task's note contains only whitespace? It should be treated as blank (title-only bullet), not shown as an empty bullet.
-- What happens if a very large number of tasks have been completed or are open (e.g., dozens in one day)? The summary should remain readable (e.g., grouped, scrollable, or otherwise not overwhelming) rather than rendering an unbounded flat list that pushes the page layout out of proportion.
+- What happens if an unusually large number of tasks have been completed or are open? All items are still listed (no cap) — the data is expected to stay naturally small (a day or a few days' worth) because the existing "start a new day" action resets the batch periodically.
 - What happens when everything is done (no open tasks) but some tasks were completed? The summary should show the done portion normally and either omit the "still open" grouping or show it as empty/complete, without implying something is missing.
 - What happens if the user is in Focus mode, where other sections of the page are currently hidden? The Standup Summary section's visibility should follow the same convention as the other bottom-of-page sections (e.g., the existing Completed section) it sits alongside.
 - What happens to the bonsai tooltip if the info icon is activated repeatedly in quick succession (e.g., rapid taps on mobile)? It should simply toggle/re-show without stacking multiple tooltips or crashing.
@@ -67,14 +73,14 @@ A user who completed several tasks (each with an optional note about what they d
 - **FR-005**: The bonsai info icon MUST be operable via keyboard alone and MUST expose an accessible name/description so screen reader users can discover and read its content.
 - **FR-006**: Any entrance animation for the bonsai tooltip MUST respect the user's reduced-motion preference.
 - **FR-007**: System MUST provide a "Standup Summary" section positioned at the bottom of the main page, below the existing Completed-tasks section.
-- **FR-008**: System MUST populate the Standup Summary's "done" portion from today's completed tasks' titles and notes (the current, not-yet-archived batch of work) — not from historical archived days. The summary represents the current batch of work in progress, not an exhaustive history.
+- **FR-008**: System MUST populate the Standup Summary's "done" portion from the current, not-yet-archived batch of completed tasks' titles and notes — everything completed since the last day-reset (typically a day or a few days' worth) — not from historical archived days. The summary represents the current batch of work in progress, not an exhaustive history.
 - **FR-008a**: System MUST populate the Standup Summary's "still open" portion from tasks that are not yet completed, listed briefly (title only — open tasks don't carry notes), so the summary conveys the full current picture (what's done and what's left) rather than completions alone.
 - **FR-009**: System MUST generate the Standup Summary entirely on-device from existing local data, with no calls to an external AI/summarization service and no data leaving the device.
 - **FR-010**: System MUST include every completed task in the summary, representing tasks with a blank/whitespace-only note by title alone rather than omitting them.
 - **FR-011**: System MUST regenerate the Standup Summary automatically whenever a task is newly marked complete (moving it from the open portion to the done portion), without requiring a manual "generate" or "refresh" action.
 - **FR-012**: When there are no completed tasks and no open tasks to summarize, the Standup Summary section MUST show calm, non-judgmental placeholder copy consistent with the app's tone (no shaming or guilt language).
 - **FR-013**: The Standup Summary section's heading and list structure MUST be properly labeled for assistive technology (correct heading level, list semantics), with the done and still-open portions distinguishable (e.g., via separate sub-headings or grouped lists).
-- **FR-014**: The Standup Summary section MUST remain readable when a large number of tasks have been completed or are open, avoiding an unbounded flat list that degrades page usability.
+- **FR-014**: The Standup Summary section MUST list every done and open item without an artificial cap or truncation; this is acceptable because the underlying data is naturally bounded to the current unarchived batch (a day or a few days' worth), not long-term history.
 
 ### Key Entities
 
@@ -97,7 +103,7 @@ A user who completed several tasks (each with an optional note about what they d
 
 - The explanatory text shown in the bonsai tooltip is the same copy currently shown under the tree ("Grows as you finish tasks and focus sessions."); no new copywriting is required unless the user wants to revise it.
 - The Standup Summary is a derived/computed view of existing task and completed-task data; it does not require a new persistent data store of its own.
-- The Standup Summary reflects the current, not-yet-archived batch of work only (today's completions plus currently open tasks) — it is intentionally not an exhaustive history across archived days. Starting a new day (via the existing archive feature) naturally resets the summary along with the rest of the board.
+- The Standup Summary reflects the current, not-yet-archived batch of work only (completions since the last day-reset, plus currently open tasks) — it is intentionally not an exhaustive history across archived days, and typically spans a day or a few days rather than a strict single calendar day. Starting a new day (via the existing archive feature) naturally resets the summary along with the rest of the board.
 - "Standup Summary" is understood as an internal, personal recap tool (matching this app's local-first, single-player nature) — it is not shared, exported to a team tool, or sent anywhere; any future export/sharing capability is out of scope for this feature.
 - No AI/LLM-based summarization is in scope for this feature, per the project's local-first & private constitution principle; the summary is produced by deterministic formatting/grouping of existing task titles and notes.
 - The Standup Summary section follows the same show/hide behavior as the adjacent Completed section (e.g., hidden during Focus mode) rather than introducing new visibility rules.
