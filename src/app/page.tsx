@@ -1,9 +1,11 @@
 "use client";
 
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import ChecklistOutlinedIcon from "@mui/icons-material/ChecklistOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import SelfImprovementOutlinedIcon from "@mui/icons-material/SelfImprovementOutlined";
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
@@ -33,6 +35,7 @@ import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import NewDayAction from "@/components/NewDayAction";
 import SandCanvas from "@/components/SandCanvas";
+import StandupSummary from "@/components/StandupSummary";
 import TaskListCard from "@/components/TaskListCard";
 import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
@@ -56,6 +59,7 @@ export default function Home() {
   const { mode: colorMode, toggleColorMode } = useColorMode();
   const [mode, setMode] = useState<DashboardMode>("flow");
   const {
+    tasks,
     frogTask,
     otherTasks,
     completedLog,
@@ -322,6 +326,18 @@ export default function Home() {
             <Typography variant="h6" component="h2">
               Bonsai
             </Typography>
+            <Tooltip
+              title="Grows as you finish tasks and focus sessions."
+              slotProps={{ transition: { timeout: reduceMotion ? 0 : undefined } }}
+            >
+              <IconButton
+                size="small"
+                aria-label="About the bonsai"
+                sx={{ color: "text.secondary" }}
+              >
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Stack>
           <Stack sx={{ alignItems: "center", justifyContent: "center", flexGrow: 1 }}>
             <BonsaiTree
@@ -332,9 +348,6 @@ export default function Home() {
               frogs={bonsai.frogs}
               size={isFocus ? 260 : 240}
             />
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
-              Grows as you finish tasks and focus sessions.
-            </Typography>
             {devMode && (
               <Stack
                 direction="row"
@@ -413,6 +426,30 @@ export default function Home() {
                   </Typography>
                 </Stack>
                 <CompletedLog entries={completedLog} onUpdateNote={updateCompletedNote} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!isFocus && (
+          <motion.div
+            key="standup-summary"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
+              <CardContent sx={{ p: 0 }}>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                  <ChecklistOutlinedIcon color="secondary" />
+                  <Typography variant="h6" component="h2">
+                    Standup Summary
+                  </Typography>
+                </Stack>
+                <StandupSummary tasks={tasks} completedLog={completedLog} />
               </CardContent>
             </Card>
           </motion.div>

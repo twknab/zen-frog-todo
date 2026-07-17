@@ -16,7 +16,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm the baseline is clean before starting: run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root. No files are changed by this task — it's a checkpoint so any pre-existing failures aren't misattributed to this feature.
+- [X] T001 Confirm the baseline is clean before starting: run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root. No files are changed by this task — it's a checkpoint so any pre-existing failures aren't misattributed to this feature.
 
 ---
 
@@ -34,9 +34,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T002 [US1] In `src/app/page.tsx`, add an info `IconButton` (e.g. `InfoOutlined` from `@mui/icons-material`) wrapped in MUI `Tooltip` to the Bonsai section's header `Stack` (~lines 320-325, next to the existing `SpaOutlinedIcon` + "Bonsai" `Typography`), mirroring the `Tooltip`+`IconButton` pattern already used at `page.tsx:162`. The tooltip's `title` is "Grows as you finish tasks and focus sessions." The `IconButton` has an explicit `aria-label` (e.g. "About the bonsai") so its purpose is announced independent of the tooltip. **Unlike** the mirrored pattern at `page.tsx:162` (which does not handle motion preference), explicitly pass `transitionDuration={reduceMotion ? 0 : undefined}` to this `Tooltip`, reusing the `reduceMotion` value already computed via `useReducedMotion()` at `page.tsx:78` — required for FR-006; confirmed by inspection that the existing `page.tsx:162`/`page.tsx:257` Tooltips do NOT do this and must not be copied as-is in this respect.
-- [ ] T003 [US1] In `src/app/page.tsx`, remove the static caption `Typography` under `BonsaiTree` (currently reading "Grows as you finish tasks and focus sessions.", lines 335-337) now that its text lives in the tooltip added in T002.
-- [ ] T004 [US1] Manually verify User Story 1 against `quickstart.md`'s Scenario 1: mouse hover, keyboard focus + Escape dismissal, screen reader announcement, `prefers-reduced-motion` (no distracting entrance animation), and touch tap/dismiss-elsewhere, in the running dev server (`npm run dev`).
+- [X] T002 [US1] In `src/app/page.tsx`, add an info `IconButton` (e.g. `InfoOutlined` from `@mui/icons-material`) wrapped in MUI `Tooltip` to the Bonsai section's header `Stack` (~lines 320-325, next to the existing `SpaOutlinedIcon` + "Bonsai" `Typography`), mirroring the `Tooltip`+`IconButton` pattern already used at `page.tsx:162`. The tooltip's `title` is "Grows as you finish tasks and focus sessions." The `IconButton` has an explicit `aria-label` (e.g. "About the bonsai") so its purpose is announced independent of the tooltip. **Unlike** the mirrored pattern at `page.tsx:162` (which does not handle motion preference), explicitly pass `slotProps={{ transition: { timeout: reduceMotion ? 0 : undefined } }}` to this `Tooltip` (this MUI fork moved `transitionDuration` into the `slots`/`slotProps` pattern, with the Grow transition's duration prop named `timeout` — confirmed against the installed `@mui/material/Tooltip` and `Grow` type declarations), reusing the `reduceMotion` value already computed via `useReducedMotion()` at `page.tsx:78` — required for FR-006; confirmed by inspection that the existing `page.tsx:162`/`page.tsx:257` Tooltips do NOT do this and must not be copied as-is in this respect. [DONE — implemented in T002.]
+- [X] T003 [US1] In `src/app/page.tsx`, remove the static caption `Typography` under `BonsaiTree` (currently reading "Grows as you finish tasks and focus sessions.", lines 335-337) now that its text lives in the tooltip added in T002.
+- [X] T004 [US1] Manually verify User Story 1 against `quickstart.md`'s Scenario 1: mouse hover, keyboard focus + Escape dismissal, screen reader announcement, `prefers-reduced-motion` (no distracting entrance animation), and touch tap/dismiss-elsewhere, in the running dev server (`npm run dev`).
 
 **Checkpoint**: User Story 1 is fully functional and independently testable/shippable at this point.
 
@@ -50,12 +50,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T005 [US2] Create `src/components/StandupSummary.tsx` exporting a `StandupSummary` component with props `{ tasks: Task[]; completedLog: CompletedLogEntry[] }` (types imported from `@/lib/tasks`) and its two pure derivations, per `contracts/standup-summary-contract.md` and `data-model.md`:
+- [X] T005 [US2] Create `src/components/StandupSummary.tsx` exporting a `StandupSummary` component with props `{ tasks: Task[]; completedLog: CompletedLogEntry[] }` (types imported from `@/lib/tasks`) and its two pure derivations, per `contracts/standup-summary-contract.md` and `data-model.md`:
   - "done" items: `completedLog` sorted ascending by `completedAt` (oldest first); each item's `note` is `.trim()`-checked — blank/whitespace-only becomes `null` (title-only), never an empty note line, never omitted.
   - "open" items: `tasks.filter(t => !t.completed)`, preserving the array's existing order, title only.
-- [ ] T006 [US2] In `src/components/StandupSummary.tsx`, implement the render: "What I did" and "What's next" as `h3` sub-headings (each only rendered when its list is non-empty) with real list markup (`<ul>`/`<li>` or MUI `List`/`ListItem`) per FR-013; when both derivations are empty, render a single calm, non-shaming placeholder line instead (FR-012) — no "you haven't done anything" language, consistent with the empty-state copy already used in `CompletedLog.tsx`.
-- [ ] T007 [US2] In `src/app/page.tsx`, render `<StandupSummary tasks={tasks} completedLog={completedLog} />` as a sibling `Card` immediately after the existing "Completed" `Card` (~lines 398-420), inside its own `AnimatePresence`/`motion.div` using the identical fade pattern and `!isFocus` visibility condition, with its own header `Stack` (checklist-style icon, e.g. `ChecklistOutlined` — fall back to `AssignmentTurnedInOutlined` if unavailable — plus `Typography variant="h6" component="h2"` reading "Standup Summary"), matching every other section's established header pattern (per research.md Decision 5/6).
-- [ ] T008 [US2] Manually verify User Story 2 against `quickstart.md`'s Scenarios 2 and 3: populated summary (done + open lists, ordering, blank-note handling, auto-update on completion, Focus-mode visibility, screen-reader structure) and empty states (both empty, done-only, open-only), in the running dev server.
+- [X] T006 [US2] In `src/components/StandupSummary.tsx`, implement the render: "What I did" and "What's next" as `h3` sub-headings (each only rendered when its list is non-empty) with real list markup (`<ul>`/`<li>` or MUI `List`/`ListItem`) per FR-013; when both derivations are empty, render a single calm, non-shaming placeholder line instead (FR-012) — no "you haven't done anything" language, consistent with the empty-state copy already used in `CompletedLog.tsx`.
+- [X] T007 [US2] In `src/app/page.tsx`, render `<StandupSummary tasks={tasks} completedLog={completedLog} />` as a sibling `Card` immediately after the existing "Completed" `Card` (~lines 398-420), inside its own `AnimatePresence`/`motion.div` using the identical fade pattern and `!isFocus` visibility condition, with its own header `Stack` (checklist-style icon, e.g. `ChecklistOutlined` — fall back to `AssignmentTurnedInOutlined` if unavailable — plus `Typography variant="h6" component="h2"` reading "Standup Summary"), matching every other section's established header pattern (per research.md Decision 5/6).
+- [X] T008 [US2] Manually verify User Story 2 against `quickstart.md`'s Scenarios 2 and 3: populated summary (done + open lists, ordering, blank-note handling, auto-update on completion, Focus-mode visibility, screen-reader structure) and empty states (both empty, done-only, open-only), in the running dev server.
 
 **Checkpoint**: User Stories 1 AND 2 both work independently at this point.
 
@@ -63,9 +63,9 @@
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T009 Run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root across the full diff (both stories) and fix any reported issues.
-- [ ] T010 Check both new UI additions against the constitution's Calm Technology (I), Accessibility (IV), and Design System Discipline (V) principles per `AGENTS.md`'s requirement that any visual-design-touching change be checked before being marked done — confirm no stock/unstyled MUI look, WCAG AA contrast, and no shame/urgency copy anywhere (including the Standup Summary empty state).
-- [ ] T011 Run the full `quickstart.md` end-to-end (all three scenarios) once more in the browser preview as the final "Done" gate.
+- [X] T009 Run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root across the full diff (both stories) and fix any reported issues.
+- [X] T010 Check both new UI additions against the constitution's Calm Technology (I), Accessibility (IV), and Design System Discipline (V) principles per `AGENTS.md`'s requirement that any visual-design-touching change be checked before being marked done — confirm no stock/unstyled MUI look, WCAG AA contrast, and no shame/urgency copy anywhere (including the Standup Summary empty state).
+- [X] T011 Run the full `quickstart.md` end-to-end (all three scenarios) once more in the browser preview as the final "Done" gate.
 
 ---
 
