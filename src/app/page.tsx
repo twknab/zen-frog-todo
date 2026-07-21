@@ -39,6 +39,7 @@ import StandupSummary from "@/components/StandupSummary";
 import TaskListCard from "@/components/TaskListCard";
 import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
+import { useDailyRollover } from "@/lib/dayArchive";
 import { useFocusStats } from "@/lib/focusStats";
 import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
@@ -80,6 +81,11 @@ export default function Home() {
   const { resetSand } = useSandReset();
   const [sandSpin, setSandSpin] = useState(0);
   const reduceMotion = useReducedMotion();
+
+  // Auto-archive + reset the board when a new calendar day begins (not only when
+  // "Start a new day" is pressed). Called after the domain hooks above so its
+  // reset broadcast lands after their hydration — see useDailyRollover.
+  useDailyRollover();
 
   // Dev tools edit the REAL, persisted tree state — so the tree looks identical
   // whether Dev is on or off, and dev changes stick after toggling out.
