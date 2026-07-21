@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
-import { deriveBonsai, useBonsai } from "./bonsai";
+import { useCallback, useEffect, useRef } from "react";
+import { deriveBonsai, useBonsai, type GrowthEvent } from "./bonsai";
 import { useFocusStats } from "./focusStats";
 import { useSandReset } from "./sand";
 import { usePersistentState } from "./storage";
@@ -22,7 +22,39 @@ export const ARCHIVE_KEY = "frog-garden:day-archive-v1";
 export const MAX_ARCHIVED_DAYS = 365; // retention bound; prune oldest beyond this
 export const SCHEMA_VERSION = 1 as const; // stamped on every export document
 const REFLECTION_KEY = "frog-garden:reflection-v1";
+
+// The local calendar date (YYYY-MM-DD) the board was last active on — drives the
+// automatic new-day rollover (see useDailyRollover below).
+export const LAST_ACTIVE_DAY_KEY = "frog-garden:last-active-day-v1";
+
+// Live-state keys owned by their domain hooks. The auto-rollover reads them
+// directly (raw, non-reactive) to build an accurate previous-day snapshot, and
+// resets them through their reactive setters. Kept in sync with the source
+// modules: tasks.ts, focusStats.ts, bonsai.ts.
+const TASKS_KEY = "frog-garden:tasks-v1";
+const COMPLETED_LOG_KEY = "frog-garden:completed-log-v1";
+const FOCUS_STATS_KEY = "frog-garden:focus-stats-v1";
+const BONSAI_KEY = "frog-garden:bonsai-v3";
 // -------------------------------------------------------------------------
+
+// Flat shapes of the live stores, mirrored here so the rollover can read them
+// without importing each hook's internal state type.
+type TasksSnapshot = { tasks: Task[]; frogTaskId: string | null };
+type FocusSnapshot = { completedSessions: number };
+type BonsaiSnapshot = { events: GrowthEvent[]; idleOffsetHours: number };
+
+/** Total, non-throwing JSON read from localStorage. Returns `fallback` on any
+ * absent/malformed/inaccessible value (mirrors readArchive's tolerance). */
+function readJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 export type ArchivedTask = {
   title: string;
@@ -267,4 +299,160 @@ export function useNewDay() {
   ]);
 
   return { archive, startNewDay };
+}
+
+// --- Automatic new-day rollover -------------------------------------------
+
+/** The stored live state a rollover reads, and the reset outcome it produces. */
+export type RolloverInput = {
+  now: Date;
+  tasksState: TasksSnapshot;
+  completedLog: CompletedLogEntry[];
+  reflection: string;
+  focus: FocusSnapshot;
+  bonsai: BonsaiSnapshot;
+};
+
+export type RolloverPlan = {
+  /** The previous day to archive, or null when the empty-day guard skips it. */
+  snapshot: ArchivedDay | null;
+  /** Unfinished tasks that carry over into the fresh day (frog is cleared). */
+  keptTasks: Task[];
+};
+
+/**
+ * Pure core of the daily rollover: given the previous day's stored live state
+ * and the current clock, produce the archive snapshot (or null when the day held
+ * nothing — the same FR-007 empty-day guard as the manual ritual) and the tasks
+ * to keep. Deterministic apart from the snapshot's random id. Callers decide
+ * WHETHER to roll over (a date change); this only computes WHAT the rollover does.
+ */
+export function buildRolloverPlan({
+  now,
+  tasksState,
+  completedLog,
+  reflection,
+  focus,
+  bonsai,
+}: RolloverInput): RolloverPlan {
+  const derived = deriveBonsai({
+    events: bonsai.events ?? [],
+    now,
+    idleOffsetHours: bonsai.idleOffsetHours ?? 0,
+  });
+  const completedTasks: ArchivedTask[] = (completedLog ?? []).map((e) => ({
+    title: e.taskTitle,
+    note: e.note,
+    completedAt: e.completedAt,
+  }));
+
+  const hasContent =
+    completedTasks.length > 0 ||
+    (reflection ?? "").trim().length > 0 ||
+    (focus?.completedSessions ?? 0) > 0 ||
+    derived.leaves > 0;
+
+  const snapshot: ArchivedDay | null = hasContent
+    ? {
+        id: makeId("day"),
+        closedAt: now.toISOString(),
+        date: localDateString(now),
+        completedTasks,
+        reflection: reflection ?? "",
+        focusSessions: focus?.completedSessions ?? 0,
+        bonsai: { leaves: derived.leaves, stage: derived.stage },
+      }
+    : null;
+
+  return { snapshot, keptTasks: (tasksState.tasks ?? []).filter((t) => !t.completed) };
+}
+
+/**
+ * On app load, if the local calendar day has changed since the board was last
+ * used, automatically do what "Start a new day" does: archive the previous day
+ * (skipping a truly empty one) and reset the live board — so the Standup Summary,
+ * reflection ("standup") box, tasks, bonsai and focus count all start fresh on a
+ * genuinely new day, not just when the button is pressed. Unfinished tasks carry
+ * over, exactly like the manual ritual.
+ *
+ * Why it reads raw localStorage instead of reusing `startNewDay()`: the domain
+ * stores hydrate from localStorage in a mount effect (see usePersistentState),
+ * so on the first render their reactive values are still defaults. Building the
+ * previous-day snapshot from a direct, non-reactive read avoids that hydration
+ * race (it never archives an empty default over real data), while the resets go
+ * through each key's reactive setter so the same-key broadcast updates the UI.
+ *
+ * MUST be called AFTER the page's domain hooks (useTasks/useBonsai/…) so this
+ * hook's reset broadcast lands after their hydration, not before it. Runs once
+ * per load; a same-day load is a no-op; a first-ever load only records today.
+ */
+export function useDailyRollover(): void {
+  const [, setArchive] = usePersistentState<ArchivedDay[]>(ARCHIVE_KEY, []);
+  const [, setTasks] = usePersistentState<TasksSnapshot>(TASKS_KEY, {
+    tasks: [],
+    frogTaskId: null,
+  });
+  const [, setCompletedLog] = usePersistentState<CompletedLogEntry[]>(COMPLETED_LOG_KEY, []);
+  const [, setReflection] = usePersistentState(REFLECTION_KEY, "");
+  const [, setFocus] = usePersistentState<FocusSnapshot>(FOCUS_STATS_KEY, {
+    completedSessions: 0,
+  });
+  const [, setBonsai] = usePersistentState<BonsaiSnapshot>(BONSAI_KEY, {
+    events: [],
+    idleOffsetHours: 0,
+  });
+  const [, setLastActiveDay] = usePersistentState<string | null>(LAST_ACTIVE_DAY_KEY, null);
+  const ranRef = useRef(false);
+
+  useEffect(() => {
+    // One-shot per load, after the stores above (and the page's) have hydrated.
+    if (ranRef.current) return;
+    ranRef.current = true;
+
+    const now = new Date();
+    const today = localDateString(now);
+    const lastActive = readJson<string | null>(LAST_ACTIVE_DAY_KEY, null);
+
+    if (lastActive === today) return; // same day — nothing to do
+    if (lastActive === null) {
+      // First-ever load (or storage cleared): remember today, don't reset.
+      setLastActiveDay(today);
+      return;
+    }
+
+    // A new calendar day. Read the previous day's live state straight from
+    // storage so the snapshot reflects real data regardless of hydration timing.
+    const { snapshot, keptTasks } = buildRolloverPlan({
+      now,
+      tasksState: readJson<TasksSnapshot>(TASKS_KEY, { tasks: [], frogTaskId: null }),
+      completedLog: readJson<CompletedLogEntry[]>(COMPLETED_LOG_KEY, []),
+      reflection: readJson<string>(REFLECTION_KEY, ""),
+      focus: readJson<FocusSnapshot>(FOCUS_STATS_KEY, { completedSessions: 0 }),
+      bonsai: readJson<BonsaiSnapshot>(BONSAI_KEY, { events: [], idleOffsetHours: 0 }),
+    });
+
+    if (snapshot) {
+      // Read the archive raw too, so we prepend onto the real list rather than a
+      // possibly-not-yet-hydrated reactive value.
+      setArchive(prependAndPrune(readArchive(), snapshot));
+    }
+
+    // Reset the live board (explicit values — no stale-state functional updates):
+    // keep unfinished tasks, clear the frog, drop the completed-log/reflection,
+    // and reset the bonsai + focus count for the fresh day.
+    setTasks({ tasks: keptTasks, frogTaskId: null });
+    setCompletedLog([]);
+    setReflection("");
+    setFocus({ completedSessions: 0 });
+    setBonsai({ events: [], idleOffsetHours: 0 });
+    setLastActiveDay(today);
+  }, [
+    setArchive,
+    setTasks,
+    setCompletedLog,
+    setReflection,
+    setFocus,
+    setBonsai,
+    setLastActiveDay,
+  ]);
 }
