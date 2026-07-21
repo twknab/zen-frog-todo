@@ -27,7 +27,7 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Purpose**: Confirm groundwork; no new dependencies are introduced.
 
-- [ ] T001 Confirm no new dependencies are needed (MUI `Collapse`/`Dialog`/`Card`/`IconButton`, Framer Motion, and `BonsaiTree` already exist) and skim the relevant App Router client-component guidance under `node_modules/next/dist/docs/` before writing components (per `AGENTS.md`).
+- [X] T001 Confirm no new dependencies are needed (MUI `Collapse`/`Dialog`/`Card`/`IconButton`, Framer Motion, and `BonsaiTree` already exist) and skim the relevant App Router client-component guidance under `node_modules/next/dist/docs/` before writing components (per `AGENTS.md`).
 
 ---
 
@@ -37,7 +37,7 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **⚠️ CRITICAL**: Complete before user-story work begins.
 
-- [ ] T002 Add and export `blossomCountForLeaves(leaves: number): number` in `src/lib/bonsai.ts` (formula `leaves >= 15 ? Math.min(6, leaves - 14) : 0`) and refactor `deriveBonsai` to use it — no behavior change (Decision 2 / data-model.md).
+- [X] T002 Add and export `blossomCountForLeaves(leaves: number): number` in `src/lib/bonsai.ts` (formula `leaves >= 15 ? Math.min(6, leaves - 14) : 0`) and refactor `deriveBonsai` to use it — no behavior change (Decision 2 / data-model.md).
 
 **Checkpoint**: Shared helper available; user stories can begin.
 
@@ -49,11 +49,11 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Independent Test**: With ≥2 archived days, the Grove shows one dated bonsai scene per day, newest-first, visually differentiated, scrolling smoothly (quickstart Scenarios 1–2, minus the toggle).
 
-- [ ] T003 [US1] Create `src/components/Grove.tsx`: a bottom-section themed card titled "The Grove" containing a horizontal, newest-first scrollable ribbon that reads `useArchive()` and renders one `BonsaiTree` per day (small `size`, `stage`+`leaves` from `day.bonsai`, `blossoms` via `blossomCountForLeaves`, `isWilting={false}`), each with a date caption from `archiveEntryLabel(day, sameDateCount)` (compute same-date counts as `ExportMenu` does).
-- [ ] T004 [US1] Add calm, non-judgmental empty-state copy in `src/components/Grove.tsx` when `useArchive()` is empty (no error, no shame) (FR-006).
-- [ ] T005 [US1] Add accessibility semantics in `src/components/Grove.tsx`: ribbon `role="list"`, each scene `role="listitem"` wrapping a button whose accessible name is `"<date> — <stage description>"` (via `bonsaiStageLabel`), with the inner SVG `aria-hidden` (FR-013).
-- [ ] T006 [US1] Mount `<Grove />` in `src/app/page.tsx` after the Standup Summary section, gated by `!isFocus` using the existing `AnimatePresence` secondary-section pattern (FR-012).
-- [ ] T007 [US1] Theme + reduced-motion + contrast pass for the ribbon in `src/components/Grove.tsx`: calm scrollbar styling, disable smooth-scroll when `useReducedMotion()` is true, verify WCAG AA in light + dark (FR-014, FR-015).
+- [X] T003 [US1] Create `src/components/Grove.tsx`: a bottom-section themed card titled "The Grove" containing a horizontal, newest-first scrollable ribbon that reads `useArchive()` and renders one `BonsaiTree` per day (small `size`, `stage`+`leaves` from `day.bonsai`, `blossoms` via `blossomCountForLeaves`, `isWilting={false}`), each with a date caption from `archiveEntryLabel(day, sameDateCount)` (compute same-date counts as `ExportMenu` does).
+- [X] T004 [US1] Add calm, non-judgmental empty-state copy in `src/components/Grove.tsx` when `useArchive()` is empty (no error, no shame) (FR-006).
+- [X] T005 [US1] Add accessibility semantics in `src/components/Grove.tsx`: ribbon `role="list"`, each scene `role="listitem"` wrapping a button whose accessible name is `"<date> — <stage description>"` (via `bonsaiStageLabel`), with the inner SVG `aria-hidden` (FR-013).
+- [X] T006 [US1] Mount `<Grove />` in `src/app/page.tsx` after the Standup Summary section, gated by `!isFocus` using the existing `AnimatePresence` secondary-section pattern (FR-012).
+- [X] T007 [US1] Theme + reduced-motion + contrast pass for the ribbon in `src/components/Grove.tsx`: calm scrollbar styling, disable smooth-scroll when `useReducedMotion()` is true, verify WCAG AA in light + dark (FR-014, FR-015).
 
 **Checkpoint**: History is visible and scrollable (always-expanded); MVP demoable.
 
@@ -65,9 +65,9 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Independent Test**: Toggle hides/shows the ribbon; the choice survives reload; default is collapsed on first load (quickstart Scenarios 1, 4).
 
-- [ ] T008 [P] [US2] Add `useGroveVisibility()` in `src/lib/grove.ts` — `usePersistentState<boolean>("frog-garden:grove-visible-v1", false)` returning `[visible, setVisible]` (mirrors `src/lib/sand.ts` pattern) (data-model.md).
-- [ ] T009 [US2] In `src/components/Grove.tsx`, wrap the ribbon in MUI `Collapse` controlled by `useGroveVisibility()`, and add a header toggle button with `aria-expanded` and a state-reflecting label ("Show the Grove" / "Hide the Grove"); set `Collapse` `timeout={0}` when `useReducedMotion()` is true (FR-008, FR-014).
-- [ ] T010 [US2] In `src/components/Grove.tsx`, ensure the hidden state frees its space (section reflows to header-only, no gap), defaults to collapsed on first load, and restores the persisted state on reload (FR-009, FR-010, FR-011).
+- [X] T008 [P] [US2] Add `useGroveVisibility()` in `src/lib/grove.ts` — `usePersistentState<boolean>("frog-garden:grove-visible-v1", false)` returning `[visible, setVisible]` (mirrors `src/lib/sand.ts` pattern) (data-model.md).
+- [X] T009 [US2] In `src/components/Grove.tsx`, wrap the ribbon in MUI `Collapse` controlled by `useGroveVisibility()`, and add a header toggle button with `aria-expanded` and a state-reflecting label ("Show the Grove" / "Hide the Grove"); set `Collapse` `timeout={0}` when `useReducedMotion()` is true (FR-008, FR-014).
+- [X] T010 [US2] In `src/components/Grove.tsx`, ensure the hidden state frees its space (section reflows to header-only, no gap), defaults to collapsed on first load, and restores the persisted state on reload (FR-009, FR-010, FR-011).
 
 **Checkpoint**: US1 + US2 both work; Grove is quiet by default and revealable.
 
@@ -79,8 +79,8 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Independent Test**: Selecting a day shows its date, reflection (omitted when blank), and completed tasks; dismiss returns focus and preserves scroll (quickstart Scenario 3).
 
-- [ ] T011 [P] [US3] Create `src/components/GroveDayDialog.tsx`: a read-only, re-themed MUI `Dialog` with props `{ day: ArchivedDay | null; sameDateCount: number; onClose }`, showing `archiveEntryLabel(day, sameDateCount)` as title, the reflection only when non-empty, and the day's `completedTasks` (title + note when present) with a calm neutral line when there are none; `transitionDuration={0}` under reduced motion (FR-017).
-- [ ] T012 [US3] In `src/components/Grove.tsx`, track a `selectedDay` state and open `GroveDayDialog` when a scene is activated; keep the ribbon mounted so horizontal scroll position is preserved, and let MUI `Dialog` return focus to the invoking scene button on close (FR-017).
+- [X] T011 [P] [US3] Create `src/components/GroveDayDialog.tsx`: a read-only, re-themed MUI `Dialog` with props `{ day: ArchivedDay | null; sameDateCount: number; onClose }`, showing `archiveEntryLabel(day, sameDateCount)` as title, the reflection only when non-empty, and the day's `completedTasks` (title + note when present) with a calm neutral line when there are none; `transitionDuration={0}` under reduced motion (FR-017).
+- [X] T012 [US3] In `src/components/Grove.tsx`, track a `selectedDay` state and open `GroveDayDialog` when a scene is activated; keep the ribbon mounted so horizontal scroll position is preserved, and let MUI `Dialog` return focus to the invoking scene button on close (FR-017).
 
 **Checkpoint**: All three stories independently functional.
 
@@ -90,7 +90,7 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 - [ ] T013 [P] Run `quickstart.md` Scenarios 1–8 in the browser (light + dark, reduced motion, keyboard + screen-reader passes) and fix any gaps.
 - [ ] T014 [P] Verify no network requests occur for any Grove interaction (DevTools Network tab) (FR-005, SC).
-- [ ] T015 Ensure `npx tsc --noEmit` and `npm run lint` are clean; resolve any issues.
+- [X] T015 Ensure `npx tsc --noEmit` and `npm run lint` are clean; resolve any issues.
 
 ---
 
