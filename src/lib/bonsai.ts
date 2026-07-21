@@ -70,6 +70,15 @@ export function bonsaiStageLabel(stage: BonsaiStage): string {
 }
 
 /**
+ * Blossoms shown for a given leaf count — a lush tree flowers as it fills in.
+ * Shared by the live tree (`deriveBonsai`) and the archived-day scenes in The
+ * Grove (specs/010-grove-history) so both flower identically for the same leaves.
+ */
+export function blossomCountForLeaves(leaves: number): number {
+  return leaves >= 15 ? Math.min(6, leaves - 14) : 0;
+}
+
+/**
  * Sum of clock-hours between `from` and `to` that fall inside the daily
  * [ACTIVE_START, ACTIVE_END] local window. Pure; never negative; robust to
  * multi-day gaps and clock skew (a nonsensical range yields 0). Overnight and
@@ -141,7 +150,7 @@ export function deriveBonsai({ events, now, idleOffsetHours = 0 }: BonsaiInput):
   const wilt = Math.floor(idleHours) * WILT_LEAVES_PER_HOUR;
 
   const leaves = Math.max(0, grown - wilt);
-  const blossoms = leaves >= 15 ? Math.min(6, leaves - 14) : 0;
+  const blossoms = blossomCountForLeaves(leaves);
 
   // Frogs accumulate from the same events (frog weight per event) but never
   // wilt — they mark work actually done this cycle. Floored at the baseline,
