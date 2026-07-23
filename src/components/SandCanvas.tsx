@@ -3,11 +3,16 @@
 import Box from "@mui/material/Box";
 import { useEffect, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { useSandReset } from "@/lib/sand";
+import {
+  captureSandDrawingFromStrokes,
+  registerSandCanvasHandlers,
+  useSandReset,
+  type SandStroke,
+} from "@/lib/sand";
 import { playRake } from "@/lib/sound";
 
 type Point = { x: number; y: number };
-type Stroke = { points: Point[]; color: string };
+type Stroke = SandStroke;
 
 // Muted, nature-derived tones — matches the zen theme palette (see src/theme/theme.ts).
 const ZEN_COLORS = ["#6B8F71", "#B98C5B", "#7A93A6", "#C79A4B", "#B1554A"];
@@ -54,9 +59,31 @@ export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) 
   const dragRectRef = useRef<DOMRect | null>(null);
   const { sandResetToken } = useSandReset();
 
-  // Clear the raked sand whenever the shared reset token bumps — from the mini
-  // reset button or from "start a new day". (On mount the canvas is already
-  // empty, so the initial run is a harmless no-op.)
+  // Register sync peek/wipe so resetSand / new-day archive can capture without
+  // racing a useEffect (specs/011 analysis C1).
+  useEffect(() => {
+    function wipeOnly() {
+      strokesRef.current = [];
+      currentRef.current = null;
+      const ctx = canvasRef.current?.getContext("2d");
+      if (ctx) ctx.clearRect(0, 0, sizeRef.current.width, sizeRef.current.height);
+    }
+
+    function peekCapture() {
+      // Include an in-progress stroke so reset mid-drag still keeps a keepsake.
+      const strokes = [...strokesRef.current];
+      if (currentRef.current) strokes.push(currentRef.current);
+      if (strokes.length === 0) return null;
+      const { width, height } = sizeRef.current;
+      return captureSandDrawingFromStrokes(strokes, width, height);
+    }
+
+    registerSandCanvasHandlers({ peekCapture, wipeOnly });
+    return () => registerSandCanvasHandlers(null);
+  }, []);
+
+  // Fallback wipe when the shared reset token bumps (resetSand already wipes
+  // sync; this covers any token-only bump and is a harmless no-op if empty).
   useEffect(() => {
     strokesRef.current = [];
     currentRef.current = null;

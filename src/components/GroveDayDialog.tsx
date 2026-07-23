@@ -10,9 +10,13 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
+import { useMemo, useState } from "react";
 import MarkdownPreview from "@/components/MarkdownPreview";
+import SandDrawingGallery from "@/components/SandDrawingGallery";
+import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
 import { archiveEntryLabel, type ArchivedDay } from "@/lib/dayArchive";
 import { bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
+import { drawingsFromArchivedDay } from "@/lib/sand";
 
 type GroveDayDialogProps = {
   /** The selected day; the dialog is open while this is non-null. */
@@ -24,74 +28,111 @@ type GroveDayDialogProps = {
 
 /**
  * A calm, read-only recap of one archived day (specs/010-grove-history, US3;
- * note rendering upgraded in specs/011-markdown-notepad): its date, the day's
- * note as sanitized markdown (only when written), and the tasks completed that
- * day. No edit or delete affordances — this is a keepsake, not a workspace.
- * MUI Dialog manages focus (traps on open, returns to the invoking scene on
- * close); motion collapses to instant under prefers-reduced-motion.
+ * reflection preview via specs/011-markdown-notepad): its date, the reflection
+ * as sanitized markdown when written, tasks completed that day, and sand
+ * drawings (011) as a bottom gallery. MUI Dialog manages focus; motion collapses
+ * under prefers-reduced-motion.
  */
 export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDayDialogProps) {
   const reduce = useReducedMotion();
+  const [sandIndex, setSandIndex] = useState<number | null>(null);
 
-  // Keep the last non-null day mounted through the close transition so the
-  // content doesn't blank out as the dialog animates away.
   const open = day !== null;
+  const label = day ? archiveEntryLabel(day, sameDateCount) : "";
+
+  const sandItems = useMemo(() => {
+    if (!day) return [];
+    return drawingsFromArchivedDay(day).map((d, i) => ({
+      id: d.id,
+      src: d.src,
+      drawing: d.drawing,
+      alt: `Sand drawing ${i + 1} for ${label}`,
+    }));
+  }, [day, label]);
+
+  const hasSand = sandItems.length > 0;
+  const hasReflection = Boolean(day && day.reflection.trim() !== "");
+  const hasTasks = Boolean(day && day.completedTasks.length > 0);
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      transitionDuration={reduce ? 0 : undefined}
-      aria-labelledby="grove-day-title"
-    >
-      {day && (
-        <>
-          <DialogTitle id="grove-day-title" sx={{ pb: 0.5 }}>
-            {archiveEntryLabel(day, sameDateCount)}
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {bonsaiStageLabel(day.bonsai.stage as BonsaiStage)}
-            </Typography>
-          </DialogTitle>
-          <DialogContent>
-            <Stack spacing={2.5} sx={{ mt: 1 }}>
-              {day.reflection.trim() !== "" && (
+    <>
+      <Dialog
+        open={open}
+        onClose={() => {
+          setSandIndex(null);
+          onClose();
+        }}
+        fullWidth
+        maxWidth="xs"
+        transitionDuration={reduce ? 0 : undefined}
+        aria-labelledby="grove-day-title"
+      >
+        {day && (
+          <>
+            <DialogTitle id="grove-day-title" sx={{ pb: 0.5 }}>
+              {label}
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {bonsaiStageLabel(day.bonsai.stage as BonsaiStage)}
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <Stack spacing={2.5} sx={{ mt: 1 }}>
+                {hasReflection && (
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle2" component="h3" color="text.secondary">
+                      Reflection
+                    </Typography>
+                    <MarkdownPreview markdown={day.reflection} />
+                  </Stack>
+                )}
+
+                {hasReflection && hasTasks && <Divider flexItem />}
+
                 <Stack spacing={0.5}>
                   <Typography variant="subtitle2" component="h3" color="text.secondary">
-                    Note
+                    What was done
                   </Typography>
-                  <MarkdownPreview markdown={day.reflection} />
+                  {hasTasks ? (
+                    <List dense disablePadding>
+                      {day.completedTasks.map((task, i) => (
+                        <ListItem key={`${task.completedAt}-${i}`} disableGutters disablePadding sx={{ py: 0.5 }}>
+                          <ListItemText
+                            primary={task.title}
+                            secondary={task.note.trim() !== "" ? task.note.trim() : undefined}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      A quiet day — nothing was recorded here, and that&apos;s perfectly fine.
+                    </Typography>
+                  )}
                 </Stack>
-              )}
 
-              {day.reflection.trim() !== "" && day.completedTasks.length > 0 && <Divider flexItem />}
-
-              <Stack spacing={0.5}>
-                <Typography variant="subtitle2" component="h3" color="text.secondary">
-                  What was done
-                </Typography>
-                {day.completedTasks.length > 0 ? (
-                  <List dense disablePadding>
-                    {day.completedTasks.map((task, i) => (
-                      <ListItem key={`${task.completedAt}-${i}`} disableGutters disablePadding sx={{ py: 0.5 }}>
-                        <ListItemText
-                          primary={task.title}
-                          secondary={task.note.trim() !== "" ? task.note.trim() : undefined}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    A quiet day — nothing was recorded here, and that&apos;s perfectly fine.
-                  </Typography>
+                {hasSand && (
+                  <>
+                    <Divider flexItem />
+                    <SandDrawingGallery
+                      items={sandItems.map(({ id, src, alt }) => ({ id, src, alt }))}
+                      heading="Sand"
+                      onSelect={(i) => setSandIndex(i)}
+                    />
+                  </>
                 )}
               </Stack>
-            </Stack>
-          </DialogContent>
-        </>
-      )}
-    </Dialog>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+
+      <SandSnapshotLightbox
+        items={sandItems}
+        index={sandIndex}
+        label={`Sand drawing for ${label}`}
+        onClose={() => setSandIndex(null)}
+        onIndexChange={setSandIndex}
+      />
+    </>
   );
 }
