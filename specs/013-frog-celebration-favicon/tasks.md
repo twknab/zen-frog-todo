@@ -16,7 +16,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm the baseline is clean before starting: run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root. No files are changed by this task — it's a checkpoint so any pre-existing failures aren't misattributed to this feature.
+- [X] T001 Confirm the baseline is clean before starting: run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root. No files are changed by this task — it's a checkpoint so any pre-existing failures aren't misattributed to this feature.
 
 ---
 
@@ -34,8 +34,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T002 [US1] In `src/components/Celebration.tsx`, edit `LottieBurst` so that when `item.kind === "frog"`, it renders inside a `position: fixed; inset: 0; display: flex; align-items: center; justify-content: center` wrapper (instead of the current `position: absolute; left/top: item.x/item.y` centered-on-click-point wrapper), with the Lottie animation sized to fill as much of the viewport as possible without distortion or cropping (relying on Lottie's default `preserveAspectRatio="xMidYMid meet"` — e.g. a square inner element sized `min(90vw, 90vh)`). The `"task"` kind branch, `SIZES.task`, `confettiData` usage, and the `SoftRing` reduced-motion component MUST remain completely unchanged — per `contracts/celebration-frog-kind-contract.md`.
-- [ ] T003 [US1] Manually verify User Story 1 against `quickstart.md`'s Scenario 1 (full-screen frog celebration at desktop and mobile widths, self-clearing, page stays interactive, regular task celebration unchanged, reduced-motion still shows the existing small `SoftRing`) in the running dev server (`npm run dev`).
+- [X] T002 [US1] In `src/components/Celebration.tsx`, edit `LottieBurst` so that when `item.kind === "frog"`, it renders inside a `position: fixed; inset: 0; display: flex; align-items: center; justify-content: center` wrapper (instead of the current `position: absolute; left/top: item.x/item.y` centered-on-click-point wrapper), with the Lottie animation sized to fill as much of the viewport as possible without distortion or cropping (relying on Lottie's default `preserveAspectRatio="xMidYMid meet"` — e.g. a square inner element sized `min(90vw, 90vh)`). The `"task"` kind branch, `SIZES.task`, `confettiData` usage, and the `SoftRing` reduced-motion component MUST remain completely unchanged — per `contracts/celebration-frog-kind-contract.md`.
+- [X] T003 [US1] Manually verify User Story 1 against `quickstart.md`'s Scenario 1 (full-screen frog celebration at desktop and mobile widths, self-clearing, page stays interactive, regular task celebration unchanged, reduced-motion still shows the existing small `SoftRing`) in the running dev server (`npm run dev`).
 
 **Checkpoint**: User Story 1 is fully functional and independently testable/shippable at this point.
 
@@ -49,8 +49,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T004 [P] [US2] Delete `src/app/favicon.ico` — superseded by the generated icon in T005, and keeping both risks browser-inconsistent icon selection (FR-007).
-- [ ] T005 [P] [US2] Create `src/app/icon.tsx`: default-export a function returning `new ImageResponse(<div style={{...}}>🐸</div>, { ...size })` (import `ImageResponse` from `next/og`), with `export const size = { width: 32, height: 32 }` and `export const contentType = "image/png"`, per Next.js's documented `icon.tsx` file convention (confirmed against `node_modules/next/dist/docs` — see research.md Decision 3). `ImageResponse`'s default `emoji: 'twemoji'` option needs no extra configuration for correct colored emoji rendering.
+- [X] T004 [P] [US2] Delete `src/app/favicon.ico` — superseded by the generated icon in T005, and keeping both risks browser-inconsistent icon selection (FR-007).
+- [X] T005 [P] [US2] Create `src/app/icon.tsx`: default-export a function returning `new ImageResponse(<div style={{...}}>🐸</div>, { ...size })` (import `ImageResponse` from `next/og`), with `export const size = { width: 32, height: 32 }` and `export const contentType = "image/png"`, per Next.js's documented `icon.tsx` file convention (confirmed against `node_modules/next/dist/docs` — see research.md Decision 3). `ImageResponse`'s default `emoji: 'twemoji'` option needs no extra configuration for correct colored emoji rendering.
 - [ ] T006 [US2] Manually verify User Story 2 against `quickstart.md`'s Scenario 2 (tab icon shows the frog emoji, same icon appears in bookmarks/history, `<head>` references the generated icon route rather than a static favicon.ico) in the running dev server.
 
 **Checkpoint**: User Stories 1 AND 2 both work independently at this point.

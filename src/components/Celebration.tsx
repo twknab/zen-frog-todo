@@ -26,12 +26,9 @@ export function useCelebration(): Celebrate {
 
 type Celebration = { id: number; x: number; y: number; kind: CelebrationKind };
 
-// A ribbon flourish greets the day's frog; confetti marks the rest. The ribbon
-// is square (400×400); the confetti is wider (940×752) so we keep its aspect.
-const SIZES: Record<CelebrationKind, { w: number; h: number }> = {
-  frog: { w: 280, h: 280 },
-  task: { w: 320, h: 256 },
-};
+// A ribbon flourish greets the day's frog (full-screen, see LottieBurst);
+// confetti marks the rest, sized here to keep its 940×752 aspect ratio.
+const TASK_SIZE = { w: 320, h: 256 };
 
 const PALETTE = ["#6B8F71", "#B98C5B", "#7A93A6", "#C79A4B", "#8FB49A"];
 // Safety net: remove a celebration even if Lottie's onComplete never fires
@@ -83,7 +80,35 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
 }
 
 function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }) {
-  const { w, h } = SIZES[item.kind];
+  if (item.kind === "frog") {
+    // The frog is the day's one designated task — its celebration fills the
+    // viewport instead of bursting from the checkbox. The square ribbon
+    // asset is boxed at min(90vw, 90vh) so it scales as large as possible
+    // without distortion or cropping on any aspect ratio.
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ width: "min(90vw, 90vh)", height: "min(90vw, 90vh)" }}>
+          <Lottie
+            animationData={ribbonData}
+            loop={false}
+            autoplay
+            onComplete={onDone}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const { w, h } = TASK_SIZE;
   return (
     <div
       style={{
@@ -97,7 +122,7 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
       }}
     >
       <Lottie
-        animationData={item.kind === "frog" ? ribbonData : confettiData}
+        animationData={confettiData}
         loop={false}
         autoplay
         onComplete={onDone}
