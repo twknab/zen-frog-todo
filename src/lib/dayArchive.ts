@@ -67,6 +67,7 @@ export type ArchivedDay = {
   closedAt: string; // ISO-8601 — exact moment of close (drives same-date labelling)
   date: string; // YYYY-MM-DD, local calendar date of the close
   completedTasks: ArchivedTask[];
+  /** Markdown source for the day's note (product: "note"; field kept for export compat). */
   reflection: string;
   focusSessions: number;
   bonsai: { leaves: number; stage: string };

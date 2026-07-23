@@ -10,6 +10,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
+import MarkdownPreview from "@/components/MarkdownPreview";
 import { archiveEntryLabel, type ArchivedDay } from "@/lib/dayArchive";
 import { bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
 
@@ -22,8 +23,9 @@ type GroveDayDialogProps = {
 };
 
 /**
- * A calm, read-only recap of one archived day (specs/010-grove-history, US3):
- * its date, the reflection (only when written), and the tasks completed that
+ * A calm, read-only recap of one archived day (specs/010-grove-history, US3;
+ * note rendering upgraded in specs/011-markdown-notepad): its date, the day's
+ * note as sanitized markdown (only when written), and the tasks completed that
  * day. No edit or delete affordances — this is a keepsake, not a workspace.
  * MUI Dialog manages focus (traps on open, returns to the invoking scene on
  * close); motion collapses to instant under prefers-reduced-motion.
@@ -57,11 +59,9 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
               {day.reflection.trim() !== "" && (
                 <Stack spacing={0.5}>
                   <Typography variant="subtitle2" component="h3" color="text.secondary">
-                    Reflection
+                    Note
                   </Typography>
-                  <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                    {day.reflection.trim()}
-                  </Typography>
+                  <MarkdownPreview markdown={day.reflection} />
                 </Stack>
               )}
 

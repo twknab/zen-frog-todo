@@ -20,7 +20,6 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
@@ -34,6 +33,7 @@ import CompletedLog from "@/components/CompletedLog";
 import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
+import MarkdownNotepad from "@/components/MarkdownNotepad";
 import NewDayAction from "@/components/NewDayAction";
 import SandCanvas from "@/components/SandCanvas";
 import StandupSummary from "@/components/StandupSummary";
@@ -396,19 +396,10 @@ export default function Home() {
               <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
                 <EditNoteOutlinedIcon color="success" />
                 <Typography variant="h6" component="h2">
-                  Close the day
+                  Today&apos;s note
                 </Typography>
               </Stack>
-              <TextField
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder="How did today go and what did we learn? Remember every day we have different capacity, needs and goals so don't beat yourself up if you didn't get everything done. Get some rest. Tomorrow is a new day to crush it."
-                multiline
-                minRows={2}
-                fullWidth
-                variant="standard"
-                slotProps={{ input: { disableUnderline: true } }}
-              />
+              <MarkdownNotepad value={notes} onChange={setNotes} />
               <NewDayAction />
             </BentoCard>
           )}

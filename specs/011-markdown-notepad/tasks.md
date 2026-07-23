@@ -27,7 +27,7 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Purpose**: Add the minimal markdown + sanitization dependencies.
 
-- [ ] T001 Install `marked` and `dompurify` (and `@types/dompurify` if typings are not bundled); confirm they appear in `package.json` / lockfile. Skim App Router client-component guidance under `node_modules/next/dist/docs/` before writing client helpers (per `AGENTS.md`).
+- [x] T001 Install `marked` and `dompurify` (and `@types/dompurify` if typings are not bundled); confirm they appear in `package.json` / lockfile. Skim App Router client-component guidance under `node_modules/next/dist/docs/` before writing client helpers (per `AGENTS.md`).
 
 ---
 
@@ -37,8 +37,8 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **⚠️ CRITICAL**: Complete before user-story UI work.
 
-- [ ] T002 [P] Create `src/lib/markdown.ts` exporting `renderMarkdownToSafeHtml(markdown: string): string` using `marked.parse` + `DOMPurify.sanitize` (client-safe; document that callers must be client components). Empty input returns `""` (Decision 2 / data-model.md).
-- [ ] T003 [P] Create `src/components/MarkdownPreview.tsx`: themed container that renders `renderMarkdownToSafeHtml(markdown)` via `dangerouslySetInnerHTML` only with sanitized output; styles headings/lists/code with theme tokens (not stock browser defaults) (FR-012, FR-015).
+- [x] T002 [P] Create `src/lib/markdown.ts` exporting `renderMarkdownToSafeHtml(markdown: string): string` using `marked.parse` + `DOMPurify.sanitize` (client-safe; document that callers must be client components). Empty input returns `""` (Decision 2 / data-model.md).
+- [x] T003 [P] Create `src/components/MarkdownPreview.tsx`: themed container that renders `renderMarkdownToSafeHtml(markdown)` via `dangerouslySetInnerHTML` only with sanitized output; styles headings/lists/code with theme tokens (not stock browser defaults) (FR-012, FR-015).
 
 **Checkpoint**: Safe preview primitive ready; notepad and Grove can consume it.
 
@@ -50,10 +50,10 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Independent Test**: Type markdown, toggle preview, reload — note persists; mode resets to write (quickstart Scenarios 1–2, 7).
 
-- [ ] T004 [US1] Create `src/components/MarkdownNotepad.tsx`: controlled `value`/`onChange`, session-only mode state defaulting to `"write"`, exclusive Write/Preview control (re-themed MUI `ToggleButtonGroup`), write-mode themed multiline `TextField`, preview-mode `MarkdownPreview`, calm placeholder prop (contracts/notepad-ui-contract.md).
-- [ ] T005 [US1] In `MarkdownNotepad.tsx`, wire accessibility: group `aria-label` (e.g. "Note display mode"), keyboard-operable toggles, announce pressed state; honor `useReducedMotion()` with instant mode swap (no decorative motion) (FR-013, FR-014).
-- [ ] T006 [US1] In `src/app/page.tsx`, replace the Close-the-day plain `TextField` with `<MarkdownNotepad value={notes} onChange={setNotes} … />`; retitle the card toward today's note; keep `<NewDayAction />` in the same card; keep `!isFocus` gate (FR-001, FR-005, FR-016).
-- [ ] T007 [US1] Theme/contrast pass on notepad + preview in light and dark — no stock Material look; no word-count/guilt copy (FR-015, FR-017).
+- [x] T004 [US1] Create `src/components/MarkdownNotepad.tsx`: controlled `value`/`onChange`, session-only mode state defaulting to `"write"`, exclusive Write/Preview control (re-themed MUI `ToggleButtonGroup`), write-mode themed multiline `TextField`, preview-mode `MarkdownPreview`, calm placeholder prop (contracts/notepad-ui-contract.md).
+- [x] T005 [US1] In `MarkdownNotepad.tsx`, wire accessibility: group `aria-label` (e.g. "Note display mode"), keyboard-operable toggles, announce pressed state; honor `useReducedMotion()` with instant mode swap (no decorative motion) (FR-013, FR-014).
+- [x] T006 [US1] In `src/app/page.tsx`, replace the Close-the-day plain `TextField` with `<MarkdownNotepad value={notes} onChange={setNotes} … />`; retitle the card toward today's note; keep `<NewDayAction />` in the same card; keep `!isFocus` gate (FR-001, FR-005, FR-016).
+- [x] T007 [US1] Theme/contrast pass on notepad + preview in light and dark — no stock Material look; no word-count/guilt copy (FR-015, FR-017).
 
 **Checkpoint**: MVP — write/preview notepad works for the live day.
 
@@ -65,9 +65,9 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Independent Test**: Start a new day → live notepad empty; Grove recap shows rendered note (quickstart Scenario 3).
 
-- [ ] T008 [US2] In `src/components/GroveDayDialog.tsx`, render non-empty `day.reflection` via `MarkdownPreview` (omit block when empty); update any "Reflection" label to calm note language (FR-008).
-- [ ] T009 [P] [US2] Update user-facing copy in `src/components/NewDayAction.tsx` (and any dialog strings) from "reflection" to "note" where appropriate — do **not** rename the `reflection` storage/export field (FR-010).
-- [ ] T010 [US2] Verify (code review + quickstart Scenario 3) that `useStartNewDay` / auto-rollover still snapshot and clear the live `frog-garden:reflection-v1` string with no parallel note key introduced (FR-006, FR-007, SC-007).
+- [x] T008 [US2] In `src/components/GroveDayDialog.tsx`, render non-empty `day.reflection` via `MarkdownPreview` (omit block when empty); update any "Reflection" label to calm note language (FR-008).
+- [x] T009 [P] [US2] Update user-facing copy in `src/components/NewDayAction.tsx` (and any dialog strings) from "reflection" to "note" where appropriate — do **not** rename the `reflection` storage/export field (FR-010).
+- [x] T010 [US2] Verify (code review + quickstart Scenario 3) that `useStartNewDay` / auto-rollover still snapshot and clear the live `frog-garden:reflection-v1` string with no parallel note key introduced (FR-006, FR-007, SC-007).
 
 **Checkpoint**: Single daily-note concept end-to-end with archive + Grove.
 
@@ -79,8 +79,8 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 **Independent Test**: Export JSON contains the note markdown source (quickstart Scenario 4).
 
-- [ ] T011 [US3] Spot-check `buildSingleDayExport` / `buildFullExport` / `useExportAll` in `src/lib/dayArchive.ts` — notepad content flows through existing `reflection` fields; add a brief comment if helpful that the field holds markdown source; no schema rename (FR-009, FR-010).
-- [ ] T012 [US3] Manually export single-day + full JSON with a distinctive note and confirm `reflection` values in the files (quickstart Scenario 4 / SC-004).
+- [x] T011 [US3] Spot-check `buildSingleDayExport` / `buildFullExport` / `useExportAll` in `src/lib/dayArchive.ts` — notepad content flows through existing `reflection` fields; add a brief comment if helpful that the field holds markdown source; no schema rename (FR-009, FR-010).
+- [x] T012 [US3] Manually export single-day + full JSON with a distinctive note and confirm `reflection` values in the files (quickstart Scenario 4 / SC-004).
 
 **Checkpoint**: Portability preserved (Principle III).
 
@@ -88,9 +88,9 @@ Single Next.js web app: source under `src/` at repo root (`src/components/`, `sr
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T013 [P] Run `quickstart.md` Scenarios 1–7 (incl. XSS paste Scenario 5, Focus Mode Scenario 6) and fix gaps.
-- [ ] T014 [P] Verify DevTools Network: no requests when typing or toggling preview (FR-011).
-- [ ] T015 Ensure `npx tsc --noEmit` and `npm run lint` are clean; resolve any issues.
+- [x] T013 [P] Run `quickstart.md` Scenarios 1–7 (incl. XSS paste Scenario 5, Focus Mode Scenario 6) and fix gaps.
+- [x] T014 [P] Verify DevTools Network: no requests when typing or toggling preview (FR-011).
+- [x] T015 Ensure `npx tsc --noEmit` and `npm run lint` are clean; resolve any issues.
 
 ---
 

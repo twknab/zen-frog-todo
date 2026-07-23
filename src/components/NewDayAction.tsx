@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useNewDay } from "@/lib/dayArchive";
 
 /**
- * "Start a new day" ritual, rendered inside the "Close the day" card. Snapshots
+ * "Start a new day" ritual, rendered inside the today's-note card. Snapshots
  * the day into the archive and resets the board after a gentle confirmation.
  * Copy is keepsake-framed, never judgmental (constitution Principles I/II).
  */
@@ -44,7 +44,7 @@ export default function NewDayAction() {
         <DialogTitle id="new-day-title">Start a new day?</DialogTitle>
         <DialogContent>
           <DialogContentText id="new-day-description">
-            Today&apos;s finished tasks and reflection are tucked into your archive, and
+            Today&apos;s finished tasks and note are tucked into your archive, and
             your board starts fresh. Unfinished tasks stay with you.
           </DialogContentText>
         </DialogContent>
