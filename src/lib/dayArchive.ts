@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useRef } from "react";
 import { deriveBonsai, useBonsai, type GrowthEvent } from "./bonsai";
 import { useFocusStats } from "./focusStats";
-import { useSandReset } from "./sand";
+import {
+  clearTodaySandSnapshot,
+  readTodaySandSnapshot,
+  takeSandSnapshotForArchive,
+  wipeSandCanvas,
+} from "./sand";
 import { usePersistentState } from "./storage";
 import { useTasks, type CompletedLogEntry, type Task } from "./tasks";
 
@@ -70,6 +75,8 @@ export type ArchivedDay = {
   reflection: string;
   focusSessions: number;
   bonsai: { leaves: number; stage: string };
+  /** Compact JPEG data URL of the day's sand keepsake (011). Optional for back-compat. */
+  sandSnapshot?: string;
 };
 
 // Export document shapes (bodies land with US2/US3; types are stable now).
@@ -244,7 +251,6 @@ export function useNewDay() {
   const { events: bonsaiEvents, idleOffsetHours, resetBonsai } = useBonsai();
   const { completedSessions, resetSessions } = useFocusStats();
   const [reflection, setReflection] = usePersistentState(REFLECTION_KEY, "");
-  const { resetSand } = useSandReset();
 
   const startNewDay = useCallback(() => {
     // `now` computed outside any state updater (keeps updaters pure).
@@ -256,12 +262,17 @@ export function useNewDay() {
       completedAt: e.completedAt,
     }));
 
+    // Prefer a fresh canvas capture if strokes remain; else today's mid-day keepsake.
+    const sandSnapshot = takeSandSnapshotForArchive() ?? undefined;
+
     // Empty-day guard (FR-007): only archive a day that actually held something.
+    // Sand keepsakes count as content so a sand-only day is not orphaned (011).
     const hasContent =
       completedTasks.length > 0 ||
       reflection.trim().length > 0 ||
       completedSessions > 0 ||
-      derived.leaves > 0;
+      derived.leaves > 0 ||
+      Boolean(sandSnapshot);
 
     if (hasContent) {
       const snapshot: ArchivedDay = {
@@ -272,6 +283,7 @@ export function useNewDay() {
         reflection,
         focusSessions: completedSessions,
         bonsai: { leaves: derived.leaves, stage: derived.stage },
+        ...(sandSnapshot ? { sandSnapshot } : {}),
       };
       // Append-first (fail-safe): the snapshot is stored before any reset runs.
       setArchive((prev) => prependAndPrune(prev, snapshot));
@@ -283,7 +295,9 @@ export function useNewDay() {
     setReflection("");
     resetBonsai();
     resetSessions();
-    resetSand(); // smooth the sand for the fresh day
+    // Wipe sand without re-saving into the today key (already attached above).
+    clearTodaySandSnapshot();
+    wipeSandCanvas();
   }, [
     bonsaiEvents,
     idleOffsetHours,
@@ -295,7 +309,6 @@ export function useNewDay() {
     setReflection,
     resetBonsai,
     resetSessions,
-    resetSand,
   ]);
 
   return { archive, startNewDay };
@@ -311,6 +324,8 @@ export type RolloverInput = {
   reflection: string;
   focus: FocusSnapshot;
   bonsai: BonsaiSnapshot;
+  /** Today's sand keepsake from storage (in-memory strokes are already gone after process death). */
+  sandSnapshot?: string | null;
 };
 
 export type RolloverPlan = {
@@ -334,6 +349,7 @@ export function buildRolloverPlan({
   reflection,
   focus,
   bonsai,
+  sandSnapshot,
 }: RolloverInput): RolloverPlan {
   const derived = deriveBonsai({
     events: bonsai.events ?? [],
@@ -346,11 +362,15 @@ export function buildRolloverPlan({
     completedAt: e.completedAt,
   }));
 
+  const sand =
+    typeof sandSnapshot === "string" && sandSnapshot.length > 0 ? sandSnapshot : undefined;
+
   const hasContent =
     completedTasks.length > 0 ||
     (reflection ?? "").trim().length > 0 ||
     (focus?.completedSessions ?? 0) > 0 ||
-    derived.leaves > 0;
+    derived.leaves > 0 ||
+    Boolean(sand);
 
   const snapshot: ArchivedDay | null = hasContent
     ? {
@@ -361,6 +381,7 @@ export function buildRolloverPlan({
         reflection: reflection ?? "",
         focusSessions: focus?.completedSessions ?? 0,
         bonsai: { leaves: derived.leaves, stage: derived.stage },
+        ...(sand ? { sandSnapshot: sand } : {}),
       }
     : null;
 
@@ -422,6 +443,8 @@ export function useDailyRollover(): void {
 
     // A new calendar day. Read the previous day's live state straight from
     // storage so the snapshot reflects real data regardless of hydration timing.
+    // Sand: only a previously saved today-key survives process death; uncleared
+    // in-memory strokes cannot be recovered (011 Decision 5).
     const { snapshot, keptTasks } = buildRolloverPlan({
       now,
       tasksState: readJson<TasksSnapshot>(TASKS_KEY, { tasks: [], frogTaskId: null }),
@@ -429,6 +452,7 @@ export function useDailyRollover(): void {
       reflection: readJson<string>(REFLECTION_KEY, ""),
       focus: readJson<FocusSnapshot>(FOCUS_STATS_KEY, { completedSessions: 0 }),
       bonsai: readJson<BonsaiSnapshot>(BONSAI_KEY, { events: [], idleOffsetHours: 0 }),
+      sandSnapshot: readTodaySandSnapshot(),
     });
 
     if (snapshot) {
@@ -445,6 +469,8 @@ export function useDailyRollover(): void {
     setReflection("");
     setFocus({ completedSessions: 0 });
     setBonsai({ events: [], idleOffsetHours: 0 });
+    clearTodaySandSnapshot();
+    wipeSandCanvas();
     setLastActiveDay(today);
   }, [
     setArchive,
