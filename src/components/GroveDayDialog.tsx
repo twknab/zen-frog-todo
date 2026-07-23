@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { useReducedMotion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { archiveEntryLabel, type ArchivedDay } from "@/lib/dayArchive";
 import { bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
 import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
@@ -41,6 +41,10 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
   const label = day ? archiveEntryLabel(day, sameDateCount) : "";
   const sandSrc = day?.sandSnapshot;
   const sandLabel = `Sand drawing for ${label}`;
+
+  useEffect(() => {
+    if (!day) setSandOpen(false);
+  }, [day]);
 
   return (
     <>
