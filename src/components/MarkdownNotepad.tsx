@@ -17,10 +17,10 @@ type MarkdownNotepadProps = {
 };
 
 const DEFAULT_PLACEHOLDER =
-  "A place for today's thoughts — markdown welcome. Every day has different capacity; be kind to yourself.";
+  "Scratchpad for notes, plans, and scraps — markdown welcome. Nothing here is graded.";
 
 /**
- * Controlled daily markdown notepad with exclusive Write / Preview modes.
+ * Controlled engineering markdown notepad with exclusive Write / Preview modes.
  * Mode is session-only (defaults to Write on mount). See
  * specs/011-markdown-notepad/contracts/notepad-ui-contract.md.
  */
@@ -33,16 +33,16 @@ export default function MarkdownNotepad({
   const reduce = useReducedMotion();
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}>
       <ToggleButtonGroup
         value={mode}
         exclusive
         size="small"
-        aria-label="Note display mode"
+        aria-label="Notepad display mode"
         onChange={(_, next: NotepadMode | null) => {
           if (next) setMode(next);
         }}
-        sx={{ mb: 1.5 }}
+        sx={{ mb: 1.5, alignSelf: "flex-start" }}
       >
         <ToggleButton value="write" aria-label="Write mode">
           Write
@@ -52,7 +52,7 @@ export default function MarkdownNotepad({
         </ToggleButton>
       </ToggleButtonGroup>
 
-      <Box sx={{ position: "relative", minHeight: 88 }}>
+      <Box sx={{ position: "relative", flexGrow: 1, minHeight: 200 }}>
         <AnimatePresence mode="wait" initial={false}>
           {mode === "write" ? (
             <motion.div
@@ -61,22 +61,26 @@ export default function MarkdownNotepad({
               animate={{ opacity: 1 }}
               exit={reduce ? undefined : { opacity: 0 }}
               transition={reduce ? { duration: 0 } : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              style={{ height: "100%" }}
             >
               <TextField
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
                 multiline
-                minRows={4}
+                minRows={16}
                 fullWidth
                 variant="standard"
-                aria-label="Today's note"
+                aria-label="Notepad"
                 slotProps={{ input: { disableUnderline: true } }}
                 sx={{
+                  height: "100%",
                   "& .MuiInputBase-root": {
                     typography: "body2",
                     lineHeight: 1.65,
                     alignItems: "flex-start",
+                    fontFamily:
+                      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                   },
                 }}
               />
@@ -89,7 +93,7 @@ export default function MarkdownNotepad({
               exit={reduce ? undefined : { opacity: 0 }}
               transition={reduce ? { duration: 0 } : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             >
-              <MarkdownPreview markdown={value} sx={{ minHeight: 72 }} />
+              <MarkdownPreview markdown={value} sx={{ minHeight: 200 }} />
             </motion.div>
           )}
         </AnimatePresence>

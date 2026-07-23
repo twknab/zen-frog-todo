@@ -12,9 +12,10 @@ import { useState } from "react";
 import { useNewDay } from "@/lib/dayArchive";
 
 /**
- * "Start a new day" ritual, rendered inside the today's-note card. Snapshots
+ * "Start a new day" ritual, rendered inside the Close-the-day card. Snapshots
  * the day into the archive and resets the board after a gentle confirmation.
  * Copy is keepsake-framed, never judgmental (constitution Principles I/II).
+ * Does not touch the persistent eng notepad (specs/011-markdown-notepad).
  */
 export default function NewDayAction() {
   const { startNewDay } = useNewDay();

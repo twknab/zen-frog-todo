@@ -20,6 +20,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
@@ -33,8 +34,9 @@ import CompletedLog from "@/components/CompletedLog";
 import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
-import MarkdownNotepad from "@/components/MarkdownNotepad";
 import NewDayAction from "@/components/NewDayAction";
+import NotepadButton from "@/components/NotepadButton";
+import NotepadShell from "@/components/NotepadShell";
 import SandCanvas from "@/components/SandCanvas";
 import StandupSummary from "@/components/StandupSummary";
 import TaskListCard from "@/components/TaskListCard";
@@ -42,6 +44,7 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useDailyRollover } from "@/lib/dayArchive";
 import { useFocusStats } from "@/lib/focusStats";
+import { useNotepad } from "@/lib/notepad";
 import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
@@ -73,6 +76,8 @@ export default function Home() {
     reorderTasks,
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
+  const [notepad, setNotepad] = useNotepad();
+  const [notepadOpen, setNotepadOpen] = useState(false);
   const celebrate = useCelebration();
   const { recordSessionComplete } = useFocusStats();
   const { events: bonsaiEvents, idleOffsetHours, recordGrowth, addIdleHours, resetBonsai } =
@@ -169,6 +174,9 @@ export default function Home() {
           </ToggleButtonGroup>
 
           <ExportMenu />
+
+          {/* Notepad stays reachable in Focus Mode (FR-013) — outside !isFocus gates. */}
+          <NotepadButton onClick={() => setNotepadOpen(true)} />
 
           <Tooltip title={colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
             <IconButton
@@ -396,15 +404,32 @@ export default function Home() {
               <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
                 <EditNoteOutlinedIcon color="success" />
                 <Typography variant="h6" component="h2">
-                  Today&apos;s note
+                  Close the day
                 </Typography>
               </Stack>
-              <MarkdownNotepad value={notes} onChange={setNotes} />
+              <TextField
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="How did today go and what did we learn? Remember every day we have different capacity, needs and goals so don't beat yourself up if you didn't get everything done. Get some rest. Tomorrow is a new day to crush it."
+                multiline
+                minRows={2}
+                fullWidth
+                variant="standard"
+                aria-label="Today's reflection"
+                slotProps={{ input: { disableUnderline: true } }}
+              />
               <NewDayAction />
             </BentoCard>
           )}
         </AnimatePresence>
       </Box>
+
+      <NotepadShell
+        open={notepadOpen}
+        onClose={() => setNotepadOpen(false)}
+        value={notepad}
+        onChange={setNotepad}
+      />
 
       <AnimatePresence>
         {!isFocus && (
