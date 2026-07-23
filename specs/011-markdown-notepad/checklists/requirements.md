@@ -31,5 +31,6 @@
 
 ## Notes
 
-- Reflection-vs-distinct decision is recorded as an Assumption (upgrade/replace recommended) for `/speckit-clarify` to confirm, not left as a NEEDS CLARIFICATION marker blocking the checklist.
-- Markdown library choice is deferred to `/speckit-plan` research (intentionally out of spec scope).
+- Clarifications session 2026-07-22 resolved: distinct from reflection; persistent (not day-ephemeral); upper-right → full-screen; Focus Mode available; full export only; rich GFM-class markdown preference; auto-persist on edit.
+- Exact markdown library choice remains a planning concern (`research.md`); user preference for richness over minimal bundle is recorded.
+- Spec quality checklist: 16/16 items still passing after clarify updates.
