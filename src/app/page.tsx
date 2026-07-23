@@ -28,6 +28,7 @@ import Typography from "@mui/material/Typography";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { GiFrog } from "react-icons/gi";
 import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
@@ -228,9 +229,7 @@ export default function Home() {
       >
         <BentoCard area="frog" accent="primary">
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
-            <span role="img" aria-hidden="true" style={{ fontSize: "1.3rem" }}>
-              🐸
-            </span>
+            <Box component={GiFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1.3rem" }} />
             <Chip
               label="Largest Task"
               color="primary"

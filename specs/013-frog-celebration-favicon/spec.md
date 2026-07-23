@@ -8,6 +8,19 @@
 
 **Input**: User description: "Two small, independent UI fixes: (1) when closing the frog task, the celebration should be full screen and full width; (2) the favicon should be the frog emoji so it shows on the browser tab."
 
+## Amendment (2026-07-23, post-implementation)
+
+During implementation, the literal 🐸 Unicode emoji was found to render as a **fully blank image** for the favicon: `ImageResponse`'s default emoji rendering fetches the colored glyph from `cdn.jsdelivr.net` at request time, which this environment's network policy blocks (confirmed directly). Rather than ship an untestable, network-dependent favicon, the user asked to bring in an icon library and use **one consistent frog mark everywhere** the app currently uses the 🐸 emoji, not just the favicon.
+
+Resolution: added `react-icons` (`GiFrog`, from the Game Icons set, CC BY 3.0 — attributed in `src/app/icon.tsx`) as a new dependency, and replaced all three existing 🐸 emoji usages with this one icon, rendered via the app's theme (`primary.main` / `zen.moss`):
+- `src/app/icon.tsx` (favicon) — rendered as a raw inline SVG path through `ImageResponse` (no network fetch, unlike the emoji path).
+- `src/app/page.tsx` — the "Largest Task" section header icon.
+- `src/components/TaskListCard.tsx` — the per-task "make this the frog" button icon.
+
+This does **not** extend to `BonsaiTree.tsx`'s decorative, procedurally-placed frog critters (feature 008-frog-friends) — those are a distinct, hand-drawn garden-pet visual, not an iconographic UI mark, and were left untouched as out of scope for this amendment.
+
+FR-006/FR-007 (favicon requirements) are satisfied by this icon-library approach rather than a literal emoji glyph; the user-facing outcome (SC-004, "identify the frog mark at a glance") is unchanged.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A bigger celebration for the day's biggest task (Priority: P1)

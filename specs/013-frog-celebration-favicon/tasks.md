@@ -43,15 +43,18 @@
 
 ## Phase 4: User Story 2 - See a frog in the browser tab (Priority: P2)
 
-**Goal**: The app's favicon is a 🐸 emoji, consistent across tab/bookmarks/history.
+**Goal**: The app's favicon is a consistent frog mark, matching the same icon used everywhere else in the app.
 
-**Independent Test**: Load the app and check the browser tab icon; confirm it's a frog emoji, not the old icon.
+**Independent Test**: Load the app and check the browser tab icon; confirm it's a frog mark, not the old icon.
 
 ### Implementation for User Story 2
 
+**Amended during implementation** (see spec.md's Amendment section): the literal 🐸 emoji rendered as a fully blank PNG in this environment (`ImageResponse`'s default emoji rendering fetches from `cdn.jsdelivr.net`, which this environment's network policy blocks — confirmed by direct testing, not assumed). Per user direction, switched to `react-icons`' `GiFrog` (Game Icons, CC BY 3.0) as one consistent, locally-bundled frog mark reused everywhere the app previously used the emoji.
+
 - [X] T004 [P] [US2] Delete `src/app/favicon.ico` — superseded by the generated icon in T005, and keeping both risks browser-inconsistent icon selection (FR-007).
-- [X] T005 [P] [US2] Create `src/app/icon.tsx`: default-export a function returning `new ImageResponse(<div style={{...}}>🐸</div>, { ...size })` (import `ImageResponse` from `next/og`), with `export const size = { width: 32, height: 32 }` and `export const contentType = "image/png"`, per Next.js's documented `icon.tsx` file convention (confirmed against `node_modules/next/dist/docs` — see research.md Decision 3). `ImageResponse`'s default `emoji: 'twemoji'` option needs no extra configuration for correct colored emoji rendering.
-- [ ] T006 [US2] Manually verify User Story 2 against `quickstart.md`'s Scenario 2 (tab icon shows the frog emoji, same icon appears in bookmarks/history, `<head>` references the generated icon route rather than a static favicon.ico) in the running dev server.
+- [X] T005 [P] [US2] Add `react-icons` as a dependency (`npm install react-icons`, synced to both `package-lock.json` and `yarn.lock` since both are tracked in this repo). Create `src/app/icon.tsx`: default-export a function returning `new ImageResponse(...)` rendering `GiFrog`'s SVG path data inline (Satori doesn't reliably render react-icons' component tree directly, so the path is embedded as a literal `<svg><path d="..."/></svg>`, colored `#6B8F71` to match `zen.moss`/`primary.main`), with `export const size = { width: 32, height: 32 }` and `export const contentType = "image/png"`, per Next.js's documented `icon.tsx` file convention. Includes a source-attribution comment per the Game Icons CC BY 3.0 license.
+- [X] T005a [US2] Replace the remaining two 🐸 emoji usages with `<Box component={GiFrog} sx={{ color: "primary.main", ... }} />` from `react-icons/gi`, for one consistent mark across the app: `src/app/page.tsx` (the "Largest Task" header icon) and `src/components/TaskListCard.tsx` (the per-task "make this the frog" button icon).
+- [X] T006 [US2] Manually verify User Story 2: tab icon shows the frog mark (confirmed via direct pixel inspection of the generated PNG — non-blank, correct shape/color), `<head>` references the generated icon route rather than a static favicon.ico, and the same `GiFrog` mark renders correctly (and matches the theme's primary green) at both other call sites, with zero console/page errors, in the running dev server.
 
 **Checkpoint**: User Stories 1 AND 2 both work independently at this point.
 
@@ -59,9 +62,9 @@
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T007 Run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root across the full diff (both stories) and fix any reported issues.
-- [ ] T008 Check the enlarged frog celebration against the constitution's Calm Technology (I) and Subtle Gamification (II) principles per `AGENTS.md`'s requirement that any visual-design-touching change be checked before being marked done — confirm it reads as a bigger positive moment for the app's one designated task, not an urgency/attention-grabbing pattern, and confirm `prefers-reduced-motion` is still fully honored (T002's constraint that `SoftRing` stays untouched).
-- [ ] T009 Run the full `quickstart.md` end-to-end (both scenarios) once more in the browser preview as the final "Done" gate.
+- [X] T007 Run `npx tsc --noEmit` and `npx eslint --max-warnings=0` at the repo root across the full diff (both stories) and fix any reported issues.
+- [X] T008 Check the enlarged frog celebration against the constitution's Calm Technology (I) and Subtle Gamification (II) principles per `AGENTS.md`'s requirement that any visual-design-touching change be checked before being marked done — confirm it reads as a bigger positive moment for the app's one designated task, not an urgency/attention-grabbing pattern, and confirm `prefers-reduced-motion` is still fully honored (T002's constraint that `SoftRing` stays untouched).
+- [X] T009 Run the full `quickstart.md` end-to-end (both scenarios) once more in the browser preview as the final "Done" gate.
 
 ---
 
