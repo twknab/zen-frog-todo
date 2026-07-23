@@ -24,12 +24,28 @@ function subscribe(key: string, listener: Listener): () => void {
   };
 }
 
-function broadcast(key: string, value: unknown, self: Listener): void {
+function broadcast(key: string, value: unknown, self: Listener | null): void {
   const set = keyListeners.get(key);
   if (!set) return;
   for (const listener of set) {
     if (listener !== self) listener(value);
   }
+}
+
+/**
+ * Imperative write for non-React call sites (e.g. sync sand capture before
+ * wipe). Persists to localStorage and notifies every `usePersistentState`
+ * subscriber for `key`. Swallows storage errors (quota / private mode).
+ */
+export function writePersistentValue<T>(key: string, value: T): void {
+  try {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    }
+  } catch {
+    // storage unavailable or quota exceeded — still broadcast in-memory
+  }
+  broadcast(key, value, null);
 }
 
 /**
