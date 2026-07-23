@@ -8,6 +8,17 @@
 
 **Input**: User description: "Add the ability to delete incomplete tasks from the dashboard task list via a small trash icon on each incomplete row. Deleting requires a calm confirmation dialog. Completed tasks cannot be deleted this way. If the deleted task was today's frog, clear the frog designation. Persist via existing tasks store. Local-only, accessible, themed MUI, no shame UI."
 
+## Clarifications
+
+### Session 2026-07-23
+
+- Q: Which tasks are eligible for deletion from the live list? → A: Only incomplete (`completed === false`) tasks show a delete affordance; completed tasks have no trash control in v1.
+- Q: Is confirmation required before delete? → A: Yes — trash opens a calm confirm dialog (title + short body + Cancel / Delete); Escape/Cancel dismisses without deleting; no instant delete.
+- Q: What is the effect of confirming delete? → A: Permanently remove the task from the live tasks array (localStorage). If it was the frog, clear frog to unset. Do not touch completedLog or day archive.
+- Q: What copy tone and wording? → A: Non-judgmental — e.g. “Remove this task?” / “It will leave your board. You can always add it again later.” Never guilt/failure language.
+- Q: Accessibility expectations for delete? → A: Icon control with accessible name including task title (e.g. `Delete task: {title}`); dialog labelled; keyboard operable; reduced-motion honored.
+- Q: What is out of scope for v1? → A: Undo/snackbar, bulk delete, swipe-to-delete, and deleting from Completed log / Grove / archives.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Remove a task that no longer belongs (Priority: P1)
