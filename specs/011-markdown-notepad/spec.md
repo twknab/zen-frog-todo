@@ -14,6 +14,16 @@ Frog Garden already captures a single free-text daily reflection in the "Close t
 
 This feature upgrades that daily note into a **universal markdown notepad** on the dashboard: a calm place to write throughout the day in raw markdown, toggle to a live rendered preview, and have the note travel with the day through archive and export — the same way tasks, focus sessions, and bonsai state already do. There is still one daily note concept, not two.
 
+## Clarifications
+
+### Session 2026-07-22
+
+- Q: Does the markdown notepad replace/upgrade the existing Close-the-day reflection field, or is it a distinct second note? → A: **Replace/upgrade** — one daily-note concept; avoids overlapping "reflection" vs "notepad" surfaces. Internal archive/export field remains `reflection` for compatibility; product copy shifts to note/notepad language.
+- Q: Where does the notepad live on the dashboard? → A: **Upgrade the existing Close-the-day card** (same grid area): notepad is the primary content; "Start a new day" stays at the bottom of that card. Card title reframes toward today's note rather than only end-of-day.
+- Q: How should archived notes appear in The Grove day recap? → A: **Rendered markdown** (same sanitized preview rules as the live notepad), omitted gracefully when empty — not raw source.
+- Q: Does write/preview mode persist across reloads? → A: **Session-only**; default is write mode on load (YAGNI — no extra preference key).
+- Q: What happens to calm empty-state / Close-the-day copy? → A: Keep a gentle, non-judgmental placeholder in write mode; drop any framing that implies the note is only for "closing" the day.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Write and preview today's note in markdown (Priority: P1)
@@ -26,7 +36,7 @@ A user working through their day wants a place to jot thoughts, standup notes, o
 
 **Acceptance Scenarios**:
 
-1. **Given** the user is on the dashboard (not in Focus Mode), **When** they find the notepad, **Then** they can enter and edit today's note as raw markdown in a clearly labelled writing mode.
+1. **Given** the user is on the dashboard (not in Focus Mode), **When** they open the upgraded Close-the-day / today's-note card, **Then** they can enter and edit today's note as raw markdown in a clearly labelled writing mode, with "Start a new day" still available in that card.
 2. **Given** the notepad has markdown content, **When** the user switches to preview mode, **Then** the content is shown as a calm, readable rendered view (not as raw source).
 3. **Given** the user is in preview mode, **When** they switch back to write mode, **Then** the raw markdown source is unchanged and editable again.
 4. **Given** the user has typed a note, **When** they reload the app, **Then** today's note is still present (persisted on-device for the live day).
@@ -47,8 +57,8 @@ A user who has been writing in the notepad throughout the day starts a new day. 
 
 1. **Given** today's notepad has content, **When** the user starts a new day (manual or automatic rollover), **Then** that content is stored on the archived day record and the live notepad starts empty for the new day.
 2. **Given** today's notepad is empty, **When** the user starts a new day, **Then** archival still succeeds and the archived day simply has no note (no error, no guilt copy).
-3. **Given** an archived day that had a notepad entry, **When** the user peeks at that day in The Grove, **Then** the recap shows the note content (replacing what was previously labelled "reflection").
-4. **Given** the old Close-the-day plain reflection field, **When** this feature ships, **Then** that separate field is gone — the notepad is the single daily note surface (existing stored reflection text migrates into the notepad / archive field so nothing is lost).
+3. **Given** an archived day that had a notepad entry, **When** the user peeks at that day in The Grove, **Then** the recap shows the note as sanitized rendered markdown (replacing the former plain-text "reflection" label/block).
+4. **Given** the old Close-the-day plain reflection field, **When** this feature ships, **Then** that separate plain TextField is gone — the notepad is the single daily note surface in the same card (existing stored reflection text appears in the notepad / archive field so nothing is lost).
 
 ---
 
@@ -82,29 +92,30 @@ A user who values portability exports a single archived day or a full export. Th
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST provide a dashboard notepad for today's daily note, available outside the end-of-day ritual alone.
+- **FR-001**: The system MUST provide a dashboard notepad for today's daily note in the upgraded Close-the-day card (same grid area), usable throughout the day — not only at end-of-day.
 - **FR-002**: The notepad MUST support a raw-markdown writing mode and a live rendered preview mode, with a user-controlled toggle between them.
 - **FR-003**: Toggling modes MUST preserve the underlying markdown source exactly (preview is read-only rendering of the same text).
-- **FR-004**: Today's note MUST persist on-device across reloads for the live day, using the app's existing local-first persistence patterns.
-- **FR-005**: The notepad MUST replace the existing Close-the-day plain reflection field as the single daily-note concept (upgrade, not a second parallel note).
+- **FR-004**: Today's note MUST persist on-device across reloads for the live day, using the app's existing local-first persistence patterns (same live storage key as today's reflection).
+- **FR-005**: The notepad MUST replace the existing Close-the-day plain reflection TextField as the single daily-note concept (upgrade, not a second parallel note); "Start a new day" MUST remain in that card.
 - **FR-006**: When a day is archived (manual new day or automatic rollover), the current notepad content MUST be stored on that day's archive record through the existing day-archive boundary (same module/pattern used for other day snapshot fields).
 - **FR-007**: After archival, the live notepad MUST clear for the new day.
-- **FR-008**: Archived note content MUST surface in The Grove's day recap (wherever reflection was previously shown), omitted gracefully when empty.
-- **FR-009**: Single-day and full JSON exports MUST include notepad content for archived days and for the live day (full export), so the user is never locked in.
-- **FR-010**: Existing stored reflection text (live key and archived `reflection` field) MUST migrate into the notepad experience without data loss; export field compatibility with prior exports MUST be preserved.
+- **FR-008**: Archived note content MUST surface in The Grove's day recap as sanitized rendered markdown (wherever plain reflection text was previously shown), omitted gracefully when empty.
+- **FR-009**: Single-day and full JSON exports MUST include notepad content for archived days and for the live day (full export) under the existing `reflection` field name, so the user is never locked in and prior exports remain compatible.
+- **FR-010**: Existing stored reflection text (live key and archived `reflection` field) MUST appear in the notepad / Grove without data loss; no rename that breaks prior exports.
 - **FR-011**: Markdown rendering MUST happen entirely on-device with no network calls, no telemetry, and no external API.
-- **FR-012**: Preview rendering MUST sanitize output so user-authored HTML/scripts cannot execute in the preview.
+- **FR-012**: Preview rendering (live notepad and Grove recap) MUST sanitize output so user-authored HTML/scripts cannot execute.
 - **FR-013**: The write/preview toggle and editor MUST be keyboard-operable and screen-reader labelled; current mode MUST be announced.
 - **FR-014**: Any mode-switch motion MUST respect `prefers-reduced-motion` (instant or minimal fallback).
 - **FR-015**: Notepad UI MUST use the app's re-themed design tokens (muted nature palette, soft elevation, generous spacing) — not stock Material Design or an unstyled default text area look.
 - **FR-016**: The notepad MUST NOT appear in Focus Mode (same secondary-section convention as Close-the-day / Grove).
 - **FR-017**: The notepad MUST NOT introduce scoreboards, streak framing, word-count guilt, or judgmental empty states (Principles I & II).
+- **FR-018**: Write/preview mode MUST default to write on each load and need not persist across reloads (session-only UI state).
 
 ### Key Entities *(include if feature involves data)*
 
-- **Daily Note**: The single free-text (markdown) note for a calendar day. For the live day it is editable in the notepad; when the day closes it is snapshotted onto the Archived Day. Replaces the former plain "reflection" concept at the product level while remaining compatible with the existing archive field.
-- **Archived Day**: Existing on-device closed-day record. Continues to carry the day's note via its existing reflection/note field; this feature does not invent a parallel store.
-- **Notepad View Mode**: Transient UI state — write vs preview — for the live notepad. Need not survive reloads unless a small local preference is chosen; default is write mode.
+- **Daily Note**: The single free-text (markdown) note for a calendar day. For the live day it is editable in the notepad; when the day closes it is snapshotted onto the Archived Day. Replaces the former plain "reflection" concept at the product level while remaining compatible with the existing archive `reflection` field.
+- **Archived Day**: Existing on-device closed-day record. Continues to carry the day's note via its existing `reflection` field; this feature does not invent a parallel store.
+- **Notepad View Mode**: Transient, session-only UI state — write vs preview — for the live notepad. Defaults to write; not persisted across reloads.
 
 ## Success Criteria *(mandatory)*
 
@@ -120,10 +131,10 @@ A user who values portability exports a single archived day or a full export. Th
 
 ## Assumptions
 
-- The notepad **upgrades/replaces** the existing Close-the-day reflection field (recommended in the feature request) rather than adding a second note type — confirmed or adjusted in `/speckit-clarify`.
-- Supported markdown is a common, modest subset suitable for short daily notes (headings, emphasis, lists, links, inline code, simple code blocks) — not a full CommonMark edge-case suite or embedded media.
-- Default mode on load is **write** (authoring first); preview is opt-in per session.
-- Notepad placement: a calm dashboard card/section near other secondary day tools (replacing or absorbing the reflection area in Close the day), visible outside Focus Mode.
-- Persistence continues to use the existing reflection storage key / archive field for compatibility; product copy may say "note" or "notepad" even if the internal field remains `reflection`.
+- The notepad **upgrades/replaces** the existing Close-the-day reflection field (confirmed in Clarifications) rather than adding a second note type.
+- Supported markdown is a common, modest subset suitable for short daily notes (headings, emphasis, lists, links, inline code, simple code blocks) — not a full CommonMark edge-case suite or embedded media. Exact library choice is a planning concern.
+- Default mode on load is **write** (authoring first); preview is opt-in per session and not persisted.
+- Notepad placement: upgraded Close-the-day card / same grid area, with New Day action retained; visible outside Focus Mode.
+- Persistence continues to use the existing reflection storage key / archive `reflection` field for compatibility; product copy says "note" / "notepad".
 - No collaborative editing, no cloud sync, no AI assist, no image upload in v1 (YAGNI).
 - No separate "notes history" browser beyond what The Grove already provides for archived days.
