@@ -68,15 +68,16 @@ src/
 ├── lib/
 │   └── tasks.ts              # EDIT — add deleteTask(id); ignore completed / missing
 ├── components/
-│   ├── TaskListCard.tsx      # EDIT — trash IconButton on incomplete rows + confirm Dialog
+│   ├── DeleteIncompleteTaskControl.tsx  # NEW — muted trash + calm confirm Dialog
+│   ├── TaskListCard.tsx      # EDIT — trash on incomplete rows via shared control
 │   └── NewDayAction.tsx      # REFERENCE — calm Dialog + useReducedMotion pattern
 ├── app/
-│   └── page.tsx              # EDIT — pass onDeleteTask={deleteTask} into TaskListCard
+│   └── page.tsx              # EDIT — pass onDeleteTask; trash on incomplete frog card
 └── theme/
     └── theme.ts              # unchanged — reuse muted palette / secondary text
 ```
 
-**Structure Decision**: Single Next.js app. Extend existing tasks hook and task list card; no new routes or storage modules.
+**Structure Decision**: Single Next.js app. Extend existing tasks hook and task list card; shared delete control also on the frog card because the frog lives outside `otherTasks`. No new routes or storage modules.
 
 ## Complexity Tracking
 

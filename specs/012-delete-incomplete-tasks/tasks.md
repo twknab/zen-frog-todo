@@ -22,7 +22,7 @@
 
 **Purpose**: Confirm feature artifacts and wiring targets
 
-- [ ] T001 Review plan.md / research.md / contracts/delete-task.md and confirm touch points: `src/lib/tasks.ts`, `src/components/TaskListCard.tsx`, `src/app/page.tsx`
+- [x] T001 Review plan.md / research.md / contracts/delete-task.md and confirm touch points: `src/lib/tasks.ts`, `src/components/TaskListCard.tsx`, `src/app/page.tsx`
 
 ---
 
@@ -32,8 +32,8 @@
 
 **⚠️ CRITICAL**: UI stories need `deleteTask` available from `useTasks`
 
-- [ ] T002 Add `deleteTask(id: string)` to `useTasks()` in `src/lib/tasks.ts` — no-op for missing or completed tasks; on success filter task from `tasks` and clear `frogTaskId` when it matches; do not mutate `completedLog`
-- [ ] T003 Export `deleteTask` from the `useTasks()` return object in `src/lib/tasks.ts`
+- [x] T002 Add `deleteTask(id: string)` to `useTasks()` in `src/lib/tasks.ts` — no-op for missing or completed tasks; on success filter task from `tasks` and clear `frogTaskId` when it matches; do not mutate `completedLog`
+- [x] T003 Export `deleteTask` from the `useTasks()` return object in `src/lib/tasks.ts`
 
 **Checkpoint**: Hook exposes delete with frog-clear and completed no-op behavior
 
@@ -47,11 +47,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Extend `TaskListCard` props in `src/components/TaskListCard.tsx` with `onDeleteTask: (id: string) => void`
-- [ ] T005 [US1] Add muted `DeleteOutline` IconButton on incomplete rows in `src/components/TaskListCard.tsx` that opens a confirm dialog (do not delete on first click)
-- [ ] T006 [US1] Implement calm confirm Dialog in `src/components/TaskListCard.tsx` (or small child) mirroring `src/components/NewDayAction.tsx`: title “Remove this task?”, body “It will leave your board. You can always add it again later.”, Cancel / Delete; Escape/Cancel dismiss without calling `onDeleteTask`
-- [ ] T007 [US1] On Delete confirm, call `onDeleteTask(task.id)` and close dialog in `src/components/TaskListCard.tsx`
-- [ ] T008 [US1] Wire `deleteTask` from `useTasks()` into `TaskListCard` as `onDeleteTask` in `src/app/page.tsx`
+- [x] T004 [US1] Extend `TaskListCard` props in `src/components/TaskListCard.tsx` with `onDeleteTask: (id: string) => void`
+- [x] T005 [US1] Add muted `DeleteOutline` IconButton on incomplete rows in `src/components/TaskListCard.tsx` that opens a confirm dialog (do not delete on first click)
+- [x] T006 [US1] Implement calm confirm Dialog in `src/components/TaskListCard.tsx` (or small child) mirroring `src/components/NewDayAction.tsx`: title “Remove this task?”, body “It will leave your board. You can always add it again later.”, Cancel / Delete; Escape/Cancel dismiss without calling `onDeleteTask`
+- [x] T007 [US1] On Delete confirm, call `onDeleteTask(task.id)` and close dialog in `src/components/TaskListCard.tsx`
+- [x] T008 [US1] Wire `deleteTask` from `useTasks()` into `TaskListCard` as `onDeleteTask` in `src/app/page.tsx`
 
 **Checkpoint**: MVP — incomplete tasks can be confirmed-deleted and persist across refresh
 
@@ -65,8 +65,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Guard trash IconButton render with `!task.completed` (and respect `locked`) in `src/components/TaskListCard.tsx`
-- [ ] T010 [US2] Verify `deleteTask` in `src/lib/tasks.ts` ignores completed ids so UI bugs cannot erase completed work
+- [x] T009 [US2] Guard trash IconButton render with `!task.completed` (and respect `locked`) in `src/components/TaskListCard.tsx`
+- [x] T010 [US2] Verify `deleteTask` in `src/lib/tasks.ts` ignores completed ids so UI bugs cannot erase completed work
 
 **Checkpoint**: Completed rows have no delete affordance; store ignores completed deletes
 
@@ -80,8 +80,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Confirm `deleteTask` clears `frogTaskId` only when deleting the frog id in `src/lib/tasks.ts` (already required by T002 — validate against US3 scenarios)
-- [ ] T012 [US3] Manually verify via dashboard that frog UI updates after deleting the frog task (no stale designation)
+- [x] T011 [US3] Confirm `deleteTask` clears `frogTaskId` only when deleting the frog id in `src/lib/tasks.ts` (already required by T002 — validate against US3 scenarios)
+- [x] T012 [US3] Manually verify via dashboard that frog UI updates after deleting the frog task (no stale designation)
 
 **Checkpoint**: Frog designation never points at a missing task after delete
 
@@ -91,11 +91,11 @@
 
 **Purpose**: A11y, calm theme, gates, checklist
 
-- [ ] T013 [P] Ensure IconButton `aria-label` is `Delete task: {title}` (fallback `Untitled`) and dialog has `aria-labelledby` / `aria-describedby` in `src/components/TaskListCard.tsx`
-- [ ] T014 [P] Honor reduced motion with `useReducedMotion()` → `transitionDuration={0}` on Dialog in `src/components/TaskListCard.tsx`
-- [ ] T015 [P] Keep trash icon muted (`text.secondary` / inherit) — never `color="error"` — in `src/components/TaskListCard.tsx`
-- [ ] T016 Run `npx tsc --noEmit` and `npm run lint` clean; walk `specs/012-delete-incomplete-tasks/quickstart.md` scenarios
-- [ ] T017 Mark completed tasks in this file as done as work lands
+- [x] T013 [P] Ensure IconButton `aria-label` is `Delete task: {title}` (fallback `Untitled`) and dialog has `aria-labelledby` / `aria-describedby` in `src/components/TaskListCard.tsx`
+- [x] T014 [P] Honor reduced motion with `useReducedMotion()` → `transitionDuration={0}` on Dialog in `src/components/TaskListCard.tsx`
+- [x] T015 [P] Keep trash icon muted (`text.secondary` / inherit) — never `color="error"` — in `src/components/TaskListCard.tsx`
+- [x] T016 Run `npx tsc --noEmit` and `npm run lint` clean; walk `specs/012-delete-incomplete-tasks/quickstart.md` scenarios
+- [x] T017 Mark completed tasks in this file as done as work lands
 
 ---
 
@@ -127,3 +127,8 @@ Ship Phase 1–3 (US1) first — that alone delivers delete-with-confirm for inc
 2. Build trash + dialog + wire page (T004–T008)
 3. Lock completed / frog behaviors (T009–T012)
 4. Polish a11y/theme and run gates (T013–T017)
+
+## Implementation notes (post-implement)
+
+- Shared child `src/components/DeleteIncompleteTaskControl.tsx` hosts trash + confirm dialog (used by `TaskListCard` and the frog card on `page.tsx`, since the frog is not in `otherTasks`).
+- Icon module: `@mui/icons-material/DeleteOutlined` (package naming).
