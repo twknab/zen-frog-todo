@@ -21,6 +21,15 @@ This does **not** extend to `BonsaiTree.tsx`'s decorative, procedurally-placed f
 
 FR-006/FR-007 (favicon requirements) are satisfied by this icon-library approach rather than a literal emoji glyph; the user-facing outcome (SC-004, "identify the frog mark at a glance") is unchanged.
 
+## Amendment 2 (2026-07-23, post-implementation)
+
+Follow-up feedback after the first amendment: (a) `GiFrog` presents poorly at small sizes — confirmed by rendering it at true 16px (the realistic size of a browser tab icon) alongside three alternatives; `GiFrog`'s front-facing, detailed silhouette became an indistinct blob, while Font Awesome's simpler side-profile `FaFrog` stayed clearly legible; (b) the main "Frog Garden" header used an unrelated meditating-person icon (`SelfImprovementOutlinedIcon`) rather than any frog mark; (c) a question about whether the bonsai's reward-frog critters (feature 008-frog-friends) use "the same old" icon.
+
+Resolution:
+- Swapped the frog mark from `GiFrog` to `FaFrog` (`react-icons/fa6`, Font Awesome, CC BY 4.0 — attributed in `icon.tsx`) everywhere it's used (favicon, "Largest Task" header, per-task frog button), based on the direct low-resolution legibility comparison.
+- Replaced the "Frog Garden" title's `SelfImprovementOutlinedIcon` with the same `FaFrog` mark, so the app's primary header is now part of the same consistent frog identity rather than a generic meditation icon.
+- Investigated the bonsai reward-frog critters (`BonsaiTree.tsx`) and confirmed they intentionally use a distinct, much simpler primitive-shape design (a few ellipses + dots, not an icon asset) — necessary because up to 20 of them render simultaneously at a scale well below 16px. The same low-resolution test that motivated the `FaFrog` switch confirms this: any of the icon-library options would look worse, not better, multiplied at that scale. Left unchanged, deliberately — this is not "the same old" icon, it's a different, purpose-built design for a different rendering constraint.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A bigger celebration for the day's biggest task (Priority: P1)

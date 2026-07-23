@@ -7,7 +7,6 @@ import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import SelfImprovementOutlinedIcon from "@mui/icons-material/SelfImprovementOutlined";
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import WavesOutlinedIcon from "@mui/icons-material/WavesOutlined";
 import Box from "@mui/material/Box";
@@ -28,7 +27,7 @@ import Typography from "@mui/material/Typography";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { GiFrog } from "react-icons/gi";
+import { FaFrog } from "react-icons/fa6";
 import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
@@ -149,7 +148,7 @@ export default function Home() {
         }}
       >
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          <SelfImprovementOutlinedIcon color="primary" fontSize="large" />
+          <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "2.1875rem" }} />
           <Box>
             <Typography variant="h4" component="h1">
               Frog Garden
@@ -229,7 +228,7 @@ export default function Home() {
       >
         <BentoCard area="frog" accent="primary">
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
-            <Box component={GiFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1.3rem" }} />
+            <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1.3rem" }} />
             <Chip
               label="Largest Task"
               color="primary"
