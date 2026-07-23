@@ -95,7 +95,7 @@ src/
 ## Key design decisions (see research.md for rationale)
 
 - **Downscale + JPEG** before persist (max edge 240px, quality 0.55) — fits ~365 days under quota.
-- **Capture in SandCanvas** when reset token bumps, *before* wiping strokes — only if `strokesRef` non-empty; publish data URL to today's store.
+- **Sync capture registry** in `sand.ts` (SandCanvas registers peek/wipe): mid-day `resetSand()` captures then wipes; archive uses `takeSandSnapshotForArchive()` then `wipeSandCanvas()` without re-saving (no effect-ordering race).
 - **Today key** separate from archive; on new day, attach to `ArchivedDay.sandSnapshot` then clear today key.
 - **Fresh capture preferred** at archive time if canvas still has strokes; else use today's stored snapshot.
 - **Grove** shows a Today chip/scene when today's snapshot exists; archived days show sand thumb when `sandSnapshot` present; click opens lightbox.

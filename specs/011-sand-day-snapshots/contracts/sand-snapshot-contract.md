@@ -4,20 +4,25 @@ UI + persistence contract for feature 011. Complements existing Grove UI contrac
 
 ## Capture API (in-process)
 
-### `resetSand()` (existing)
+### Mid-day vs archive clear
 
-- Remains the public clear signal (token bump).
-- Side effect (new): `SandCanvas` may write `frog-garden:sand-today-snapshot-v1` **before** wiping when strokes exist.
+| API | Behavior |
+|---|---|
+| `resetSand()` | Sync: peek capture → write today if non-null → wipe. Used by the Sand Mode reset button. |
+| `takeSandSnapshotForArchive()` | Sync: peek capture if strokes, else today's stored value. Does not wipe. |
+| `wipeSandCanvas()` | Wipe strokes/bitmap only (no save). Used after archive/rollover. |
+| `clearTodaySandSnapshot()` | Sets today key to `null` after archive. |
 
 ### Today's snapshot accessors (`src/lib/sand.ts`)
 
 | Export | Behavior |
 |---|---|
 | `SAND_TODAY_SNAPSHOT_KEY` | `'frog-garden:sand-today-snapshot-v1'` |
-| `useTodaySandSnapshot()` | Reactive `[value, setValue]` or read helper for Grove |
+| `useTodaySandSnapshot()` | Reactive read for Grove (`string \| null`) |
 | `readTodaySandSnapshot()` | Non-reactive raw read for rollover (mirrors `readArchive` tolerance) |
 | `clearTodaySandSnapshot()` | Sets null after archive |
 | `captureSandSnapshot(canvas)` | Offscreen downscale → JPEG data URL; never throws to caller (returns `null` on failure) |
+| `registerSandCanvasHandlers` | SandCanvas mount/unmount registration of peek/wipe |
 
 ### `ArchivedDay.sandSnapshot`
 

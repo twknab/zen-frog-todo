@@ -28,13 +28,22 @@ All decisions below are constrained by the constitution (calm, local-first, acce
 
 **Failure mode**: If `setItem` throws (`QuotaExceededError`), swallow and continue clear/archive (FR-011). No alarm UI.
 
-## Decision 2 — Capture timing & ownership (SandCanvas + reset token)
+## Decision 2 — Capture timing & ownership (sync registry + reset token)
 
-**Decision**: Keep the existing `sandResetToken` broadcast. In `SandCanvas`, the effect that watches the token MUST: (1) if `strokesRef.current.length > 0`, downscale-capture and write today's snapshot; (2) then clear strokes/bitmap as today. Empty canvas → skip write. Page/new-day callers keep calling `resetSand()`; they do not need a canvas ref.
+**Decision**: `SandCanvas` registers two sync callbacks with `sand.ts` on mount (cleared on unmount):
 
-**Rationale**: Locked clarification #3 (capture immediately before wipe from live canvas). The canvas owns the bitmap and stroke truth; the token remains the single clear signal (existing pattern). Avoids prop-drilling a canvas ref into `dayArchive`.
+1. `peekCapture()` — if strokes exist, return downscaled JPEG **without** wiping; else `null`.
+2. `wipeOnly()` — clear strokes/bitmap with **no** snapshot write.
 
-**Alternatives considered**: Imperative `captureAndReset()` called from page/`useNewDay` via ref — more coupling. Persist every stroke continuously — out of scope / heavier.
+Public API:
+
+- `resetSand()` (mid-day button): `peekCapture()` → if non-null, write today key (fail-open) → `wipeOnly()`. Prefer invoking this **synchronously** from the reset helper (not only in a post-paint effect) so storage is updated before any subsequent archive read in the same turn. A token bump may still notify other listeners, but capture MUST NOT depend on `useEffect` ordering for correctness.
+- `takeSandSnapshotForArchive()`: return `peekCapture() ?? readTodaySandSnapshot()` (fresh preferred).
+- After archiving: `clearTodaySandSnapshot()` then `wipeSandCanvas()` (`wipeOnly`) — **do not** call a capture-and-save reset, or the keepsake would be rewritten into the today key after clear.
+
+**Rationale**: Locked clarification #3, plus analysis C1 — `useNewDay` builds the archive in the same synchronous turn as reset; an effect-only capture races and drops fresh drawings. A tiny module registry avoids prop-drilling a canvas ref into `dayArchive` while keeping stroke truth inside `SandCanvas`.
+
+**Alternatives considered**: Effect-only capture on token (rejected: races archive). Imperative React ref from page (more coupling). Persist every stroke continuously — out of scope.
 
 ## Decision 3 — Today's snapshot key + archive field (additive)
 

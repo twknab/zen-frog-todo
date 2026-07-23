@@ -37,8 +37,8 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **⚠️ CRITICAL**: Complete before user-story UI work depends on them.
 
-- [ ] T002 Add snapshot constants + pure `captureSandSnapshot(source: HTMLCanvasElement): string | null` in `src/lib/sand.ts` (max edge 240, JPEG quality 0.55, sand-colored background composite, never throws — return `null` on failure) per research Decision 1 & 7 / data-model.md.
-- [ ] T003 [P] Add today's snapshot persistence in `src/lib/sand.ts`: key `frog-garden:sand-today-snapshot-v1`, `useTodaySandSnapshot()`, `readTodaySandSnapshot()`, `clearTodaySandSnapshot()` / safe setter that swallows `QuotaExceededError` (FR-011).
+- [ ] T002 Add snapshot constants + pure `captureSandSnapshot(source: HTMLCanvasElement): string | null` in `src/lib/sand.ts` (max edge 240, JPEG quality 0.55, fixed muted sand-colored background composite, never throws — return `null` on failure) per research Decision 1 & 7 / data-model.md.
+- [ ] T003 [P] Add today's snapshot persistence + sync canvas registry in `src/lib/sand.ts`: key `frog-garden:sand-today-snapshot-v1`, `useTodaySandSnapshot()`, `readTodaySandSnapshot()`, `clearTodaySandSnapshot()`, `registerSandCanvasHandlers({ peekCapture, wipeOnly })`, `takeSandSnapshotForArchive()`, `wipeSandCanvas()`, and make `resetSand()` synchronously capture→save today→wipe (fail-open on quota) (FR-011, analysis C1).
 - [ ] T004 [P] Extend `ArchivedDay` in `src/lib/dayArchive.ts` with optional `sandSnapshot?: string`; tolerate absent/invalid values when reading (`?? undefined`) — back-compat with pre-feature archives (FR-005).
 
 **Checkpoint**: Capture + storage primitives ready; US1 can wire SandCanvas.
@@ -51,9 +51,9 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **Independent Test**: quickstart Scenarios A–C (mid-day overwrite, empty skip, archive attach).
 
-- [ ] T005 [US1] In `src/components/SandCanvas.tsx`, on `sandResetToken` change: if `strokesRef` has strokes, call `captureSandSnapshot` and write today's snapshot (fail-open); then clear strokes/bitmap as today. Skip write when empty (FR-001, FR-002, FR-003).
-- [ ] T006 [US1] Update `useNewDay` in `src/lib/dayArchive.ts` to attach `sandSnapshot` (prefer fresh capture coordination via today key written by canvas wipe order — ensure resetSand runs such that capture lands before archive read, OR read today key after a synchronous capture path); widen empty-day `hasContent` when sand keepsake exists; clear today key after archive (FR-004, Decision 4).
-- [ ] T007 [US1] Update `buildRolloverPlan` / `useDailyRollover` in `src/lib/dayArchive.ts` to include `sandSnapshot` from `readTodaySandSnapshot()` when present, widen empty-day guard, and clear today key after rollover (Decision 5). Document that uncleared in-memory strokes after process death cannot be recovered.
+- [ ] T005 [US1] In `src/components/SandCanvas.tsx`, register `peekCapture` / `wipeOnly` with `registerSandCanvasHandlers` (unregister on unmount); implement peek via `captureSandSnapshot(canvas)` when `strokesRef` non-empty; keep token listener as wipe-only fallback for any external token bumps that don't go through `resetSand`'s sync path (FR-001, FR-002, FR-003).
+- [ ] T006 [US1] Update `useNewDay` in `src/lib/dayArchive.ts`: `sandSnapshot = takeSandSnapshotForArchive()`; widen `hasContent` when sand keepsake exists; attach optional field on archive; then `clearTodaySandSnapshot()` + `wipeSandCanvas()` (not capture-and-save `resetSand`) (FR-004, Decision 4, analysis C1).
+- [ ] T007 [US1] Update `buildRolloverPlan` / `useDailyRollover` in `src/lib/dayArchive.ts` to accept/include `sandSnapshot` from `readTodaySandSnapshot()` when present, widen empty-day guard, then clear today key + `wipeSandCanvas()` after rollover (Decision 5). Comment that uncleared in-memory strokes after process death cannot be recovered.
 
 **Checkpoint**: Snapshots persist for today and onto archived days; MVP data path complete.
 
@@ -66,7 +66,7 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 **Independent Test**: quickstart Scenario D (+ Today/archived thumbs visible).
 
 - [ ] T008 [P] [US2] Create `src/components/SandSnapshotLightbox.tsx` — themed MUI `Dialog`, `img` with date-referenced `alt`, Escape/backdrop dismiss, `transitionDuration={0}` under `useReducedMotion()`, focus return via MUI defaults (FR-009, FR-010, FR-012).
-- [ ] T009 [US2] Extend `src/components/Grove.tsx` to show a **Today** ribbon entry when `useTodaySandSnapshot()` is non-null (label "Today", thumbnail button opens lightbox); no shame UI when absent (FR-008).
+- [ ] T009 [US2] Extend `src/components/Grove.tsx` to show a **Today** ribbon entry when `useTodaySandSnapshot()` is non-null (label "Today", thumbnail button opens lightbox) even if the archive is empty; calm archive empty-state only when archive is empty AND there is no today snapshot; no shame UI when sand absent (FR-008, analysis M2).
 - [ ] T010 [US2] Extend `src/components/GroveDayDialog.tsx` (and/or Grove scene controls) to show a sand thumbnail when `day.sandSnapshot` is set; activating opens `SandSnapshotLightbox` with `archiveEntryLabel` in the accessible name (FR-008, FR-010).
 - [ ] T011 [US2] A11y pass: keyboard operability for all new controls, SR names reference date/Today, verify reduced-motion on lightbox; no scoreboard copy (FR-010, FR-014).
 
