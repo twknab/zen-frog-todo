@@ -31,5 +31,6 @@
 
 ## Notes
 
-- Locked product defaults from the feature brief (eligibility, confirm dialog, frog clear, copy, a11y, out-of-scope) are encoded in FR/US; Phase C will record them formally under Clarifications.
+- Clarifications session 2026-07-23 recorded locked product defaults (eligibility, confirm dialog, frog clear, copy, a11y, out-of-scope).
 - Mentions of "MUI" in the input were translated to themed/calm UI requirements without naming frameworks in the body.
+- Spec quality re-validated after clarify: 16/16 items still passing.

@@ -87,7 +87,7 @@ If the unfinished task being removed was designated as today's frog, removing it
 - **FR-005**: Canceling or dismissing the dialog (including Escape) MUST leave the task and all related state unchanged.
 - **FR-006**: If the removed task was designated as today's frog, the system MUST clear the frog designation to unset.
 - **FR-007**: Removing an incomplete task MUST NOT append to, edit, or remove entries in the completed-task log, day archive, or Grove history.
-- **FR-008**: Delete-related copy MUST be calm and non-judgmental (for example, asking to remove the task and noting it leaves the board); it MUST NOT use guilt, failure, or alarm framing.
+- **FR-008**: Delete-related copy MUST be calm and non-judgmental. Preferred dialog framing: title “Remove this task?” and body “It will leave your board. You can always add it again later.” The system MUST NOT use guilt, failure, or alarm framing.
 - **FR-009**: The trash control MUST be keyboard-operable and have an accessible name that includes the task title (or a clear fallback when the title is empty).
 - **FR-010**: The confirmation dialog MUST be labelled for assistive technology, keyboard-operable, and honor reduced-motion preferences.
 - **FR-011**: Visual treatment of the trash control MUST be muted and themed with the rest of the app — not alarm-red shame styling.
