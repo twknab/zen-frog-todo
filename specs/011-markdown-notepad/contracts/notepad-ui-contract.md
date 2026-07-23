@@ -1,64 +1,67 @@
-# UI Contract: Markdown Notepad
+# UI Contract: Markdown Notepad (persistent eng notes)
 
-This is a client UI feature; the "contract" is observable behavior and component boundaries, not a network API.
+Client UI feature — observable behavior and component boundaries, not a network API.
 
-## Component: `MarkdownNotepad` (`src/components/MarkdownNotepad.tsx`)
+## Component: `NotepadButton`
 
-**Role**: Controlled markdown editor with exclusive write / preview modes for today's daily note.
+**Role**: Upper-right header control to open the notepad.
 
-**Props**:
+| Contract | Detail |
+|---|---|
+| Placement | Header action stack with Export / theme (upper-right). |
+| Visibility | Shown in Flow **and** Focus Mode. |
+| A11y | `aria-label` e.g. “Open notepad”; keyboard activatable. |
+| Behavior | Sets shell open = true. |
+
+## Component: `NotepadShell`
+
+**Role**: Full-screen surface hosting the editor.
+
+| Contract | Detail |
+|---|---|
+| Presentation | Full-screen modal (`Dialog` `fullScreen` preferred). |
+| Open/close | Close button + Escape; focus trapped while open. |
+| Motion | Respect `useReducedMotion()` (instant when reduced). |
+| Content | Title (“Notepad”), close control, `<MarkdownNotepad />`. |
+| Persist | Closing does **not** discard; no Save/Discard prompt. |
+
+## Component: `MarkdownNotepad`
+
+**Role**: Controlled write/preview editor for the engineering notepad.
 
 | Prop | Type | Required | Notes |
 |---|---|---|---|
 | `value` | `string` | yes | Markdown source |
-| `onChange` | `(next: string) => void` | yes | Called on write-mode edits |
-| `placeholder` | `string` | no | Calm empty-state hint for write mode |
+| `onChange` | `(next: string) => void` | yes | Auto-persist via parent |
+| `placeholder` | `string` | no | Calm eng-scratchpad hint (not reflection/guilt copy) |
 
-**Behavior**:
-
-| Element | Contract |
+| Behavior | Contract |
 |---|---|
-| Mode control | Exclusive Write / Preview control; keyboard-operable; group has an accessible name (e.g. "Note display mode"); announces pressed state. |
-| Write mode | Themed multiline text field bound to `value` / `onChange`. Visible when mode is write. |
-| Preview mode | `MarkdownPreview` of `value`. Read-only. Empty value → calm empty preview (no error). |
-| Mode switch | Preserves `value` exactly. Motion instant under `prefers-reduced-motion`. |
-| Default | Mode is write on mount. |
+| Mode control | Exclusive Write / Preview; labelled group; keyboard + `aria-pressed`. |
+| Write | Themed multiline field; large minRows suitable for full-screen. |
+| Preview | `MarkdownPreview` of `value`; empty → calm empty state. |
+| Default mode | `write` on mount / each shell open. |
+| Must not | Touch reflection storage; call network; stock-MUI look; non-essential motion under reduced-motion. |
 
-**Must**:
-- Not persist mode (FR-018).
-- Not call network APIs (FR-011).
-- Use theme tokens (FR-015).
-- Remain usable when empty (edge case).
+## Component: `MarkdownPreview`
 
-**Must not**: introduce a second persisted note; look like stock Material chrome; play non-essential motion under reduced-motion.
+**Role**: Themed GFM markdown render (`react-markdown` + `remark-gfm` + `rehype-sanitize`).
 
-## Component: `MarkdownPreview` (`src/components/MarkdownPreview.tsx`)
+| Prop | Type |
+|---|---|
+| `markdown` | `string` |
+| `sx` | optional MUI sx |
 
-**Role**: Themed, sanitized rendered markdown.
+**Contract**: No unsanitized HTML injection; theme tokens for typography/tables/code; reusable for Grove reflection if desired.
 
-**Props**: `{ markdown: string }` (and optional `sx` if useful).
+## Page integration (`page.tsx`)
 
-**Contract**:
-- Renders `renderMarkdownToSafeHtml(markdown)` into a themed container.
-- Never injects unsanitized HTML.
-- Used by both `MarkdownNotepad` (preview mode) and `GroveDayDialog` (archived note).
+- Restore Close-the-day card: plain reflection `TextField` + `NewDayAction` (not `MarkdownNotepad`).
+- Mount `NotepadButton` in header (outside `!isFocus` gates).
+- Mount `NotepadShell` once; bind notepad string to `frog-garden:notepad-v1`.
+- Do not clear notepad in new-day flows.
 
-## Lib: `renderMarkdownToSafeHtml` (`src/lib/markdown.ts`)
+## Focus Mode
 
-**Contract**: `(markdown: string) => string` — always returns a string safe for `dangerouslySetInnerHTML`. Empty input → empty string (or benign empty paragraph policy documented in implementation).
-
-## Page integration (`src/app/page.tsx`)
-
-- Close-the-day / today's-note card keeps grid area `reflection`.
-- Replaces plain `TextField` with `<MarkdownNotepad value={notes} onChange={setNotes} … />`.
-- Keeps `<NewDayAction />` in the same card.
-- Card remains gated by `!isFocus`.
-
-## Grove integration (`src/components/GroveDayDialog.tsx`)
-
-- When `day.reflection.trim() !== ""`, render heading + `<MarkdownPreview markdown={day.reflection} />` instead of plain Typography text.
-- When empty, omit the note block entirely (unchanged graceful omit).
-
-## Archive / export
-
-- No new fields. Live and archived note content continue to flow through `reflection` as documented in `dayArchive.ts` contracts from features 007/010.
+- Notepad button remains reachable.
+- Opening notepad does not require exiting Focus Mode.

@@ -1,60 +1,69 @@
-# Phase 0 Research: Markdown Notepad — Daily Notes
+# Phase 0 Research: Markdown Notepad — Persistent Engineering Notes
 
-All decisions below are constrained by the constitution (calm, local-first, accessible, re-themed MUI, YAGNI) and the clarified spec. No `NEEDS CLARIFICATION` items remain from the plan's Technical Context.
+All decisions constrained by the constitution and the **post-clarify** spec. Prior research that assumed “replace reflection / Close-the-day card” is superseded.
 
-## Decision 1 — Replace/upgrade the reflection field (not a second note)
+## Decision 1 — Distinct from reflection (not a replace)
 
-- **Decision**: The markdown notepad **replaces** the Close-the-day plain `TextField`. Live persistence stays on `frog-garden:reflection-v1`. Archive/export continue to use `ArchivedDay.reflection` / `live.reflection`. Product copy shifts to "note" / "Today's note"; internal field name stays `reflection` for compatibility.
-- **Rationale**: Clarified in session 2026-07-22. Avoids two overlapping daily-note concepts (Principle VI). Zero migration of stored strings — existing text appears in the notepad automatically.
-- **Alternatives considered**: Distinct second note (duplication, dual archive fields, dual export keys); rename storage key (breaks prior exports / FR-010).
+- **Decision**: Keep Close-the-day **reflection** as a plain mental-health token (`frog-garden:reflection-v1`, archived on new day). Add a **separate** engineering notepad.
+- **Rationale**: Clarified 2026-07-22 — reflection ≠ eng scratchpad. Avoids conflating two jobs.
+- **Alternatives considered**: Replace/upgrade reflection (rejected); second day-bound note that clears on new day (rejected — user wants persistence).
 
-## Decision 2 — Markdown stack: `marked` + `DOMPurify`
+## Decision 2 — Persistence model
 
-- **Decision**: Parse with [`marked`](https://github.com/markedjs/marked) (`marked.parse`), sanitize with [`dompurify`](https://github.com/cure53/DOMPurify) before any HTML insert. Shared helper `renderMarkdownToSafeHtml` in `src/lib/markdown.ts`. Preview components use `dangerouslySetInnerHTML` **only** with sanitized output. Both packages used from client components only (`"use client"`).
-- **Rationale**: Principle VI — smallest reasonable option that covers a modest markdown subset + XSS hardening (FR-011, FR-012). Not a WYSIWYG suite. Fits the feature request's explicit example ("minimal markdown parser + manual sanitization").
+- **Decision**: New key `frog-garden:notepad-v1` (string markdown source) via `usePersistentState`. **Never** cleared by `useStartNewDay` / auto-rollover. **Not** copied onto `ArchivedDay`.
+- **Rationale**: Clarify — not ephemeral to the day; independent of day archive.
+- **Alternatives considered**: Snapshot into each archived day (rejected); multi-note library (YAGNI for v1).
+
+## Decision 3 — Full export only
+
+- **Decision**: Extend `FullExport` with top-level `notepad: string` (alongside `archive` + `live`). Do **not** add notepad to `SingleDayExport` / `ArchivedDay`. `useExportEverything` reads the notepad key at click time. Older full exports without `notepad` → treat as `""` on any future import path.
+- **Rationale**: Clarify Option A. Principle III still satisfied via full dump.
+- **Alternatives considered**: Embed in every day export (false history); omit from all exports (lock-in — forbidden).
+
+## Decision 4 — UI chrome: upper-right → full-screen
+
+- **Decision**: IconButton (or equivalent) in the existing header `Stack` next to Export / theme controls. Opens a **full-screen** MUI `Dialog` (`fullScreen`) or full-viewport bottom `Drawer` — prefer **`Dialog` fullScreen** for standard focus trap, Escape-to-close, and `aria-modal` semantics. Host `MarkdownNotepad` inside. Close control in the shell header. Visible in **both** Flow and Focus modes.
+- **Rationale**: Clarify (upper-right, full-screen, Focus-available). Dialog fullScreen matches “plenty of real estate” better than a partial bottom sheet.
+- **Alternatives considered**: Bottom half drawer (too small); Close-the-day card embedding (conflicts with distinct reflection); hide in Focus (rejected — flow-state notes).
+
+## Decision 5 — Markdown stack: `react-markdown` + `remark-gfm` + `rehype-sanitize`
+
+- **Decision**: Replace `marked` + `dompurify` with:
+  - [`react-markdown`](https://github.com/remarkjs/react-markdown) — React elements, secure by default (no raw HTML).
+  - [`remark-gfm`](https://github.com/remarkjs/remark-gfm) — tables, task lists, strikethrough, autolinks.
+  - [`rehype-sanitize`](https://github.com/rehypejs/rehype-sanitize) — defense-in-depth allowlist.
+  - Shared `MarkdownPreview` wraps this config; theme via `components` map / surrounding MUI `Box` styles (no stock GitHub CSS dump).
+- **Rationale**: Clarify — “richest markdown library the better” / FR-016. Richer GFM story and idiomatic React vs `dangerouslySetInnerHTML`. Still 100% client-side, no telemetry.
 - **Alternatives considered**:
-  - `react-markdown` + `rehype-sanitize` — excellent React ergonomics and no `dangerouslySetInnerHTML`, but pulls a larger unified/remark graph; more than needed for short daily notes.
-  - `markdown-it` — more plugins/weight than we need.
-  - Custom regex parser — fragile, incomplete, worse XSS story.
-  - Heavy editors (CodeMirror MD, TipTap, Milkdown) — violates YAGNI and calm UX (chrome, toolbars, bundle size).
+  - Keep `marked` + `DOMPurify` (already in package.json) — smaller, but weaker fit to “richest” ask and keeps HTML string injection.
+  - `markdown-it` + plugins — powerful, more manual React wiring.
+  - TipTap / CodeMirror / Milkdown — WYSIWYG weight; violates calm/YAGNI for v1.
+  - Math/KaTeX, Mermaid, raw HTML (`rehype-raw`) — out of scope (YAGNI; security surface).
 
-## Decision 3 — Placement: upgrade Close-the-day card
+## Decision 6 — Write / preview + auto-persist
 
-- **Decision**: Keep the existing bento `reflection` grid area. Replace the multiline `TextField` with `<MarkdownNotepad />`. Retitle the card toward today's note (e.g. "Today's note"); keep `<NewDayAction />` at the bottom of the same card. Still hidden in Focus Mode via existing `!isFocus` gate.
-- **Rationale**: Clarified placement; least layout churn; notepad is available all day in the same surface users already know.
-- **Alternatives considered**: Separate card above/below (two note-adjacent regions during transition); move note to Standup Summary (wrong job — that's task rollup).
+- **Decision**: Session-only mode state (`write` \| `preview`), default `write` on open. Exclusive themed `ToggleButtonGroup`. Parent binds `value`/`onChange` to persistent notepad state — every keystroke persists; closing the shell never prompts and never discards.
+- **Rationale**: FR-003–005, FR-015, FR-017; clarify auto-persist.
+- **Alternatives considered**: Explicit Save (rejected); split-pane always-on preview (more density).
 
-## Decision 4 — Write / preview toggle UX + a11y
+## Decision 7 — Reduced motion & a11y
 
-- **Decision**: Session-only React state (`"write" | "preview"`), default `"write"`. Use a re-themed MUI `ToggleButtonGroup` (exclusive) or two `ToggleButton`s with clear labels ("Write" / "Preview"), `aria-label` on the group (e.g. "Note display mode"), and `aria-pressed` semantics from ToggleButton. Write mode: themed multiline `TextField` (same calm standard variant as today). Preview mode: `MarkdownPreview` in a similarly padded region. Only one mode visible at a time (not split pane).
-- **Rationale**: FR-002, FR-013, FR-018; matches MUI patterns already in the app; exclusive toggle is keyboard-friendly.
-- **Alternatives considered**: Tabs (heavier); split pane (more density, less calm); persisting mode preference (YAGNI).
+- **Decision**: `useReducedMotion()` — zero-duration Dialog transition and mode crossfade when reduced. Shell: labelled open button (“Open notepad”), Dialog title (“Notepad”), close button, focus trap. Toggle group `aria-label` e.g. “Notepad display mode”.
+- **Rationale**: Principle IV / FR-010–011.
 
-## Decision 5 — Reduced motion
+## Decision 8 — Grove / reflection rendering
 
-- **Decision**: Read `useReducedMotion()` (same as `BonsaiTree` / `page.tsx`). If reduced: swap write/preview instantly (no opacity/height animation). If motion allowed: optional short opacity crossfade (≤ ~200ms, calm easing) via Framer Motion or CSS — sparingly.
-- **Rationale**: Principle IV / FR-014.
+- **Decision**: Grove may keep using `MarkdownPreview` for archived **reflection** (nice-to-have; reflections are usually plain prose). Do **not** show the engineering notepad inside Grove day recaps (notepad is not day-scoped).
+- **Rationale**: Spec — notepad independent of archive; Grove is day history.
+- **Alternatives considered**: Show notepad snippet in Grove (misleading “day note”).
 
-## Decision 6 — Shared preview for Grove
+## Decision 9 — Realigning existing WIP on this branch
 
-- **Decision**: Extract `MarkdownPreview` and reuse it in `GroveDayDialog` wherever plain `day.reflection` text is shown today. Empty reflection still omitted entirely (no empty heading).
-- **Rationale**: FR-008 — one sanitization path; visual consistency between live preview and history.
-- **Alternatives considered**: Plain text in Grove only (inconsistent with "live rendered preview" promise for archived notes).
+- **Decision**: Treat current Close-the-day `MarkdownNotepad` + reflection-key binding as **incorrect relative to clarify**. Tasks must: restore plain reflection `TextField` + original card framing; introduce shell + new key; swap markdown deps; extend full export.
+- **Rationale**: Spec drift from pre-clarify implementation.
 
-## Decision 7 — Export / archive boundary
+## Decision 10 — Scope guards
 
-- **Decision**: No changes to export JSON shape. `buildSingleDayExport` / `buildFullExport` / `useStartNewDay` / auto-rollover already read/write `reflection`. Notepad parent continues to pass the same string into those hooks. Update user-facing strings in `NewDayAction` (and similar) from "reflection" to "note" where appropriate.
-- **Rationale**: FR-006, FR-009, FR-010; Principle III portability without lock-in or breaking old exports.
-
-## Decision 8 — Markdown subset & unsafe content
-
-- **Decision**: Rely on `marked` defaults for common constructs (headings, emphasis, lists, links, code). Configure DOMPurify with a conservative allowlist (default DOMPurify profile is fine; do **not** enable `ADD_TAGS` for `script`/`iframe`). Links may render as `<a>`; prefer `target`-safe defaults (DOMPurify strips dangerous URLs like `javascript:`). No image embedding UX in v1 (images in markdown may render as sanitized `<img>` only if DOMPurify allows — acceptable; no upload UI).
-- **Rationale**: Spec Assumptions + FR-012. Edge case: malformed markdown never corrupts the source string (source lives only in write-mode state / storage).
-
-## Decision 9 — Scope guards (deliberately not built)
-
-- No WYSIWYG, toolbar, or slash-commands.
-- No separate notes history beyond The Grove.
-- No cloud sync, AI assist, or collaborative editing.
-- No new localStorage keys for mode or a second note body.
-- No rename of `reflection` in archive/export JSON.
+- No multi-note library, per-task attachments, cloud sync, AI, image upload UI, slash-commands, or notepad version history beyond full export.
+- No day-archive snapshot of notepad.
+- No removing or renaming `ArchivedDay.reflection`.
