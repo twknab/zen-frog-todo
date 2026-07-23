@@ -3,7 +3,11 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { renderMarkdownToSafeHtml } from "@/lib/markdown";
+import ReactMarkdown from "react-markdown";
+import {
+  markdownRehypePlugins,
+  markdownRemarkPlugins,
+} from "@/lib/markdown";
 
 type MarkdownPreviewProps = {
   markdown: string;
@@ -12,13 +16,14 @@ type MarkdownPreviewProps = {
 };
 
 /**
- * Themed, sanitized rendered markdown. Shared by the live notepad preview and
- * The Grove day recap (specs/011-markdown-notepad).
+ * Themed GFM markdown render via react-markdown + remark-gfm + rehype-sanitize.
+ * Shared by the live notepad preview and The Grove day recap
+ * (specs/011-markdown-notepad).
  */
 export default function MarkdownPreview({ markdown, sx }: MarkdownPreviewProps) {
-  const html = renderMarkdownToSafeHtml(markdown);
+  const source = markdown ?? "";
 
-  if (html === "") {
+  if (source.trim() === "") {
     return (
       <Typography variant="body2" color="text.secondary" sx={sx}>
         Nothing to preview yet — switch to Write and jot a thought.
@@ -52,6 +57,10 @@ export default function MarkdownPreview({ markdown, sx }: MarkdownPreviewProps) 
             pl: 2.5,
           },
           "& li": { my: 0.35 },
+          "& li > input[type=checkbox]": {
+            mr: 1,
+            verticalAlign: "middle",
+          },
           "& a": {
             color: "secondary.main",
             textDecorationThickness: "1px",
@@ -90,6 +99,26 @@ export default function MarkdownPreview({ markdown, sx }: MarkdownPreviewProps) 
             borderTop: 1,
             borderColor: "divider",
           },
+          "& table": {
+            width: "100%",
+            borderCollapse: "collapse",
+            my: 1.5,
+            typography: "body2",
+          },
+          "& th, & td": {
+            border: 1,
+            borderColor: "divider",
+            px: 1.25,
+            py: 0.75,
+            textAlign: "left",
+          },
+          "& th": {
+            fontWeight: 600,
+            bgcolor: "action.hover",
+          },
+          "& del": {
+            color: "text.secondary",
+          },
           "& img": {
             maxWidth: "100%",
             borderRadius: 1,
@@ -97,7 +126,13 @@ export default function MarkdownPreview({ markdown, sx }: MarkdownPreviewProps) 
         },
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    >
+      <ReactMarkdown
+        remarkPlugins={markdownRemarkPlugins}
+        rehypePlugins={markdownRehypePlugins}
+      >
+        {source}
+      </ReactMarkdown>
+    </Box>
   );
 }

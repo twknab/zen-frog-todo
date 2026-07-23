@@ -1,30 +1,12 @@
 /**
- * Client-side markdown → safe HTML for the daily notepad preview.
- * Callers must only feed the result into `dangerouslySetInnerHTML`.
- * Uses `marked` + `DOMPurify` (see specs/011-markdown-notepad/research.md).
- *
- * SSR: returns "" when `window` is unavailable; the preview hydrates on the client.
+ * Shared react-markdown plugin config for themed GFM previews.
+ * Used by MarkdownPreview (live notepad + Grove archived reflection).
+ * See specs/011-markdown-notepad/research.md Decision 5.
  */
 
-import DOMPurify from "dompurify";
-import { marked } from "marked";
+import type { PluggableList } from "unified";
+import rehypeSanitize from "rehype-sanitize";
+import remarkGfm from "remark-gfm";
 
-marked.setOptions({
-  gfm: true,
-  breaks: true,
-});
-
-export function renderMarkdownToSafeHtml(markdown: string): string {
-  const source = markdown ?? "";
-  if (source.trim() === "") {
-    return "";
-  }
-
-  const raw = marked.parse(source, { async: false }) as string;
-
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return DOMPurify.sanitize(raw);
-}
+export const markdownRemarkPlugins: PluggableList = [remarkGfm];
+export const markdownRehypePlugins: PluggableList = [rehypeSanitize];
