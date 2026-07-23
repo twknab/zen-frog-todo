@@ -120,6 +120,19 @@ export function useTasks() {
     setCompletedLog([]);
   }
 
+  // Remove an incomplete live task permanently. Completed / missing ids are
+  // ignored so finished work cannot be erased this way (spec 012). Does not
+  // touch completedLog, day archive, or Grove.
+  function deleteTask(id: string) {
+    const target = tasks.find((task) => task.id === id);
+    if (!target || target.completed) return;
+    setState((current) => ({
+      ...current,
+      tasks: current.tasks.filter((task) => task.id !== id),
+      frogTaskId: current.frogTaskId === id ? null : current.frogTaskId,
+    }));
+  }
+
   function reorderTasks(draggedId: string, targetId: string) {
     if (draggedId === targetId) return;
     setState((current) => {
@@ -150,6 +163,7 @@ export function useTasks() {
     toggleTaskCompleted,
     updateCompletedNote,
     setFrogTaskId,
+    deleteTask,
     reorderTasks,
     startNewDay,
   };
