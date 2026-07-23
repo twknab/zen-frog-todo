@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { archiveEntryLabel, type ArchivedDay } from "@/lib/dayArchive";
 import { bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
 import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
@@ -33,7 +33,8 @@ type GroveDayDialogProps = {
  */
 export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDayDialogProps) {
   const reduce = useReducedMotion();
-  const [sandOpen, setSandOpen] = useState(false);
+  /** When set to the current day's id, the sand lightbox is open for that day. */
+  const [sandDayId, setSandDayId] = useState<string | null>(null);
 
   // Keep the last non-null day mounted through the close transition so the
   // content doesn't blank out as the dialog animates away.
@@ -41,10 +42,7 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
   const label = day ? archiveEntryLabel(day, sameDateCount) : "";
   const sandSrc = day?.sandSnapshot;
   const sandLabel = `Sand drawing for ${label}`;
-
-  useEffect(() => {
-    if (!day) setSandOpen(false);
-  }, [day]);
+  const sandLightboxOpen = Boolean(day && sandDayId === day.id && sandSrc);
 
   return (
     <>
@@ -72,7 +70,7 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
                       Sand
                     </Typography>
                     <Button
-                      onClick={() => setSandOpen(true)}
+                      onClick={() => setSandDayId(day.id)}
                       aria-label={sandLabel}
                       color="inherit"
                       sx={{
@@ -145,9 +143,9 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
       </Dialog>
 
       <SandSnapshotLightbox
-        src={sandOpen && sandSrc ? sandSrc : null}
+        src={sandLightboxOpen && sandSrc ? sandSrc : null}
         label={sandLabel}
-        onClose={() => setSandOpen(false)}
+        onClose={() => setSandDayId(null)}
       />
     </>
   );
