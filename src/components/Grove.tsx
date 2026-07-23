@@ -252,11 +252,13 @@ export default function Grove() {
   );
 }
 
-/** Soft stacked peek of recent drawings — latest on top, older slipped behind. */
+/** Soft stacked peek of recent drawings — rounded bordered cards, latest on top. */
 function SandStackPeek({ srcs, size }: { srcs: string[]; size: number }) {
   const shown = srcs.slice(-STACK_PEEK);
   const layers = shown.length;
-  const stackPad = layers > 1 ? 6 : 0;
+  // Enough offset that each card edge reads as a distinct layer.
+  const step = layers > 1 ? 5 : 0;
+  const stackPad = step * (layers - 1);
 
   return (
     <Box
@@ -268,13 +270,10 @@ function SandStackPeek({ srcs, size }: { srcs: string[]; size: number }) {
     >
       {shown.map((src, i) => {
         const fromTop = i; // oldest further back
-        const offset = (layers - 1 - fromTop) * 3;
+        const offset = (layers - 1 - fromTop) * step;
         return (
           <Box
             key={`${src.slice(0, 24)}-${i}`}
-            component="img"
-            src={src}
-            alt=""
             aria-hidden
             sx={{
               position: "absolute",
@@ -282,14 +281,27 @@ function SandStackPeek({ srcs, size }: { srcs: string[]; size: number }) {
               top: offset,
               width: size,
               height: size,
-              objectFit: "cover",
-              borderRadius: 1.5,
-              display: "block",
-              bgcolor: "action.hover",
-              boxShadow: layers > 1 ? 1 : 0,
+              borderRadius: 2,
+              overflow: "hidden",
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "divider",
+              boxShadow: 1,
               zIndex: fromTop + 1,
             }}
-          />
+          >
+            <Box
+              component="img"
+              src={src}
+              alt=""
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          </Box>
         );
       })}
     </Box>
