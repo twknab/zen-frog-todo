@@ -9,13 +9,13 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
 import { useReducedMotion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import SandDrawingGallery from "@/components/SandDrawingGallery";
+import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
 import { archiveEntryLabel, type ArchivedDay } from "@/lib/dayArchive";
 import { bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
-import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
+import { drawingsFromArchivedDay } from "@/lib/sand";
 
 type GroveDayDialogProps = {
   /** The selected day; the dialog is open while this is non-null. */
@@ -28,27 +28,38 @@ type GroveDayDialogProps = {
 /**
  * A calm, read-only recap of one archived day (specs/010-grove-history, US3):
  * its date, the reflection (only when written), and the tasks completed that
- * day. Optional sand keepsake thumbnail (011) opens a lightbox.
- * MUI Dialog manages focus; motion collapses under prefers-reduced-motion.
+ * day. Sand drawings (011) appear as a bottom gallery; each thumb opens a
+ * lightbox. MUI Dialog manages focus; motion collapses under prefers-reduced-motion.
  */
 export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDayDialogProps) {
   const reduce = useReducedMotion();
-  /** When set to the current day's id, the sand lightbox is open for that day. */
-  const [sandDayId, setSandDayId] = useState<string | null>(null);
+  const [sandIndex, setSandIndex] = useState<number | null>(null);
 
-  // Keep the last non-null day mounted through the close transition so the
-  // content doesn't blank out as the dialog animates away.
   const open = day !== null;
   const label = day ? archiveEntryLabel(day, sameDateCount) : "";
-  const sandSrc = day?.sandSnapshot;
-  const sandLabel = `Sand drawing for ${label}`;
-  const sandLightboxOpen = Boolean(day && sandDayId === day.id && sandSrc);
+
+  const sandItems = useMemo(() => {
+    if (!day) return [];
+    return drawingsFromArchivedDay(day).map((d, i) => ({
+      id: d.id,
+      src: d.src,
+      drawing: d.drawing,
+      alt: `Sand drawing ${i + 1} for ${label}`,
+    }));
+  }, [day, label]);
+
+  const hasSand = sandItems.length > 0;
+  const hasReflection = Boolean(day && day.reflection.trim() !== "");
+  const hasTasks = Boolean(day && day.completedTasks.length > 0);
 
   return (
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={() => {
+          setSandIndex(null);
+          onClose();
+        }}
         fullWidth
         maxWidth="xs"
         transitionDuration={reduce ? 0 : undefined}
@@ -64,45 +75,7 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
             </DialogTitle>
             <DialogContent>
               <Stack spacing={2.5} sx={{ mt: 1 }}>
-                {typeof sandSrc === "string" && sandSrc.length > 0 && (
-                  <Stack spacing={0.5}>
-                    <Typography variant="subtitle2" component="h3" color="text.secondary">
-                      Sand
-                    </Typography>
-                    <Button
-                      onClick={() => setSandDayId(day.id)}
-                      aria-label={sandLabel}
-                      color="inherit"
-                      sx={{
-                        p: 0.5,
-                        alignSelf: "flex-start",
-                        borderRadius: 2,
-                        textTransform: "none",
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={sandSrc}
-                        alt=""
-                        aria-hidden
-                        sx={{
-                          width: 120,
-                          height: "auto",
-                          borderRadius: 1.5,
-                          display: "block",
-                        }}
-                      />
-                    </Button>
-                  </Stack>
-                )}
-
-                {typeof sandSrc === "string" &&
-                  sandSrc.length > 0 &&
-                  (day.reflection.trim() !== "" || day.completedTasks.length > 0) && (
-                    <Divider flexItem />
-                  )}
-
-                {day.reflection.trim() !== "" && (
+                {hasReflection && (
                   <Stack spacing={0.5}>
                     <Typography variant="subtitle2" component="h3" color="text.secondary">
                       Reflection
@@ -113,13 +86,13 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
                   </Stack>
                 )}
 
-                {day.reflection.trim() !== "" && day.completedTasks.length > 0 && <Divider flexItem />}
+                {hasReflection && hasTasks && <Divider flexItem />}
 
                 <Stack spacing={0.5}>
                   <Typography variant="subtitle2" component="h3" color="text.secondary">
                     What was done
                   </Typography>
-                  {day.completedTasks.length > 0 ? (
+                  {hasTasks ? (
                     <List dense disablePadding>
                       {day.completedTasks.map((task, i) => (
                         <ListItem key={`${task.completedAt}-${i}`} disableGutters disablePadding sx={{ py: 0.5 }}>
@@ -136,6 +109,17 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
                     </Typography>
                   )}
                 </Stack>
+
+                {hasSand && (
+                  <>
+                    <Divider flexItem />
+                    <SandDrawingGallery
+                      items={sandItems.map(({ id, src, alt }) => ({ id, src, alt }))}
+                      heading="Sand"
+                      onSelect={(i) => setSandIndex(i)}
+                    />
+                  </>
+                )}
               </Stack>
             </DialogContent>
           </>
@@ -143,9 +127,11 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
       </Dialog>
 
       <SandSnapshotLightbox
-        src={sandLightboxOpen && sandSrc ? sandSrc : null}
-        label={sandLabel}
-        onClose={() => setSandDayId(null)}
+        items={sandItems}
+        index={sandIndex}
+        label={`Sand drawing for ${label}`}
+        onClose={() => setSandIndex(null)}
+        onIndexChange={setSandIndex}
       />
     </>
   );

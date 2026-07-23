@@ -4,14 +4,15 @@ import Box from "@mui/material/Box";
 import { useEffect, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import {
-  captureSandSnapshot,
+  captureSandDrawingFromStrokes,
   registerSandCanvasHandlers,
   useSandReset,
+  type SandStroke,
 } from "@/lib/sand";
 import { playRake } from "@/lib/sound";
 
 type Point = { x: number; y: number };
-type Stroke = { points: Point[]; color: string };
+type Stroke = SandStroke;
 
 // Muted, nature-derived tones — matches the zen theme palette (see src/theme/theme.ts).
 const ZEN_COLORS = ["#6B8F71", "#B98C5B", "#7A93A6", "#C79A4B", "#B1554A"];
@@ -68,12 +69,13 @@ export default function SandCanvas({ minHeight = 220 }: { minHeight?: number }) 
       if (ctx) ctx.clearRect(0, 0, sizeRef.current.width, sizeRef.current.height);
     }
 
-    function peekCapture(): string | null {
+    function peekCapture() {
       // Include an in-progress stroke so reset mid-drag still keeps a keepsake.
-      if (strokesRef.current.length === 0 && !currentRef.current) return null;
-      const canvas = canvasRef.current;
-      if (!canvas) return null;
-      return captureSandSnapshot(canvas);
+      const strokes = [...strokesRef.current];
+      if (currentRef.current) strokes.push(currentRef.current);
+      if (strokes.length === 0) return null;
+      const { width, height } = sizeRef.current;
+      return captureSandDrawingFromStrokes(strokes, width, height);
     }
 
     registerSandCanvasHandlers({ peekCapture, wipeOnly });

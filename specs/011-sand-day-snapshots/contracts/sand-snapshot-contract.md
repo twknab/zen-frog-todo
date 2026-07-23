@@ -1,66 +1,40 @@
-# Contract: Sand Snapshot Capture & Browse
+# Contract: Sand day drawings (capture + browse)
 
-UI + persistence contract for feature 011. Complements existing Grove UI contract (`specs/010-grove-history/contracts/grove-ui-contract.md`).
-
-## Capture API (in-process)
-
-### Mid-day vs archive clear
+## Module: `src/lib/sand.ts`
 
 | API | Behavior |
 |---|---|
-| `resetSand()` | Sync: peek capture → write today if non-null → wipe. Used by the Sand Mode reset button. |
-| `takeSandSnapshotForArchive()` | Sync: peek capture if strokes, else today's stored value. Does not wipe. |
-| `wipeSandCanvas()` | Wipe strokes/bitmap only (no save). Used after archive/rollover. |
-| `clearTodaySandSnapshot()` | Sets today key to `null` after archive. |
+| `registerSandCanvasHandlers({ peekCapture, wipeOnly })` | SandCanvas registers on mount; `null` on unmount |
+| `peekCapture()` | If strokes exist → `SandDrawing` (SVG) without wipe; else `null` |
+| `wipeOnly()` | Clear strokes/bitmap; no persistence write |
+| `resetSand()` | `peekCapture` → append today (fail-open) → `wipeOnly` → bump token |
+| `takeSandDrawingsForArchive()` | Today list + fresh peek if strokes; does not wipe |
+| `wipeSandCanvas()` | `wipeOnly` only (post-archive) |
+| `useTodaySandDrawings()` | Reactive `SandDrawing[]` for Grove |
+| `readTodaySandDrawings()` / `clearTodaySandDrawings()` | Non-reactive read / clear |
+| `downloadSandSvg(drawing)` | Download raw SVG file |
+| `drawingsFromArchivedDay(day)` | Prefer `sandDrawings`; else legacy `sandSnapshot` |
 
-### Today's snapshot accessors (`src/lib/sand.ts`)
-
-| Export | Behavior |
+| Constant | Value |
 |---|---|
-| `SAND_TODAY_SNAPSHOT_KEY` | `'frog-garden:sand-today-snapshot-v1'` |
-| `useTodaySandSnapshot()` | Reactive read for Grove (`string \| null`) |
-| `readTodaySandSnapshot()` | Non-reactive raw read for rollover (mirrors `readArchive` tolerance) |
-| `clearTodaySandSnapshot()` | Sets null after archive |
-| `captureSandSnapshot(canvas)` | Offscreen downscale → JPEG data URL; never throws to caller (returns `null` on failure) |
-| `registerSandCanvasHandlers` | SandCanvas mount/unmount registration of peek/wipe |
+| `SAND_TODAY_DRAWINGS_KEY` | `'frog-garden:sand-today-drawings-v1'` |
+| `MAX_SAND_DRAWINGS_PER_DAY` | `24` |
 
-### `ArchivedDay.sandSnapshot`
+## Archive: `src/lib/dayArchive.ts`
 
-- Optional string data URL.
-- Set only when archiving a day that has a keepsake (fresh or today key).
+- `ArchivedDay.sandDrawings?: SandDrawing[]` (preferred)
+- `ArchivedDay.sandSnapshot?: string` (legacy JPEG; read-only compat)
+- `useNewDay` / `buildRolloverPlan` / `useDailyRollover` attach `sandDrawings`, then clear today + wipe canvas
 
-## Grove browse contract
+## UI
 
-### Today entry
-
-- **When**: `useTodaySandSnapshot()` is a non-null string.
-- **Where**: Same Grove ribbon as archived days (typically leading / distinct from archive list).
-- **Label**: `"Today"` (accessible name includes “Today” and that it is a sand drawing).
-- **Action**: Activating the sand thumbnail opens the sand lightbox (not the archived-day recap, unless product combines them calmly — prefer dedicated lightbox for the image).
-
-### Archived day with sand
-
-- Day recap dialog MAY show a sand thumbnail when `day.sandSnapshot` is present.
-- Thumbnail button/name: e.g. `Sand drawing for {archiveEntryLabel(...)}`.
-- Activate → sand lightbox with that day's image + date in title/`alt`.
-
-### Days without sand
-
-- No placeholder gray box, no “you didn’t rake” copy.
-
-## Lightbox contract
-
-| Requirement | Behavior |
+| Surface | Behavior |
 |---|---|
-| Component | Themed MUI `Dialog` (pattern: `GroveDayDialog` / `NewDayAction`) |
-| Open | Controlled by parent (`src` + `label` non-null) |
-| Image | `<img src={dataUrl} alt={label} />` — label references date / “Today” |
-| Dismiss | Backdrop click, Escape, optional close control; `onClose` clears selection |
-| Focus | Dialog focus trap on open; return focus to invoker on close (MUI default) |
-| Motion | `transitionDuration={0}` when `useReducedMotion()` is true |
-| Chrome | No score UI; calm title only |
+| Grove ribbon | Today stack + count; archived day stack peek → lightbox |
+| `GroveDayDialog` | Bottom horizontal gallery (`SandDrawingGallery`) |
+| `SandSnapshotLightbox` | Prev/next, Escape dismiss, reduced-motion, Download SVG |
 
-## Failure contract
+## Accessibility
 
-- Capture or `localStorage` write failure → log optional soft console warn at most; **still clear sand / complete new day**.
-- Never surface quota errors as blocking modals.
+- Thumbnail buttons: date-referenced `aria-label`
+- Lightbox: labelled dialog; Escape closes; transitions honor `prefers-reduced-motion`

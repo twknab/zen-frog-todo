@@ -14,30 +14,37 @@ import { useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import BonsaiTree from "@/components/BonsaiTree";
 import GroveDayDialog from "@/components/GroveDayDialog";
-import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
+import SandSnapshotLightbox, { type SandLightboxItem } from "@/components/SandSnapshotLightbox";
 import { blossomCountForLeaves, bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
 import { archiveEntryLabel, useArchive, type ArchivedDay } from "@/lib/dayArchive";
 import { useGroveVisibility } from "@/lib/grove";
-import { useTodaySandSnapshot } from "@/lib/sand";
+import {
+  drawingsFromArchivedDay,
+  sandSvgDataUrl,
+  useTodaySandDrawings,
+} from "@/lib/sand";
 
 const SCENE_SIZE = 104;
 const SAND_THUMB_SIZE = 88;
+const STACK_PEEK = 3;
 
 /**
  * The Grove (specs/010-grove-history + 011-sand-day-snapshots): calm history of
- * archived days as bonsai scenes, plus optional sand keepsake thumbnails and a
- * Today entry when the live day has a latest sand snapshot.
+ * archived days as bonsai scenes, plus sand drawing stacks (all of today's
+ * clears, and a peek under each archived day that had sand).
  */
 export default function Grove() {
   const archive = useArchive();
   const [visible, setVisible] = useGroveVisibility();
   const reduce = useReducedMotion();
   const [selected, setSelected] = useState<ArchivedDay | null>(null);
-  const todaySand = useTodaySandSnapshot();
-  const [sandLightbox, setSandLightbox] = useState<{ src: string; label: string } | null>(null);
+  const todayDrawings = useTodaySandDrawings();
+  const [sandLightbox, setSandLightbox] = useState<{
+    items: SandLightboxItem[];
+    index: number;
+    label: string;
+  } | null>(null);
 
-  // How many entries share each date — drives same-date time disambiguation,
-  // consistent with the export menu's labelling (FR-003).
   const dateCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const day of archive) counts.set(day.date, (counts.get(day.date) ?? 0) + 1);
@@ -45,7 +52,17 @@ export default function Grove() {
   }, [archive]);
 
   const selectedSameDateCount = selected ? (dateCounts.get(selected.date) ?? 1) : 1;
-  const showEmptyCopy = archive.length === 0 && !todaySand;
+  const showEmptyCopy = archive.length === 0 && todayDrawings.length === 0;
+
+  const todayItems: SandLightboxItem[] = useMemo(
+    () =>
+      todayDrawings.map((d) => ({
+        id: d.id,
+        src: sandSvgDataUrl(d.svg),
+        drawing: d,
+      })),
+    [todayDrawings],
+  );
 
   return (
     <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
@@ -100,13 +117,21 @@ export default function Grove() {
                   },
                 }}
               >
-                {todaySand && (
+                {todayItems.length > 0 && (
                   <Box role="listitem" sx={{ flexShrink: 0 }}>
                     <Button
                       onClick={() =>
-                        setSandLightbox({ src: todaySand, label: "Sand drawing for Today" })
+                        setSandLightbox({
+                          items: todayItems,
+                          index: todayItems.length - 1,
+                          label: "Sand drawings for Today",
+                        })
                       }
-                      aria-label="Sand drawing for Today"
+                      aria-label={
+                        todayItems.length === 1
+                          ? "Sand drawing for Today"
+                          : `${todayItems.length} sand drawings for Today`
+                      }
                       color="inherit"
                       sx={{
                         p: 1,
@@ -116,22 +141,13 @@ export default function Grove() {
                         alignItems: "center",
                       }}
                     >
-                      <Box
-                        component="img"
-                        src={todaySand}
-                        alt=""
-                        aria-hidden
-                        sx={{
-                          width: SAND_THUMB_SIZE,
-                          height: SAND_THUMB_SIZE,
-                          objectFit: "cover",
-                          borderRadius: 1.5,
-                          display: "block",
-                          bgcolor: "action.hover",
-                        }}
+                      <SandStackPeek
+                        srcs={todayItems.map((i) => i.src)}
+                        size={SAND_THUMB_SIZE}
                       />
                       <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
                         Today
+                        {todayItems.length > 1 ? ` · ${todayItems.length}` : ""}
                       </Typography>
                     </Button>
                   </Box>
@@ -140,7 +156,7 @@ export default function Grove() {
                 {archive.map((day) => {
                   const label = archiveEntryLabel(day, dateCounts.get(day.date) ?? 1);
                   const stage = day.bonsai.stage as BonsaiStage;
-                  const hasSand = typeof day.sandSnapshot === "string" && day.sandSnapshot.length > 0;
+                  const sand = drawingsFromArchivedDay(day);
                   return (
                     <Box key={day.id} role="listitem" sx={{ flexShrink: 0 }}>
                       <Stack spacing={0.5} sx={{ alignItems: "center" }}>
@@ -171,15 +187,24 @@ export default function Grove() {
                             </Typography>
                           </Box>
                         </Button>
-                        {hasSand && (
+                        {sand.length > 0 && (
                           <Button
                             onClick={() =>
                               setSandLightbox({
-                                src: day.sandSnapshot!,
-                                label: `Sand drawing for ${label}`,
+                                items: sand.map((s) => ({
+                                  id: s.id,
+                                  src: s.src,
+                                  drawing: s.drawing,
+                                })),
+                                index: sand.length - 1,
+                                label: `Sand drawings for ${label}`,
                               })
                             }
-                            aria-label={`Sand drawing for ${label}`}
+                            aria-label={
+                              sand.length === 1
+                                ? `Sand drawing for ${label}`
+                                : `${sand.length} sand drawings for ${label}`
+                            }
                             color="inherit"
                             size="small"
                             sx={{
@@ -187,21 +212,15 @@ export default function Grove() {
                               textTransform: "none",
                               borderRadius: 1.5,
                               minWidth: 0,
+                              flexDirection: "column",
                             }}
                           >
-                            <Box
-                              component="img"
-                              src={day.sandSnapshot}
-                              alt=""
-                              aria-hidden
-                              sx={{
-                                width: 56,
-                                height: 40,
-                                objectFit: "cover",
-                                borderRadius: 1,
-                                display: "block",
-                              }}
-                            />
+                            <SandStackPeek srcs={sand.map((s) => s.src)} size={56} />
+                            {sand.length > 1 && (
+                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }}>
+                                {sand.length}
+                              </Typography>
+                            )}
                           </Button>
                         )}
                       </Stack>
@@ -221,10 +240,58 @@ export default function Grove() {
       />
 
       <SandSnapshotLightbox
-        src={sandLightbox?.src ?? null}
+        items={sandLightbox?.items ?? []}
+        index={sandLightbox?.index ?? null}
         label={sandLightbox?.label ?? ""}
         onClose={() => setSandLightbox(null)}
+        onIndexChange={(i) =>
+          setSandLightbox((prev) => (prev ? { ...prev, index: i } : prev))
+        }
       />
     </Card>
+  );
+}
+
+/** Soft stacked peek of recent drawings — latest on top, older slipped behind. */
+function SandStackPeek({ srcs, size }: { srcs: string[]; size: number }) {
+  const shown = srcs.slice(-STACK_PEEK);
+  const layers = shown.length;
+  const stackPad = layers > 1 ? 6 : 0;
+
+  return (
+    <Box
+      sx={{
+        position: "relative",
+        width: size + stackPad,
+        height: size + stackPad,
+      }}
+    >
+      {shown.map((src, i) => {
+        const fromTop = i; // oldest further back
+        const offset = (layers - 1 - fromTop) * 3;
+        return (
+          <Box
+            key={`${src.slice(0, 24)}-${i}`}
+            component="img"
+            src={src}
+            alt=""
+            aria-hidden
+            sx={{
+              position: "absolute",
+              left: offset,
+              top: offset,
+              width: size,
+              height: size,
+              objectFit: "cover",
+              borderRadius: 1.5,
+              display: "block",
+              bgcolor: "action.hover",
+              boxShadow: layers > 1 ? 1 : 0,
+              zIndex: fromTop + 1,
+            }}
+          />
+        );
+      })}
+    </Box>
   );
 }

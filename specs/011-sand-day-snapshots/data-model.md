@@ -1,68 +1,63 @@
 # Phase 1 Data Model: Sand Day Snapshots
 
-Additive extension of the existing day archive plus one live "today" slot. Back-compatible with archived days that predate this feature.
+Additive extension of the existing day archive plus a live "today" drawings list. Back-compatible with archived days that predate this feature (including legacy single JPEG `sandSnapshot`).
 
 ## Extended entity — `ArchivedDay`
 
-Defined in `src/lib/dayArchive.ts`. **New optional field only**; all existing fields unchanged.
+Defined in `src/lib/dayArchive.ts`. **New optional fields only**; all existing fields unchanged.
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | `string` | unchanged |
-| `closedAt` | `string` (ISO-8601) | unchanged |
-| `date` | `string` (`YYYY-MM-DD`) | unchanged |
-| `completedTasks` | `ArchivedTask[]` | unchanged |
-| `reflection` | `string` | unchanged |
-| `focusSessions` | `number` | unchanged |
-| `bonsai` | `{ leaves: number; stage: string }` | unchanged |
-| **`sandSnapshot`** | `string \| undefined` | **NEW, optional.** JPEG data URL (`data:image/jpeg;base64,…`) of the day's sand keepsake. Absent / `undefined` on older records ⇒ no sand thumbnail. |
+| …existing fields… | | unchanged |
+| **`sandDrawings`** | `SandDrawing[] \| undefined` | **NEW, optional.** Vector SVG keepsakes for the day (all mid-day clears + final capture). Absent on older records. |
+| **`sandSnapshot`** | `string \| undefined` | **Legacy.** Single JPEG data URL from the first implementation. Still read via `drawingsFromArchivedDay` for old days. |
 
 **Validation / read tolerance**:
 
-- When reading archive JSON, missing `sandSnapshot` is fine.
-- Non-string / empty string ⇒ treat as absent (`undefined`).
+- Missing `sandDrawings` / `sandSnapshot` is fine.
+- Prefer `sandDrawings` when present; else fall back to legacy `sandSnapshot`.
 - Do not migrate/rewrite old records on load (YAGNI).
 
-**Empty-day guard**: `hasContent` becomes true when any prior condition holds **OR** a sand snapshot will be attached (today key non-null and/or fresh capture available).
+**Empty-day guard**: `hasContent` is true when any prior condition holds **OR** `sandDrawings.length > 0`.
 
-## New entity (persisted) — Today's Sand Keepsake
+## Entity — `SandDrawing`
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `string` | Local id (`sand-…`) |
+| `capturedAt` | `string` (ISO-8601) | Capture moment |
+| `svg` | `string` | Full SVG document (export/download as-is) |
+| `width` / `height` | `number` | CSS-pixel size at capture (viewBox) |
+
+## New entity (persisted) — Today's Sand Drawings
 
 | Attribute | Type | Default | Storage key | Notes |
 |---|---|---|---|---|
-| `todaySandSnapshot` | `string \| null` | `null` | `frog-garden:sand-today-snapshot-v1` | Latest mid-day capture for the live day. Overwritten on each successful clear-with-strokes. Cleared when the day is archived / rollover completes. |
+| `todaySandDrawings` | `SandDrawing[]` | `[]` | `frog-garden:sand-today-drawings-v1` | Append on each mid-day clear-with-strokes. Soft-capped at `MAX_SAND_DRAWINGS_PER_DAY` (24). Cleared when the day is archived / rollover completes. |
 
 **Lifecycle**:
 
 ```
 [draw] → [smooth sand]
             ├─ strokes empty? → no write
-            └─ strokes present? → overwrite today key with compact JPEG
+            └─ strokes present? → append SVG SandDrawing to today list
 [draw] → [start new day / rollover]
-            ├─ canvas has strokes? → fresh capture → ArchivedDay.sandSnapshot
-            ├─ else today key set? → copy into ArchivedDay.sandSnapshot
-            └─ else → omit field
-            then clear today key + wipe sand
+            ├─ take today list + fresh capture if strokes remain
+            ├─ attach as ArchivedDay.sandDrawings (omit if empty)
+            └─ clear today list + wipe sand
 ```
 
-## Derived (not persisted) — Capture parameters
+## Derived helpers
 
-Constants (named in `sand.ts`):
-
-| Constant | Value | Role |
-|---|---|---|
-| `SAND_SNAPSHOT_MAX_EDGE` | `240` | Longest edge in CSS pixels for offscreen scale |
-| `SAND_SNAPSHOT_JPEG_QUALITY` | `0.55` | `toDataURL` quality argument |
-| `SAND_SNAPSHOT_MIME` | `'image/jpeg'` | Encoding |
-
-Helper (pure where possible): `captureSandSnapshot(sourceCanvas) => string | null` — returns null if canvas has zero size; composites onto sand-colored background; returns data URL.
-
-## Relationships
-
-- `SandCanvas` **writes** Today's Sand Keepsake on reset-with-strokes; **clears** in-memory strokes after.
-- `useNewDay` / `useDailyRollover` **read** today key (+ optional fresh capture coordination) → **write** `ArchivedDay.sandSnapshot` → **clear** today key.
-- `Grove` **reads** today key + `useArchive()` → renders Today entry + archived sand thumbs.
-- `SandSnapshotLightbox` **reads** a transient `{ src, label }` from Grove UI state (not persisted).
+| Helper | Role |
+|---|---|
+| `strokesToSvg` / `captureSandDrawingFromStrokes` | Vectorize in-memory strokes |
+| `sandSvgDataUrl` | `<img src>` for SVG markup |
+| `drawingsFromArchivedDay` | Normalize `sandDrawings` + legacy JPEG |
+| `downloadSandSvg` | Browser download of raw SVG |
+| `takeSandDrawingsForArchive` | Today list + optional fresh peek |
+| `useTodaySandDrawings` | Reactive Grove read |
 
 ## Export
 
-Existing `SingleDayExport` / `FullExport` wrap `ArchivedDay` / archive arrays — the optional field flows through JSON export automatically. No new export kind required for v1.
+`SingleDayExport` / `FullExport` wrap `ArchivedDay` — `sandDrawings[].svg` flows through JSON automatically. Lightbox also offers per-drawing SVG download.
