@@ -1,16 +1,16 @@
 ---
-description: "Task list for Markdown Notepad — Daily Notes"
+description: "Task list for Markdown Notepad — Persistent Engineering Notes"
 ---
 
-# Tasks: Markdown Notepad — Daily Notes
+# Tasks: Markdown Notepad — Persistent Engineering Notes
 
 **Input**: Design documents from `specs/011-markdown-notepad/`
 
-**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/notepad-ui-contract.md, quickstart.md
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/notepad-ui-contract.md, contracts/notepad-export-contract.md, quickstart.md
 
 **Tests**: No automated test tasks — gate is clean `tsc --noEmit` + `eslint` plus manual `quickstart.md` verification.
 
-**Organization**: Tasks grouped by user story (US1 → US2 → US3) so each is an independently testable increment.
+**Organization**: Tasks grouped by user story (US1 → US2 → US3). Prior branch WIP assumed “replace reflection”; these tasks **realign** to the clarified model.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -19,104 +19,130 @@ description: "Task list for Markdown Notepad — Daily Notes"
 
 ## Path Conventions
 
-Single Next.js web app: source under `src/` at repo root (`src/components/`, `src/lib/`, `src/app/`).
+Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 ---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Add the minimal markdown + sanitization dependencies.
+**Purpose**: Swap to the rich GFM markdown stack.
 
-- [x] T001 Install `marked` and `dompurify` (and `@types/dompurify` if typings are not bundled); confirm they appear in `package.json` / lockfile. Skim App Router client-component guidance under `node_modules/next/dist/docs/` before writing client helpers (per `AGENTS.md`).
+- [ ] T001 Replace `marked` + `dompurify` (+ `@types/dompurify` if present) with `react-markdown`, `remark-gfm`, and `rehype-sanitize` in `package.json` / lockfile (`npm uninstall` / `npm install`). Skim App Router client-component notes under `node_modules/next/dist/docs/` before writing client UI (per `AGENTS.md`).
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Shared safe-render helper all preview surfaces use.
+**Purpose**: Shared preview + notepad persistence key; undo incorrect Close-the-day binding.
 
 **⚠️ CRITICAL**: Complete before user-story UI work.
 
-- [x] T002 [P] Create `src/lib/markdown.ts` exporting `renderMarkdownToSafeHtml(markdown: string): string` using `marked.parse` + `DOMPurify.sanitize` (client-safe; document that callers must be client components). Empty input returns `""` (Decision 2 / data-model.md).
-- [x] T003 [P] Create `src/components/MarkdownPreview.tsx`: themed container that renders `renderMarkdownToSafeHtml(markdown)` via `dangerouslySetInnerHTML` only with sanitized output; styles headings/lists/code with theme tokens (not stock browser defaults) (FR-012, FR-015).
+- [ ] T002 Rewrite `src/components/MarkdownPreview.tsx` to render via `react-markdown` with `remarkPlugins={[remarkGfm]}` and `rehypePlugins={[rehypeSanitize]}`, styled with theme tokens (tables/code/lists); no `dangerouslySetInnerHTML` / no `marked` (research Decision 5; contracts/notepad-ui-contract.md).
+- [ ] T003 Update or remove `src/lib/markdown.ts` so nothing depends on `marked`/`DOMPurify` (either delete and import plugins only from `MarkdownPreview`, or re-export shared plugin arrays from a thin `src/lib/markdown.ts`).
+- [ ] T004 [P] Add `NOTEPAD_KEY = "frog-garden:notepad-v1"` (and optional `useNotepad()` thin wrapper) in `src/lib/notepad.ts` using `usePersistentState` (data-model.md).
+- [ ] T005 In `src/app/page.tsx`, restore the Close-the-day card to a plain reflection `TextField` bound to `frog-garden:reflection-v1` (mental-health copy / prior framing), keep `<NewDayAction />`, and **remove** `<MarkdownNotepad />` from that card (research Decision 1 & 9).
 
-**Checkpoint**: Safe preview primitive ready; notepad and Grove can consume it.
-
----
-
-## Phase 3: User Story 1 - Write and preview today's note (Priority: P1) 🎯 MVP
-
-**Goal**: Dashboard notepad with write/preview toggle, persisted live note, a11y + reduced motion.
-
-**Independent Test**: Type markdown, toggle preview, reload — note persists; mode resets to write (quickstart Scenarios 1–2, 7).
-
-- [x] T004 [US1] Create `src/components/MarkdownNotepad.tsx`: controlled `value`/`onChange`, session-only mode state defaulting to `"write"`, exclusive Write/Preview control (re-themed MUI `ToggleButtonGroup`), write-mode themed multiline `TextField`, preview-mode `MarkdownPreview`, calm placeholder prop (contracts/notepad-ui-contract.md).
-- [x] T005 [US1] In `MarkdownNotepad.tsx`, wire accessibility: group `aria-label` (e.g. "Note display mode"), keyboard-operable toggles, announce pressed state; honor `useReducedMotion()` with instant mode swap (no decorative motion) (FR-013, FR-014).
-- [x] T006 [US1] In `src/app/page.tsx`, replace the Close-the-day plain `TextField` with `<MarkdownNotepad value={notes} onChange={setNotes} … />`; retitle the card toward today's note; keep `<NewDayAction />` in the same card; keep `!isFocus` gate (FR-001, FR-005, FR-016).
-- [x] T007 [US1] Theme/contrast pass on notepad + preview in light and dark — no stock Material look; no word-count/guilt copy (FR-015, FR-017).
-
-**Checkpoint**: MVP — write/preview notepad works for the live day.
+**Checkpoint**: Preview stack + notepad key ready; reflection UI restored; user stories can begin.
 
 ---
 
-## Phase 4: User Story 2 - One daily note that closes with the day (Priority: P2)
+## Phase 3: User Story 1 - Open full-screen notepad write/preview (Priority: P1) 🎯 MVP
 
-**Goal**: Archive path + Grove show the note; no duplicate reflection field; user-facing "reflection" → "note" copy.
+**Goal**: Upper-right control opens a full-screen notepad with write/preview and auto-persisted eng notes.
 
-**Independent Test**: Start a new day → live notepad empty; Grove recap shows rendered note (quickstart Scenario 3).
+**Independent Test**: quickstart Scenarios 1, 5–7 (open full-screen, GFM preview, persist across close/reload, a11y/reduced-motion, theme).
 
-- [x] T008 [US2] In `src/components/GroveDayDialog.tsx`, render non-empty `day.reflection` via `MarkdownPreview` (omit block when empty); update any "Reflection" label to calm note language (FR-008).
-- [x] T009 [P] [US2] Update user-facing copy in `src/components/NewDayAction.tsx` (and any dialog strings) from "reflection" to "note" where appropriate — do **not** rename the `reflection` storage/export field (FR-010).
-- [x] T010 [US2] Verify (code review + quickstart Scenario 3) that `useStartNewDay` / auto-rollover still snapshot and clear the live `frog-garden:reflection-v1` string with no parallel note key introduced (FR-006, FR-007, SC-007).
+- [ ] T006 [P] [US1] Retheme `src/components/MarkdownNotepad.tsx` for eng-scratchpad use: calm placeholder (not “today’s reflection” guilt copy), larger `minRows` for full-screen, keep exclusive Write/Preview `ToggleButtonGroup` with labels + `useReducedMotion` mode swap (contracts/notepad-ui-contract.md).
+- [ ] T007 [US1] Create `src/components/NotepadShell.tsx`: full-screen MUI `Dialog` (`fullScreen`) hosting title “Notepad”, close control, and `<MarkdownNotepad />`; Escape/close dismisses without discard prompt; `transitionDuration={0}` when `useReducedMotion()` (research Decision 4).
+- [ ] T008 [P] [US1] Create `src/components/NotepadButton.tsx`: themed header `IconButton` with `aria-label="Open notepad"` that opens the shell.
+- [ ] T009 [US1] In `src/app/page.tsx`, bind notepad state via `NOTEPAD_KEY` / `useNotepad()`, mount `<NotepadButton />` in the upper-right header `Stack` (with Export/theme), mount `<NotepadShell />`, and wire open state + `value`/`onChange` auto-persist (FR-002, FR-005, FR-017).
 
-**Checkpoint**: Single daily-note concept end-to-end with archive + Grove.
+**Checkpoint**: US1 demoable — full-screen eng notepad with write/preview + persistence.
 
 ---
 
-## Phase 5: User Story 3 - Export includes notes (Priority: P3)
+## Phase 4: User Story 2 - Reflection stays; notepad survives new day + Focus (Priority: P2)
 
-**Goal**: Confirm single-day and full exports still carry notepad content under `reflection`.
+**Goal**: Reflection remains day-scoped; notepad survives new day; notepad usable in Focus Mode.
 
-**Independent Test**: Export JSON contains the note markdown source (quickstart Scenario 4).
+**Independent Test**: quickstart Scenarios 2–3 (Focus open; new day clears reflection only).
 
-- [x] T011 [US3] Spot-check `buildSingleDayExport` / `buildFullExport` / `useExportAll` in `src/lib/dayArchive.ts` — notepad content flows through existing `reflection` fields; add a brief comment if helpful that the field holds markdown source; no schema rename (FR-009, FR-010).
-- [x] T012 [US3] Manually export single-day + full JSON with a distinctive note and confirm `reflection` values in the files (quickstart Scenario 4 / SC-004).
+- [ ] T010 [US2] In `src/app/page.tsx`, ensure `NotepadButton` / shell are **not** gated by `!isFocus` so Focus Mode can open the notepad (FR-013, SC-008).
+- [ ] T011 [US2] Audit `src/lib/dayArchive.ts` new-day / auto-rollover paths so they never clear `frog-garden:notepad-v1` (only reflection/tasks/etc. as today) (FR-005–006).
+- [ ] T012 [US2] Smoke-check Close-the-day: reflection still archives/clears; notepad text remains after confirm (page + `NewDayAction` / archive hooks).
 
-**Checkpoint**: Portability preserved (Principle III).
+**Checkpoint**: US1 + US2 — distinct reflection vs notepad; Focus + new-day behavior correct.
+
+---
+
+## Phase 5: User Story 3 - Full export includes notepad (Priority: P3)
+
+**Goal**: Full JSON export carries top-level `notepad`; single-day export unchanged.
+
+**Independent Test**: quickstart Scenario 4.
+
+- [ ] T013 [US3] Extend `FullExport` in `src/lib/dayArchive.ts` with top-level `notepad: string`; update `buildFullExport` signature/callers per `contracts/notepad-export-contract.md` (do **not** add notepad to `ArchivedDay` / `SingleDayExport`).
+- [ ] T014 [US3] Update `useExportEverything` in `src/lib/dayArchive.ts` to read `frog-garden:notepad-v1` at click time and include it in the full dump (missing → `""`).
+
+**Checkpoint**: All three stories independently functional.
 
 ---
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [x] T013 [P] Run `quickstart.md` Scenarios 1–7 (incl. XSS paste Scenario 5, Focus Mode Scenario 6) and fix gaps.
-- [x] T014 [P] Verify DevTools Network: no requests when typing or toggling preview (FR-011).
-- [x] T015 Ensure `npx tsc --noEmit` and `npm run lint` are clean; resolve any issues.
+- [ ] T015 [P] Confirm `GroveDayDialog` still renders archived `reflection` via `MarkdownPreview` (or plain text) and does **not** surface the eng notepad (research Decision 8).
+- [ ] T016 Run `quickstart.md` Scenarios 1–7 (light + dark, Focus, reduced motion, keyboard) and fix gaps.
+- [ ] T017 Ensure `npx tsc --noEmit` and `npm run lint` are clean; remove unused `marked`/`dompurify` imports if any remain.
 
 ---
 
 ## Dependencies & Execution Order
 
-- **Setup (T001)** → **Foundational (T002–T003)** → user stories.
-- **T002 / T003**: parallel after T001 (different files).
-- **US1 (T004–T007)**: T004 first; T005 edits same file; T006 needs T004; T007 after mount.
-- **US2 (T008–T010)**: needs US1 notepad live + T003 preview; T008/T009 parallel; T010 after.
-- **US3 (T011–T012)**: after US2 archive path confirmed.
-- **Polish (T013–T015)**: after stories complete.
+- **Setup (T001)** → **Foundational (T002–T005)** → user stories.
+- **US1 (T006–T009)**: T006/T008 can parallel after foundation; T007 before/with T009; T009 integrates in `page.tsx`.
+- **US2 (T010–T012)**: After US1 shell exists; T010–T011 can parallel; T012 validates both.
+- **US3 (T013–T014)**: Can start after T004 (key exists); naturally after US1 for manual export check.
+- **Polish (T015–T017)**: After desired stories complete.
 
-## Parallel opportunities
+### User Story Dependencies
 
-```text
-T001
- then T002 || T003
- then T004 → T005 → T006 → T007
- then (T008 || T009) → T010
- then T011 → T012
- then (T013 || T014) ; T015
+- **US1 (P1)**: After Foundational — MVP.
+- **US2 (P2)**: Needs US1 shell/button; independently testable via Focus + new-day.
+- **US3 (P3)**: Needs notepad key + export helpers; independently testable via JSON inspect.
+
+### Parallel Opportunities
+
+```bash
+# After T001:
+# T002 MarkdownPreview  ||  T004 notepad.ts
+# Then T003 cleanup, T005 restore reflection
+
+# After foundation:
+# T006 MarkdownNotepad  ||  T008 NotepadButton
+# Then T007 NotepadShell → T009 page wiring
 ```
 
-## Implementation strategy
+---
 
-1. Ship **US1** as MVP (live write/preview notepad).
-2. Add **US2** (Grove + copy + archive verification).
-3. Confirm **US3** export (likely already satisfied — verify, don't over-build).
-4. Polish gate: quickstart + tsc + eslint.
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. T001–T005 foundation (deps + preview + key + restore reflection)
+2. T006–T009 full-screen notepad
+3. **STOP** — validate quickstart Scenario 1
+
+### Incremental Delivery
+
+1. MVP (US1) → demo eng notepad
+2. US2 → Focus + new-day separation
+3. US3 → full export field
+4. Polish → gates green
+
+---
+
+## Notes
+
+- Prior checked tasks for “replace reflection / marked stack” are **obsolete**; this file supersedes them — all tasks start unchecked.
+- Do not clear notepad on new day; do not put notepad on `ArchivedDay`.
+- Commit after each phase or logical group when implementing.
