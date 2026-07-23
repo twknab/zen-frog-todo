@@ -27,7 +27,7 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **Purpose**: Swap to the rich GFM markdown stack.
 
-- [ ] T001 Replace `marked` + `dompurify` (+ `@types/dompurify` if present) with `react-markdown`, `remark-gfm`, and `rehype-sanitize` in `package.json` / lockfile (`npm uninstall` / `npm install`). Skim App Router client-component notes under `node_modules/next/dist/docs/` before writing client UI (per `AGENTS.md`).
+- [x] T001 Replace `marked` + `dompurify` (+ `@types/dompurify` if present) with `react-markdown`, `remark-gfm`, and `rehype-sanitize` in `package.json` / lockfile (`npm uninstall` / `npm install`). Skim App Router client-component notes under `node_modules/next/dist/docs/` before writing client UI (per `AGENTS.md`).
 
 ---
 
@@ -37,10 +37,10 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **⚠️ CRITICAL**: Complete before user-story UI work.
 
-- [ ] T002 Rewrite `src/components/MarkdownPreview.tsx` to render via `react-markdown` with `remarkPlugins={[remarkGfm]}` and `rehypePlugins={[rehypeSanitize]}`, styled with theme tokens (tables/code/lists); no `dangerouslySetInnerHTML` / no `marked` (research Decision 5; contracts/notepad-ui-contract.md).
-- [ ] T003 Update or remove `src/lib/markdown.ts` so nothing depends on `marked`/`DOMPurify` (either delete and import plugins only from `MarkdownPreview`, or re-export shared plugin arrays from a thin `src/lib/markdown.ts`).
-- [ ] T004 [P] Add `NOTEPAD_KEY = "frog-garden:notepad-v1"` (and optional `useNotepad()` thin wrapper) in `src/lib/notepad.ts` using `usePersistentState` (data-model.md).
-- [ ] T005 In `src/app/page.tsx`, restore the Close-the-day card to a plain reflection `TextField` bound to `frog-garden:reflection-v1` (mental-health copy / prior framing), keep `<NewDayAction />`, and **remove** `<MarkdownNotepad />` from that card (research Decision 1 & 9).
+- [x] T002 Rewrite `src/components/MarkdownPreview.tsx` to render via `react-markdown` with `remarkPlugins={[remarkGfm]}` and `rehypePlugins={[rehypeSanitize]}`, styled with theme tokens (tables/code/lists); no `dangerouslySetInnerHTML` / no `marked` (research Decision 5; contracts/notepad-ui-contract.md).
+- [x] T003 Update or remove `src/lib/markdown.ts` so nothing depends on `marked`/`DOMPurify` (either delete and import plugins only from `MarkdownPreview`, or re-export shared plugin arrays from a thin `src/lib/markdown.ts`).
+- [x] T004 [P] Add `NOTEPAD_KEY = "frog-garden:notepad-v1"` (and optional `useNotepad()` thin wrapper) in `src/lib/notepad.ts` using `usePersistentState` (data-model.md).
+- [x] T005 In `src/app/page.tsx`, restore the Close-the-day card to a plain reflection `TextField` bound to `frog-garden:reflection-v1` (mental-health copy / prior framing), keep `<NewDayAction />`, and **remove** `<MarkdownNotepad />` from that card (research Decision 1 & 9).
 
 **Checkpoint**: Preview stack + notepad key ready; reflection UI restored; user stories can begin.
 
@@ -52,10 +52,10 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **Independent Test**: quickstart Scenarios 1, 5–7 (open full-screen, GFM preview, persist across close/reload, a11y/reduced-motion, theme).
 
-- [ ] T006 [P] [US1] Retheme `src/components/MarkdownNotepad.tsx` for eng-scratchpad use: calm placeholder (not “today’s reflection” guilt copy), larger `minRows` for full-screen, keep exclusive Write/Preview `ToggleButtonGroup` with labels + `useReducedMotion` mode swap (contracts/notepad-ui-contract.md).
-- [ ] T007 [US1] Create `src/components/NotepadShell.tsx`: full-screen MUI `Dialog` (`fullScreen`) hosting title “Notepad”, close control, and `<MarkdownNotepad />`; Escape/close dismisses without discard prompt; `transitionDuration={0}` when `useReducedMotion()` (research Decision 4).
-- [ ] T008 [P] [US1] Create `src/components/NotepadButton.tsx`: themed header `IconButton` with `aria-label="Open notepad"` that opens the shell.
-- [ ] T009 [US1] In `src/app/page.tsx`, bind notepad state via `NOTEPAD_KEY` / `useNotepad()`, mount `<NotepadButton />` in the upper-right header `Stack` (with Export/theme), mount `<NotepadShell />`, and wire open state + `value`/`onChange` auto-persist (FR-002, FR-005, FR-017).
+- [x] T006 [P] [US1] Retheme `src/components/MarkdownNotepad.tsx` for eng-scratchpad use: calm placeholder (not “today’s reflection” guilt copy), larger `minRows` for full-screen, keep exclusive Write/Preview `ToggleButtonGroup` with labels + `useReducedMotion` mode swap (contracts/notepad-ui-contract.md).
+- [x] T007 [US1] Create `src/components/NotepadShell.tsx`: full-screen MUI `Dialog` (`fullScreen`) hosting title “Notepad”, close control, and `<MarkdownNotepad />`; Escape/close dismisses without discard prompt; `transitionDuration={0}` when `useReducedMotion()` (research Decision 4).
+- [x] T008 [P] [US1] Create `src/components/NotepadButton.tsx`: themed header `IconButton` with `aria-label="Open notepad"` that opens the shell.
+- [x] T009 [US1] In `src/app/page.tsx`, bind notepad state via `NOTEPAD_KEY` / `useNotepad()`, mount `<NotepadButton />` in the upper-right header `Stack` (with Export/theme), mount `<NotepadShell />`, and wire open state + `value`/`onChange` auto-persist (FR-002, FR-005, FR-017).
 
 **Checkpoint**: US1 demoable — full-screen eng notepad with write/preview + persistence.
 
@@ -67,9 +67,9 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **Independent Test**: quickstart Scenarios 2–3 (Focus open; new day clears reflection only).
 
-- [ ] T010 [US2] In `src/app/page.tsx`, ensure `NotepadButton` / shell are **not** gated by `!isFocus` so Focus Mode can open the notepad (FR-013, SC-008).
-- [ ] T011 [US2] Audit `src/lib/dayArchive.ts` new-day / auto-rollover paths so they never clear `frog-garden:notepad-v1` (only reflection/tasks/etc. as today) (FR-005–006).
-- [ ] T012 [US2] Smoke-check Close-the-day: reflection still archives/clears; notepad text remains after confirm (page + `NewDayAction` / archive hooks).
+- [x] T010 [US2] In `src/app/page.tsx`, ensure `NotepadButton` / shell are **not** gated by `!isFocus` so Focus Mode can open the notepad (FR-013, SC-008).
+- [x] T011 [US2] Audit `src/lib/dayArchive.ts` new-day / auto-rollover paths so they never clear `frog-garden:notepad-v1` (only reflection/tasks/etc. as today) (FR-005–006).
+- [x] T012 [US2] Smoke-check Close-the-day: reflection still archives/clears; notepad text remains after confirm (page + `NewDayAction` / archive hooks).
 
 **Checkpoint**: US1 + US2 — distinct reflection vs notepad; Focus + new-day behavior correct.
 
@@ -81,8 +81,8 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 **Independent Test**: quickstart Scenario 4.
 
-- [ ] T013 [US3] Extend `FullExport` in `src/lib/dayArchive.ts` with top-level `notepad: string`; update `buildFullExport` signature/callers per `contracts/notepad-export-contract.md` (do **not** add notepad to `ArchivedDay` / `SingleDayExport`).
-- [ ] T014 [US3] Update `useExportEverything` in `src/lib/dayArchive.ts` to read `frog-garden:notepad-v1` at click time and include it in the full dump (missing → `""`).
+- [x] T013 [US3] Extend `FullExport` in `src/lib/dayArchive.ts` with top-level `notepad: string`; update `buildFullExport` signature/callers per `contracts/notepad-export-contract.md` (do **not** add notepad to `ArchivedDay` / `SingleDayExport`).
+- [x] T014 [US3] Update `useExportEverything` in `src/lib/dayArchive.ts` to read `frog-garden:notepad-v1` at click time and include it in the full dump (missing → `""`).
 
 **Checkpoint**: All three stories independently functional.
 
@@ -90,9 +90,9 @@ Single Next.js web app: `src/components/`, `src/lib/`, `src/app/`.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T015 [P] Confirm `GroveDayDialog` still renders archived `reflection` via `MarkdownPreview` (or plain text) and does **not** surface the eng notepad (research Decision 8).
-- [ ] T016 Run `quickstart.md` Scenarios 1–7 (light + dark, Focus, reduced motion, keyboard) and fix gaps.
-- [ ] T017 Ensure `npx tsc --noEmit` and `npm run lint` are clean; remove unused `marked`/`dompurify` imports if any remain.
+- [x] T015 [P] Confirm `GroveDayDialog` still renders archived `reflection` via `MarkdownPreview` (or plain text) and does **not** surface the eng notepad (research Decision 8).
+- [x] T016 Run `quickstart.md` Scenarios 1–7 (light + dark, Focus, reduced motion, keyboard) and fix gaps.
+- [x] T017 Ensure `npx tsc --noEmit` and `npm run lint` are clean; remove unused `marked`/`dompurify` imports if any remain.
 
 ---
 
