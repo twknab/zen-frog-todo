@@ -9,6 +9,7 @@ import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import type { ChangeEvent, DragEvent, KeyboardEvent } from "react";
 import { useCelebration } from "@/components/Celebration";
+import DeleteIncompleteTaskControl from "@/components/DeleteIncompleteTaskControl";
 import type { Task } from "@/lib/tasks";
 
 type TaskListCardProps = {
@@ -18,6 +19,7 @@ type TaskListCardProps = {
   onAddTask: (title: string) => void;
   onSetFrog: (id: string) => void;
   onToggleCompleted: (id: string) => void;
+  onDeleteTask: (id: string) => void;
   onReorder: (draggedId: string, targetId: string) => void;
 };
 
@@ -28,6 +30,7 @@ export default function TaskListCard({
   onAddTask,
   onSetFrog,
   onToggleCompleted,
+  onDeleteTask,
   onReorder,
 }: TaskListCardProps) {
   const [draft, setDraft] = useState("");
@@ -114,17 +117,24 @@ export default function TaskListCard({
             }}
           />
           {!task.completed && (
-            <IconButton
-              className="frog-toggle"
-              size="small"
-              onClick={() => onSetFrog(task.id)}
-              aria-label={`Make "${task.title}" today's frog`}
-              sx={{ opacity: 0, transition: "opacity 150ms ease" }}
-            >
-              <span role="img" aria-hidden="true" style={{ fontSize: "1rem" }}>
-                🐸
-              </span>
-            </IconButton>
+            <>
+              <IconButton
+                className="frog-toggle"
+                size="small"
+                onClick={() => onSetFrog(task.id)}
+                aria-label={`Make "${task.title}" today's frog`}
+                sx={{ opacity: 0, transition: "opacity 150ms ease" }}
+              >
+                <span role="img" aria-hidden="true" style={{ fontSize: "1rem" }}>
+                  🐸
+                </span>
+              </IconButton>
+              <DeleteIncompleteTaskControl
+                taskId={task.id}
+                taskTitle={task.title}
+                onDelete={onDeleteTask}
+              />
+            </>
           )}
         </Stack>
       ))}

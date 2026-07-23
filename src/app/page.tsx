@@ -31,6 +31,7 @@ import { useEffect, useState } from "react";
 import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
 import CompletedLog from "@/components/CompletedLog";
+import DeleteIncompleteTaskControl from "@/components/DeleteIncompleteTaskControl";
 import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
@@ -73,6 +74,7 @@ export default function Home() {
     toggleTaskCompleted,
     updateCompletedNote,
     setFrogTaskId,
+    deleteTask,
     reorderTasks,
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
@@ -253,10 +255,18 @@ export default function Home() {
                 sx={{
                   color: frogTask.completed ? "text.disabled" : "text.primary",
                   textDecoration: frogTask.completed ? "line-through" : "none",
+                  flexGrow: 1,
                 }}
               >
                 {frogTask.title}
               </Typography>
+              {!frogTask.completed && (
+                <DeleteIncompleteTaskControl
+                  taskId={frogTask.id}
+                  taskTitle={frogTask.title}
+                  onDelete={deleteTask}
+                />
+              )}
             </Stack>
           ) : (
             <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
@@ -318,6 +328,7 @@ export default function Home() {
                 onAddTask={addTask}
                 onSetFrog={setFrogTaskId}
                 onToggleCompleted={toggleTaskCompleted}
+                onDeleteTask={deleteTask}
                 onReorder={reorderTasks}
               />
             </BentoCard>
