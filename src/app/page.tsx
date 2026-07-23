@@ -35,6 +35,8 @@ import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
 import NewDayAction from "@/components/NewDayAction";
+import NotepadButton from "@/components/NotepadButton";
+import NotepadShell from "@/components/NotepadShell";
 import SandCanvas from "@/components/SandCanvas";
 import StandupSummary from "@/components/StandupSummary";
 import TaskListCard from "@/components/TaskListCard";
@@ -42,6 +44,7 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useDailyRollover } from "@/lib/dayArchive";
 import { useFocusStats } from "@/lib/focusStats";
+import { useNotepad } from "@/lib/notepad";
 import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
@@ -73,6 +76,8 @@ export default function Home() {
     reorderTasks,
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
+  const [notepad, setNotepad] = useNotepad();
+  const [notepadOpen, setNotepadOpen] = useState(false);
   const celebrate = useCelebration();
   const { recordSessionComplete } = useFocusStats();
   const { events: bonsaiEvents, idleOffsetHours, recordGrowth, addIdleHours, resetBonsai } =
@@ -169,6 +174,9 @@ export default function Home() {
           </ToggleButtonGroup>
 
           <ExportMenu />
+
+          {/* Notepad stays reachable in Focus Mode (FR-013) — outside !isFocus gates. */}
+          <NotepadButton onClick={() => setNotepadOpen(true)} />
 
           <Tooltip title={colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
             <IconButton
@@ -407,6 +415,7 @@ export default function Home() {
                 minRows={2}
                 fullWidth
                 variant="standard"
+                aria-label="Today's reflection"
                 slotProps={{ input: { disableUnderline: true } }}
               />
               <NewDayAction />
@@ -414,6 +423,13 @@ export default function Home() {
           )}
         </AnimatePresence>
       </Box>
+
+      <NotepadShell
+        open={notepadOpen}
+        onClose={() => setNotepadOpen(false)}
+        value={notepad}
+        onChange={setNotepad}
+      />
 
       <AnimatePresence>
         {!isFocus && (

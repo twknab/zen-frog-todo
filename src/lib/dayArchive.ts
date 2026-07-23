@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { deriveBonsai, useBonsai, type GrowthEvent } from "./bonsai";
 import { useFocusStats } from "./focusStats";
+import { NOTEPAD_KEY } from "./notepad";
 import {
   clearTodaySandDrawings,
   readTodaySandDrawings,
@@ -73,6 +74,7 @@ export type ArchivedDay = {
   closedAt: string; // ISO-8601 — exact moment of close (drives same-date labelling)
   date: string; // YYYY-MM-DD, local calendar date of the close
   completedTasks: ArchivedTask[];
+  /** Markdown source for the day's note (product: "note"; field kept for export compat). */
   reflection: string;
   focusSessions: number;
   bonsai: { leaves: number; stage: string };
@@ -106,6 +108,8 @@ export type FullExport = {
     focusSessions: number;
     bonsai: { leaves: number; stage: string };
   };
+  /** Persistent eng notepad (frog-garden:notepad-v1); not day-scoped. */
+  notepad: string;
 };
 
 // --- Small pure helpers ---------------------------------------------------
@@ -189,9 +193,20 @@ export function archiveEntryLabel(day: ArchivedDay, sameDateCount: number): stri
   return dateLabel;
 }
 
-/** Wrap the whole archive + current live state as a full-dump export document. */
-export function buildFullExport(archive: ArchivedDay[], live: FullExport["live"]): FullExport {
-  return { schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), kind: "full", archive, live };
+/** Wrap the whole archive + current live state + notepad as a full-dump export. */
+export function buildFullExport(
+  archive: ArchivedDay[],
+  live: FullExport["live"],
+  notepad: string = "",
+): FullExport {
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    kind: "full",
+    archive,
+    live,
+    notepad,
+  };
 }
 
 /** Filename for the full dump: `frog-garden-all-<date>.json`. */
@@ -210,6 +225,9 @@ export function useExportEverything(): () => void {
   const { events, idleOffsetHours } = useBonsai();
   const { completedSessions } = useFocusStats();
   const [reflection] = usePersistentState(REFLECTION_KEY, "");
+  // Notepad is independent of the day; read at click time (missing → "").
+  // Never cleared by useStartNewDay / auto-rollover (FR-005–006).
+  const [notepad] = usePersistentState(NOTEPAD_KEY, "");
 
   return useCallback(() => {
     const now = new Date();
@@ -222,8 +240,18 @@ export function useExportEverything(): () => void {
       focusSessions: completedSessions,
       bonsai: { leaves: derived.leaves, stage: derived.stage },
     };
-    downloadJson(fullExportFilename(now), buildFullExport(archive, live));
-  }, [archive, tasks, frogTaskId, completedLog, events, idleOffsetHours, completedSessions, reflection]);
+    downloadJson(fullExportFilename(now), buildFullExport(archive, live, notepad ?? ""));
+  }, [
+    archive,
+    tasks,
+    frogTaskId,
+    completedLog,
+    events,
+    idleOffsetHours,
+    completedSessions,
+    reflection,
+    notepad,
+  ]);
 }
 
 /**

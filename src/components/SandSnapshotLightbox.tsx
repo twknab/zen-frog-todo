@@ -11,7 +11,6 @@ import Typography from "@mui/material/Typography";
 import ChevronLeftOutlinedIcon from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import { useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
 import {
   downloadSandSvg,
   type SandDrawing,
@@ -52,12 +51,6 @@ export default function SandSnapshotLightbox({
   const current = items[safeIndex];
   const multi = items.length > 1;
 
-  // Keep title stable through close animation.
-  const [title, setTitle] = useState(label);
-  useEffect(() => {
-    if (open) setTitle(label);
-  }, [open, label]);
-
   function go(delta: number) {
     if (!multi || index === null) return;
     const next = (safeIndex + delta + items.length) % items.length;
@@ -66,8 +59,8 @@ export default function SandSnapshotLightbox({
 
   const detailLabel =
     multi && current
-      ? `${title} (${safeIndex + 1} of ${items.length})`
-      : title;
+      ? `${label} (${safeIndex + 1} of ${items.length})`
+      : label;
 
   return (
     <Dialog

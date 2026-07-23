@@ -11,6 +11,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
+import MarkdownPreview from "@/components/MarkdownPreview";
 import SandDrawingGallery from "@/components/SandDrawingGallery";
 import SandSnapshotLightbox from "@/components/SandSnapshotLightbox";
 import { archiveEntryLabel, type ArchivedDay } from "@/lib/dayArchive";
@@ -26,10 +27,11 @@ type GroveDayDialogProps = {
 };
 
 /**
- * A calm, read-only recap of one archived day (specs/010-grove-history, US3):
- * its date, the reflection (only when written), and the tasks completed that
- * day. Sand drawings (011) appear as a bottom gallery; each thumb opens a
- * lightbox. MUI Dialog manages focus; motion collapses under prefers-reduced-motion.
+ * A calm, read-only recap of one archived day (specs/010-grove-history, US3;
+ * reflection preview via specs/011-markdown-notepad): its date, the reflection
+ * as sanitized markdown when written, tasks completed that day, and sand
+ * drawings (011) as a bottom gallery. MUI Dialog manages focus; motion collapses
+ * under prefers-reduced-motion.
  */
 export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDayDialogProps) {
   const reduce = useReducedMotion();
@@ -80,9 +82,7 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
                     <Typography variant="subtitle2" component="h3" color="text.secondary">
                       Reflection
                     </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                      {day.reflection.trim()}
-                    </Typography>
+                    <MarkdownPreview markdown={day.reflection} />
                   </Stack>
                 )}
 
