@@ -1,10 +1,12 @@
 "use client";
 
+import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { CelebrationProvider } from "@/components/Celebration";
+import GardenBackdrop from "@/components/GardenBackdrop";
 import { usePersistentState } from "@/lib/storage";
 import {
   createZenTheme,
@@ -84,7 +86,10 @@ export default function ThemeRegistry({ children }: { children: ReactNode }) {
         <GardenPaletteContext.Provider value={gardenPalette}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <CelebrationProvider>{children}</CelebrationProvider>
+            <GardenBackdrop palette={palette} mode={mode} />
+            <Box sx={{ position: "relative", zIndex: 1, minHeight: "100%" }}>
+              <CelebrationProvider>{children}</CelebrationProvider>
+            </Box>
           </ThemeProvider>
         </GardenPaletteContext.Provider>
       </ColorModeContext.Provider>
