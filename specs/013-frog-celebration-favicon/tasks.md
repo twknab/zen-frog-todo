@@ -85,6 +85,13 @@
 - [X] T023 Manually verify at both the single-frog baseline and a multi-frog crowd via screenshot — noticeably larger at both; documented the expected tradeoff that critters overlap more at high crowd density on the same fixed-width ground band. `tsc --noEmit` + `eslint --max-warnings=0` clean, full end-to-end smoke test zero console errors.
 - [X] T024 Commit this scale change separately from T018-T021's squirrel-icon change, then push both commits.
 
+### Amendment 5 tasks — collision halo, frog pop, better squirrel (see spec.md's Amendment 5)
+
+- [X] T025 Build an accurate mock (`scratchpad/critter-lab.html`) mirroring the real bonsai transforms at bonsai scale on the actual card background, to test collision fixes and squirrel candidates together rather than guessing.
+- [X] T026 In `src/components/BonsaiTree.tsx`, add a "sticker halo" to every frog critter: stroke in `theme.palette.background.paper`, `paint-order="stroke"` (behind the fill), `vector-effect="non-scaling-stroke"` at width 2.5, so overlapping frogs in a dense pile stay individually distinct. Bump the frog fill from `primary.light` to `primary.main` so they pop.
+- [X] T027 Switch `SQUIRREL_ICON_PATH` in `src/lib/frogIcon.ts` from Octicons (read as thin/outlined) to Game Icons' squirrel (bold, solid, clear bushy tail — reads cleanly at the ~2× bonsai scale even though it lost definition at true 16px). Apply the same halo, bump `SQUIRREL_SLOT.scale` 1.15 → 2, and fill `secondary.main`.
+- [X] T028 Manually verify via screenshot: single-frog baseline (bold, clean), a 9-frog pile (individually distinct, no blob — collision solved), and a triggered squirrel (clean, clearly a squirrel, cohesive beside the frogs). Confirm the change is scoped to bonsai critters only (favicon/header/task frogs unchanged, no halo). `tsc`/`eslint` clean, full smoke test zero console errors.
+
 ---
 
 ## Phase 5: Polish & Cross-Cutting Concerns

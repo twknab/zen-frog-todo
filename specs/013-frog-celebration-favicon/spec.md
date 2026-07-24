@@ -44,6 +44,17 @@ Resolution for (a): Font Awesome has no squirrel icon, so compared candidates fr
 
 Resolution for (b): doubled every scale factor in `BonsaiTree.tsx`'s `FROG_POSITIONS` — the baseline frog's scale goes from 1 to 2, and the per-frog depth-variation range goes from 0.68..1.18 to 1.36..2.36 (so the smallest critter is exactly 2× its previous smallest size, and every other size scales proportionally with it). Verified via screenshot at both the single-frog baseline and a multi-frog crowd — noticeably larger and more prominent at both; at high crowd density the critters overlap considerably more than before (an expected, direct consequence of doubling scale on the same fixed-width ground band), reading as a denser cluster rather than individually separated frogs, which is an accepted tradeoff of the explicit request rather than a defect. Kept as its own commit, separate from (a), so either change can be reverted independently.
 
+## Amendment 5 (2026-07-23, post-implementation)
+
+Feedback on the Amendment-4 result: the Octicons squirrel read as "too outlined" (its solid fill has thin internal cutouts that look hollow at critter scale), and the 2×-scaled frogs "all collide when piled" into an indistinct green mass. Request: a better squirrel and possibly a better frog — cartoony is fine — with the frog *popping* and the squirrel clean/visible and matching the same design feel; bring the best assets and best UX.
+
+Investigation (rendered an accurate mock mirroring the real bonsai transforms, at bonsai scale, on the actual card background):
+- **Collision** is not fixable by icon choice alone — any silhouette blobs when densely piled. The fix is a **"sticker halo"**: each critter path is stroked in the card's own background colour (`theme.palette.background.paper`), painted *behind* the fill (`paint-order: stroke`) with a `non-scaling-stroke` so the rim stays a constant width regardless of the per-critter scale/transform. Overlapping critters then show a clean background-coloured gap between them and read as distinct individuals. The mock showed this cleanly separates even a dense scale-2 pile.
+- **Frog pop**: bumped the bonsai frogs' fill from `primary.light` (pale/washed) to `primary.main` (bolder moss) — noticeably more vivid in the mock while staying within the themed palette.
+- **Squirrel**: re-tested all four react-icons squirrels at bonsai scale (~2×) *with* the halo. Game Icons' squirrel — dismissed in Amendment 4 for losing definition at true 16px — actually reads perfectly here (bold, solid, unmistakable bushy curled tail) because it renders far larger than icon size in the bonsai. Switched `SQUIRREL_ICON_PATH` from Octicons to Game Icons' squirrel (CC BY 3.0) and bumped `SQUIRREL_SLOT.scale` from 1.15 to 2 so it matches the enlarged frogs. A hand-authored squirrel was also tried and rejected (read as a shapeless blob).
+
+The halo, bolder fill, and squirrel swap are all scoped to the bonsai critters only — the favicon / header / task-button / celebration frogs are single, non-overlapping marks and are unchanged (no halo, still `FaFrog`). Verified via screenshot at the single-frog baseline and a 9-frog pile (frogs now individually distinct and popping) and by triggering the squirrel (clean, clearly a squirrel, cohesive beside the frogs). `tsc`/`eslint` clean, zero console errors on the full smoke test.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A bigger celebration for the day's biggest task (Priority: P1)
