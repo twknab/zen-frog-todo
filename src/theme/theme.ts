@@ -86,11 +86,12 @@ const naturalDark: ZenPalette = {
  * Opt-in only; Natural remains default (Principle V compatibility).
  */
 const vibrantLight: ZenPalette = {
-  bgDefault: "#F5F2FF",
-  bgPaper: "#FFFFFF",
+  // Slightly warmer lilac base — atmosphere wash supplies the psychedelic kick.
+  bgDefault: "#F3EEFF",
+  bgPaper: "#FFFBFF",
   ink: "#231C33",
   inkSoft: "#5B5470",
-  mist: "#E7E1F5",
+  mist: "#E4DCF8",
   tooltipBg: "#231C33",
   moss: "#16A34A",
   mossLight: "#4ADE80",
@@ -105,11 +106,12 @@ const vibrantLight: ZenPalette = {
 };
 
 const vibrantDark: ZenPalette = {
-  bgDefault: "#141021",
-  bgPaper: "#1E192E",
+  // Deeper violet night — richer canvas for neon wash layers.
+  bgDefault: "#120E1F",
+  bgPaper: "#1F1830",
   ink: "#F2EDFB",
   inkSoft: "#ADA4C4",
-  mist: "rgba(198, 180, 245, 0.14)",
+  mist: "rgba(198, 180, 245, 0.16)",
   tooltipBg: "#2A2340",
   moss: "#4ADE80",
   mossLight: "#86EFAC",
@@ -120,7 +122,7 @@ const vibrantDark: ZenPalette = {
   rust: "#FB6F92",
   ochre: "#FBBF24",
   dusk: "#34D9E8",
-  contrastText: "#141021",
+  contrastText: "#120E1F",
 };
 
 /**
