@@ -28,42 +28,46 @@ type ZenPalette = {
   contrastText: string;
 };
 
+// EXPERIMENT: a brighter, modern, lightly-psychedelic palette. Vivid spring
+// green keeps the frog identity front-and-centre while warm coral + electric
+// cyan/violet accents push the whole garden into neon territory. (Diverges
+// from the constitution's muted-palette principle — experiment branch only.)
 const zenLight: ZenPalette = {
-  bgDefault: "#F6F3EC",
-  bgPaper: "#FBF9F4",
-  ink: "#33302A",
-  inkSoft: "#6B665C",
-  mist: "#E3DFD3",
-  tooltipBg: "#33302A",
-  moss: "#6B8F71",
-  mossLight: "#93B49A",
-  mossDark: "#4F6E55",
-  clay: "#B98C5B",
-  clayLight: "#D2AC81",
-  clayDark: "#8C6A41",
-  rust: "#B1554A",
-  ochre: "#C79A4B",
-  dusk: "#7A93A6",
+  bgDefault: "#F5F2FF",
+  bgPaper: "#FFFFFF",
+  ink: "#231C33",
+  inkSoft: "#5B5470",
+  mist: "#E7E1F5",
+  tooltipBg: "#231C33",
+  moss: "#16A34A",
+  mossLight: "#4ADE80",
+  mossDark: "#15803D",
+  clay: "#EA6F3D",
+  clayLight: "#FB8C5A",
+  clayDark: "#C2521F",
+  rust: "#E11D6B",
+  ochre: "#E0930B",
+  dusk: "#0E9BB8",
   contrastText: "#FFFFFF",
 };
 
 const zenDark: ZenPalette = {
-  bgDefault: "#1B1916",
-  bgPaper: "#24211C",
-  ink: "#ECE7DB",
-  inkSoft: "#A9A395",
-  mist: "rgba(236, 231, 219, 0.12)",
-  tooltipBg: "#38342D",
-  moss: "#8FB597",
-  mossLight: "#B0CDB5",
-  mossDark: "#5E8266",
-  clay: "#D2A878",
-  clayLight: "#E4C6A0",
-  clayDark: "#A67C4E",
-  rust: "#D9796B",
-  ochre: "#DCB566",
-  dusk: "#8FA9BD",
-  contrastText: "#20201C",
+  bgDefault: "#141021",
+  bgPaper: "#1E192E",
+  ink: "#F2EDFB",
+  inkSoft: "#ADA4C4",
+  mist: "rgba(198, 180, 245, 0.14)",
+  tooltipBg: "#2A2340",
+  moss: "#4ADE80",
+  mossLight: "#86EFAC",
+  mossDark: "#22C55E",
+  clay: "#FB8C5A",
+  clayLight: "#FDBA8C",
+  clayDark: "#EA6F3D",
+  rust: "#FB6F92",
+  ochre: "#FBBF24",
+  dusk: "#34D9E8",
+  contrastText: "#141021",
 };
 
 const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial, sans-serif`;
@@ -121,15 +125,17 @@ export function createZenTheme(mode: ColorMode): Theme {
     shadows: buildZenShadows(mode),
     typography: {
       fontFamily: bodyFontFamily,
-      h1: { fontFamily: headingFontFamily, fontWeight: 500, letterSpacing: 0.2 },
-      h2: { fontFamily: headingFontFamily, fontWeight: 500, letterSpacing: 0.2 },
-      h3: { fontFamily: headingFontFamily, fontWeight: 500 },
-      h4: { fontFamily: headingFontFamily, fontWeight: 500 },
-      h5: { fontFamily: headingFontFamily, fontWeight: 500 },
-      h6: { fontFamily: headingFontFamily, fontWeight: 600 },
+      // Mild tracking only — Syne + tight negative spacing was part of the
+      // "horizontally skewed" feel; Bricolage doesn't need the squeeze.
+      h1: { fontFamily: headingFontFamily, fontWeight: 800, letterSpacing: -0.2 },
+      h2: { fontFamily: headingFontFamily, fontWeight: 800, letterSpacing: -0.15 },
+      h3: { fontFamily: headingFontFamily, fontWeight: 700 },
+      h4: { fontFamily: headingFontFamily, fontWeight: 700, letterSpacing: -0.1 },
+      h5: { fontFamily: headingFontFamily, fontWeight: 700 },
+      h6: { fontFamily: headingFontFamily, fontWeight: 700 },
       body1: { lineHeight: 1.7 },
       body2: { lineHeight: 1.7 },
-      button: { fontWeight: 600, textTransform: "none" },
+      button: { fontWeight: 700, textTransform: "none" },
     },
     transitions: {
       easing: {

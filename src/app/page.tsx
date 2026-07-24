@@ -150,7 +150,19 @@ export default function Home() {
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
           <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "2.1875rem" }} />
           <Box>
-            <Typography variant="h4" component="h1">
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                // Psychedelic gradient wordmark: spring green → cyan → violet.
+                backgroundImage: (theme) =>
+                  `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 50%, #B983FF 100%)`,
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+                width: "fit-content",
+              }}
+            >
               Frog Garden
             </Typography>
             <Typography variant="body2" color="text.secondary">
