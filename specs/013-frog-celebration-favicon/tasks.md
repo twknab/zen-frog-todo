@@ -72,6 +72,13 @@
 - [X] T016 In `src/components/BonsaiTree.tsx`, replace the reward-frog critters' ellipse-based rendering with `FROG_ICON_PATH`, drawn as a `<path>` with a local `translate`/`scale` transform sized to the critters' previous footprint, matching the file's existing hand-authored-SVG-primitives style. The squirrel critter is unaffected.
 - [X] T017 Manually verify at both the single-frog baseline and a multi-frog crowd (~9 critters via repeated "Complete focus session" dev-mode clicks) that the silhouette reads clearly at critter scale — it does, better than Amendment 2's stated concern anticipated (that concern held for `GiFrog`'s detail level, not `FaFrog`'s simpler one). Re-ran `tsc --noEmit` + `eslint --max-warnings=0` and the full end-to-end smoke test — all clean, zero console errors.
 
+### Amendment 4a tasks — squirrel icon (own commit, see spec.md's Amendment 4)
+
+- [X] T018 Compare Game Icons' and GitHub Octicons' squirrel icons against the `FaFrog` reference at true 16px (Font Awesome has no squirrel). Octicons' bold solid-fill squirrel stayed legible; Game Icons' lost definition, same pattern as the frog comparison. Added `SQUIRREL_ICON_PATH`/`SQUIRREL_ICON_VIEWBOX` (Octicons, MIT) to `src/lib/frogIcon.ts`.
+- [X] T019 In `src/components/BonsaiTree.tsx`, replace the squirrel's hand-drawn ellipse/circle/path shapes with `SQUIRREL_ICON_PATH`, sized to its previous footprint via a local transform; removed the now-unused `eyeFill`/`squirrelTail` theme-color variables.
+- [X] T020 Manually verify by triggering the squirrel's seeded-probability appearance (repeated dev-mode "Complete focus session" clicks past `SQUIRREL_MIN`) and screenshotting it — the curled bushy tail, its key identifying feature, reads clearly. `tsc --noEmit` + `eslint --max-warnings=0` clean, zero console errors.
+- [X] T021 Commit this squirrel-icon change on its own, separate from the frog critter up-scaling in Amendment 4b, so either can be reverted independently.
+
 ---
 
 ## Phase 5: Polish & Cross-Cutting Concerns

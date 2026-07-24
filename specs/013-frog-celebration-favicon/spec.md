@@ -36,6 +36,14 @@ Explicit follow-up request: make the bonsai reward-frog critters use the same `F
 
 Resolution: replaced the critters' ellipse-based rendering in `BonsaiTree.tsx` with the same `FROG_ICON_PATH` used for the favicon, drawn as a plain `<path>` (matching the file's existing hand-authored-SVG-primitives style, not a nested React component) with a local `translate`/`scale` transform sized to the critters' previous footprint. Verified via screenshot at both the single-frog baseline and a ~9-frog crowd — the silhouette reads clearly at both scales, better than the earlier concern anticipated (the concern held for `GiFrog`'s more detailed silhouette, not `FaFrog`'s simpler one). The path data itself was extracted to a small shared module, `src/lib/frogIcon.ts`, so `icon.tsx` and `BonsaiTree.tsx` (the two places that need raw path data rather than the `<FaFrog />` component) share one source instead of duplicating the path string. The squirrel critter (a distinct, non-frog reward) is unaffected.
 
+## Amendment 4 (2026-07-23, post-implementation)
+
+Explicit follow-up requests: (a) give the bonsai's occasional squirrel visitor the same treatment — an icon of "the same artistic variety" as the frog mark, rather than its old hand-drawn ellipse/path shape; (b) separately, scale every reward-frog critter up 2× (the smallest critter's scale factor doubles, and so does every other's, proportionally).
+
+Resolution for (a): Font Awesome has no squirrel icon, so compared candidates from other sets at true 16px (same method as the frog comparison) — Game Icons' squirrel lost definition at that size the same way its frog did; GitHub Octicons' squirrel (bold, solid single-color fill — the same general weight/style family as Font Awesome) stayed clearly legible and was chosen. Added `SQUIRREL_ICON_PATH`/`SQUIRREL_ICON_VIEWBOX` to `src/lib/frogIcon.ts` alongside the frog constants, and replaced the squirrel's hand-drawn ellipse/circle shapes in `BonsaiTree.tsx` with this path, sized to its previous footprint. Verified via screenshot (triggering the squirrel's seeded-probability appearance in the dev-mode test harness) — the curled bushy tail, the squirrel's key identifying feature, reads clearly.
+
+Resolution for (b): documented separately, see the corresponding tasks.md entry — kept as an independent commit from (a) specifically so either change can be reverted without affecting the other.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A bigger celebration for the day's biggest task (Priority: P1)

@@ -11,7 +11,7 @@ import {
   SQUIRREL_MIN,
   type BonsaiStage,
 } from "@/lib/bonsai";
-import { FROG_ICON_PATH } from "@/lib/frogIcon";
+import { FROG_ICON_PATH, SQUIRREL_ICON_PATH } from "@/lib/frogIcon";
 
 type BonsaiTreeProps = {
   stage: BonsaiStage;
@@ -115,9 +115,7 @@ export default function BonsaiTree({
       };
 
   const frogFill = theme.palette.primary.light;
-  const eyeFill = theme.palette.text.primary;
   const squirrelBody = theme.palette.secondary.dark;
-  const squirrelTail = theme.palette.secondary.main;
 
   const isShrub = stage === "shrub" || leaves <= 0;
   const shownLeaves = LEAF_POSITIONS.slice(0, Math.min(leaves, MAX_LEAVES));
@@ -245,16 +243,15 @@ export default function BonsaiTree({
                 transform={`translate(${SQUIRREL_SLOT.x} ${SQUIRREL_SLOT.y}) scale(${SQUIRREL_SLOT.scale})`}
                 {...appear}
               >
-                {/* bushy tail */}
-                <path d="M6 3 Q17 -4 11 -14 Q7 -19 2 -15 Q8 -10 4 -1 Z" fill={squirrelTail} />
-                {/* body */}
-                <ellipse cx={0} cy={1} rx={5.5} ry={7} fill={squirrelBody} />
-                {/* head */}
-                <circle cx={-3} cy={-6} r={3.4} fill={squirrelBody} />
-                {/* ear */}
-                <circle cx={-5} cy={-9} r={1.4} fill={squirrelBody} />
-                {/* eye */}
-                <circle cx={-4} cy={-6.2} r={0.9} fill={eyeFill} />
+                {/* Same artistic variety as the frog mark (a bold, solid-fill
+                    icon, sized small) — see src/lib/frogIcon.ts. Path is
+                    24x24; this local transform centers and sizes it to
+                    the same footprint the hand-drawn critter used to have. */}
+                <path
+                  d={SQUIRREL_ICON_PATH}
+                  fill={squirrelBody}
+                  transform="translate(-12.6 -12.6) scale(1.05)"
+                />
               </motion.g>
             )}
           </AnimatePresence>
