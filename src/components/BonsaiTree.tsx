@@ -11,6 +11,7 @@ import {
   SQUIRREL_MIN,
   type BonsaiStage,
 } from "@/lib/bonsai";
+import { FROG_ICON_PATH } from "@/lib/frogIcon";
 
 type BonsaiTreeProps = {
   stage: BonsaiStage;
@@ -228,12 +229,11 @@ export default function BonsaiTree({
           <AnimatePresence>
             {shownFrogs.map((p, i) => (
               <motion.g key={i} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
-                <ellipse cx={0} cy={4} rx={9} ry={6} fill={frogFill} />
-                <ellipse cx={-4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
-                <ellipse cx={4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
-                <circle cx={-4} cy={-1.5} r={1.2} fill={eyeFill} />
-                <circle cx={4} cy={-1.5} r={1.2} fill={eyeFill} />
-                <path d="M-4 5 Q0 8 4 5" stroke={eyeFill} strokeWidth={1} fill="none" strokeLinecap="round" />
+                {/* Same frog mark used everywhere else in the app (favicon,
+                    header, task buttons) — see src/lib/frogIcon.ts. Path is
+                    576x512; this local transform centers and shrinks it to
+                    the same footprint the hand-drawn critter used to have. */}
+                <path d={FROG_ICON_PATH} fill={frogFill} transform="translate(-8.064 -7.168) scale(0.028)" />
               </motion.g>
             ))}
           </AnimatePresence>

@@ -30,6 +30,12 @@ Resolution:
 - Replaced the "Frog Garden" title's `SelfImprovementOutlinedIcon` with the same `FaFrog` mark, so the app's primary header is now part of the same consistent frog identity rather than a generic meditation icon.
 - Investigated the bonsai reward-frog critters (`BonsaiTree.tsx`) and confirmed they intentionally use a distinct, much simpler primitive-shape design (a few ellipses + dots, not an icon asset) — necessary because up to 20 of them render simultaneously at a scale well below 16px. The same low-resolution test that motivated the `FaFrog` switch confirms this: any of the icon-library options would look worse, not better, multiplied at that scale. Left unchanged, deliberately — this is not "the same old" icon, it's a different, purpose-built design for a different rendering constraint.
 
+## Amendment 3 (2026-07-23, post-implementation)
+
+Explicit follow-up request: make the bonsai reward-frog critters use the same `FaFrog` mark after all, rather than the hand-drawn primitive shapes recommended in Amendment 2.
+
+Resolution: replaced the critters' ellipse-based rendering in `BonsaiTree.tsx` with the same `FROG_ICON_PATH` used for the favicon, drawn as a plain `<path>` (matching the file's existing hand-authored-SVG-primitives style, not a nested React component) with a local `translate`/`scale` transform sized to the critters' previous footprint. Verified via screenshot at both the single-frog baseline and a ~9-frog crowd — the silhouette reads clearly at both scales, better than the earlier concern anticipated (the concern held for `GiFrog`'s more detailed silhouette, not `FaFrog`'s simpler one). The path data itself was extracted to a small shared module, `src/lib/frogIcon.ts`, so `icon.tsx` and `BonsaiTree.tsx` (the two places that need raw path data rather than the `<FaFrog />` component) share one source instead of duplicating the path string. The squirrel critter (a distinct, non-frog reward) is unaffected.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A bigger celebration for the day's biggest task (Priority: P1)

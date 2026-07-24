@@ -66,6 +66,12 @@
 - [X] T013 [US2] Investigate whether `BonsaiTree.tsx`'s reward-frog critters should also switch to the icon-library mark. Confirmed (via the same low-resolution comparison, plus a screenshot of the actual multi-frog rendering) that they intentionally use a distinct, simpler primitive-shape design purpose-built for rendering up to 20 critters simultaneously at a scale well below 16px — switching them to an icon-library asset would look worse there, not better. Left unchanged; documented the reasoning in spec.md rather than silently doing nothing.
 - [X] T014 Re-run `tsc --noEmit` + `eslint --max-warnings=0` and a full end-to-end smoke test (frog designation → completion → full-screen celebration, header, favicon) after the swap — all clean, zero console errors.
 
+### Amendment 3 tasks (post-implementation follow-up, see spec.md's Amendment 3)
+
+- [X] T015 Extract the Font Awesome frog path data to `src/lib/frogIcon.ts` (`FROG_ICON_PATH`, `FROG_ICON_VIEWBOX`), and update `src/app/icon.tsx` to import from it instead of holding its own copy — a straight refactor, no behavior change, done ahead of a second raw-path consumer.
+- [X] T016 In `src/components/BonsaiTree.tsx`, replace the reward-frog critters' ellipse-based rendering with `FROG_ICON_PATH`, drawn as a `<path>` with a local `translate`/`scale` transform sized to the critters' previous footprint, matching the file's existing hand-authored-SVG-primitives style. The squirrel critter is unaffected.
+- [X] T017 Manually verify at both the single-frog baseline and a multi-frog crowd (~9 critters via repeated "Complete focus session" dev-mode clicks) that the silhouette reads clearly at critter scale — it does, better than Amendment 2's stated concern anticipated (that concern held for `GiFrog`'s detail level, not `FaFrog`'s simpler one). Re-ran `tsc --noEmit` + `eslint --max-warnings=0` and the full end-to-end smoke test — all clean, zero console errors.
+
 ---
 
 ## Phase 5: Polish & Cross-Cutting Concerns
