@@ -2,6 +2,7 @@
 
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Popover from "@mui/material/Popover";
@@ -12,7 +13,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
-import { useId, useState, type MouseEvent } from "react";
+import { useId, useState, type MouseEvent, type ReactNode } from "react";
 import { useColorMode, useGardenPalette } from "@/theme/ThemeRegistry";
 import type { ColorMode, PaletteId } from "@/theme/theme";
 
@@ -22,8 +23,70 @@ type OptionsPanelProps = {
 };
 
 /**
+ * Shared ToggleButtonGroup look for Options — selected state uses primary
+ * fill + contrast text so the active choice reads clearly at WCAG AA.
+ */
+const optionsToggleSx = {
+  gap: 0.5,
+  "& .MuiToggleButtonGroup-grouped": {
+    border: "1px solid",
+    borderColor: "divider",
+    borderRadius: "10px !important",
+    mx: 0,
+    px: 1.25,
+    py: 0.75,
+    typography: "body2",
+    color: "text.secondary",
+    transition: "background-color 180ms ease, color 180ms ease, border-color 180ms ease",
+    "&.Mui-selected": {
+      bgcolor: "primary.main",
+      color: "primary.contrastText",
+      borderColor: "primary.main",
+      "&:hover": {
+        bgcolor: "primary.dark",
+        borderColor: "primary.dark",
+      },
+    },
+    "&:hover": {
+      bgcolor: "action.hover",
+    },
+  },
+} as const;
+
+function OptionsSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <Box>
+      <Typography
+        component="h3"
+        variant="overline"
+        sx={{
+          display: "block",
+          mb: 1,
+          letterSpacing: "0.08em",
+          color: "text.secondary",
+          lineHeight: 1.2,
+        }}
+      >
+        {label}
+      </Typography>
+      {children}
+    </Box>
+  );
+}
+
+/**
  * Calm Options Popover — single home for Palette, Appearance, and Dev.
  * Keeps the main header free of settings chrome.
+ *
+ * Radius: uses theme.shape.borderRadius (16) — one step softer than cards
+ * (24px), not the previous `borderRadius: 3` (= 48px) which felt bubbly
+ * for a compact settings surface.
  */
 export default function OptionsPanel({
   devMode,
@@ -73,34 +136,33 @@ export default function OptionsPanel({
             "aria-label": "Options",
             sx: {
               mt: 1,
-              p: 2.5,
-              minWidth: 280,
-              borderRadius: 3,
+              p: 2.25,
+              minWidth: 288,
+              // Theme radius (16) — calm for a settings popover; cards stay 24.
+              borderRadius: 1,
               border: "1px solid",
               borderColor: "divider",
+              boxShadow: 3,
             },
           },
         }}
       >
-        <Stack spacing={2.5}>
-          <Typography variant="subtitle2" color="text.secondary">
+        <Stack spacing={0}>
+          <Typography
+            variant="subtitle2"
+            sx={{ mb: 2, color: "text.primary", fontWeight: 700 }}
+          >
             Options
           </Typography>
 
-          <Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block", mb: 1 }}
-            >
-              Palette
-            </Typography>
+          <OptionsSection label="Palette">
             <ToggleButtonGroup
               value={palette}
               exclusive
               size="small"
               fullWidth
               aria-label="Palette"
+              sx={optionsToggleSx}
               onChange={(_, next: PaletteId | null) => {
                 if (next) setPalette(next);
               }}
@@ -115,22 +177,18 @@ export default function OptionsPanel({
                 Dusk
               </ToggleButton>
             </ToggleButtonGroup>
-          </Box>
+          </OptionsSection>
 
-          <Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block", mb: 1 }}
-            >
-              Appearance
-            </Typography>
+          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+          <OptionsSection label="Appearance">
             <ToggleButtonGroup
               value={mode}
               exclusive
               size="small"
               fullWidth
               aria-label="Appearance"
+              sx={optionsToggleSx}
               onChange={(_, next: ColorMode | null) => {
                 if (next) setColorMode(next);
               }}
@@ -142,20 +200,26 @@ export default function OptionsPanel({
                 Dark
               </ToggleButton>
             </ToggleButtonGroup>
-          </Box>
+          </OptionsSection>
 
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={devMode}
-                onChange={(event) => onDevModeChange(event.target.checked)}
-              />
-            }
-            label="Dev"
-            slotProps={{ typography: { variant: "body2", color: "text.secondary" } }}
-            sx={{ ml: 0, mr: 0 }}
-          />
+          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+          <OptionsSection label="Dev">
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={devMode}
+                  onChange={(event) => onDevModeChange(event.target.checked)}
+                />
+              }
+              label="Dev tools"
+              slotProps={{
+                typography: { variant: "body2", color: "text.secondary" },
+              }}
+              sx={{ ml: 0, mr: 0 }}
+            />
+          </OptionsSection>
         </Stack>
       </Popover>
     </>
