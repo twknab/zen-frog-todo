@@ -239,7 +239,16 @@ export default function Home() {
             <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
               <Checkbox
                 checked={frogTask.completed}
+                disabled={frogTask.completed}
+                slotProps={{
+                  input: {
+                    "aria-label": frogTask.completed
+                      ? "Frog completed — designate a new frog to move on"
+                      : `Mark "${frogTask.title}" complete`,
+                  },
+                }}
                 onChange={(event) => {
+                  if (frogTask.completed) return;
                   if (event.target.checked) {
                     const rect = event.currentTarget.getBoundingClientRect();
                     celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "frog");

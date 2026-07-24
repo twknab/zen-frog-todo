@@ -31,6 +31,17 @@ function makeId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** Incomplete first, completed last — relative order within each group preserved. */
+function partitionCompletedToBottom(tasks: Task[]): Task[] {
+  const incomplete: Task[] = [];
+  const completed: Task[] = [];
+  for (const task of tasks) {
+    if (task.completed) completed.push(task);
+    else incomplete.push(task);
+  }
+  return [...incomplete, ...completed];
+}
+
 export function useTasks() {
   const [state, setState] = usePersistentState<TasksState>(
     "frog-garden:tasks-v1",
@@ -47,7 +58,10 @@ export function useTasks() {
     if (!trimmed) return;
     setState((current) => ({
       ...current,
-      tasks: [...current.tasks, { id: makeId("task"), title: trimmed, completed: false }],
+      tasks: partitionCompletedToBottom([
+        ...current.tasks,
+        { id: makeId("task"), title: trimmed, completed: false },
+      ]),
     }));
   }
 
@@ -61,11 +75,15 @@ export function useTasks() {
   function toggleTaskCompleted(id: string) {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
+    // Completed frog stays completed; move on by designating a new frog.
+    if (id === state.frogTaskId && task.completed) return;
     const nowCompleted = !task.completed;
 
     setState((current) => ({
       ...current,
-      tasks: current.tasks.map((t) => (t.id === id ? { ...t, completed: nowCompleted } : t)),
+      tasks: partitionCompletedToBottom(
+        current.tasks.map((t) => (t.id === id ? { ...t, completed: nowCompleted } : t)),
+      ),
     }));
 
     // Append-only: reopening/re-completing a task never edits or removes a
@@ -136,19 +154,22 @@ export function useTasks() {
   function reorderTasks(draggedId: string, targetId: string) {
     if (draggedId === targetId) return;
     setState((current) => {
-      const tasks = [...current.tasks];
-      const fromIndex = tasks.findIndex((task) => task.id === draggedId);
-      const toIndex = tasks.findIndex((task) => task.id === targetId);
+      const next = [...current.tasks];
+      const fromIndex = next.findIndex((task) => task.id === draggedId);
+      const toIndex = next.findIndex((task) => task.id === targetId);
       if (fromIndex === -1 || toIndex === -1) return current;
-      const [dragged] = tasks.splice(fromIndex, 1);
-      tasks.splice(toIndex, 0, dragged);
-      return { ...current, tasks };
+      const [dragged] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, dragged);
+      // DnD may mix groups briefly; keep incomplete above completed.
+      return { ...current, tasks: partitionCompletedToBottom(next) };
     });
   }
 
   // Normalize tasks loaded from storage written by an older schema (e.g.
   // before `completed` existed) so controlled inputs never see `undefined`.
-  const tasks = state.tasks.map((task) => ({ ...task, completed: task.completed ?? false }));
+  const tasks = partitionCompletedToBottom(
+    state.tasks.map((task) => ({ ...task, completed: task.completed ?? false })),
+  );
   const frogTask = tasks.find((task) => task.id === state.frogTaskId) ?? null;
   const otherTasks = tasks.filter((task) => task.id !== state.frogTaskId);
 
