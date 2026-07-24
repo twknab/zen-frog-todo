@@ -1,7 +1,7 @@
 "use client";
 
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
-import NotesOutlinedIcon from "@mui/icons-material/NotesOutlined";
+import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -22,6 +22,9 @@ type NotepadShellProps = {
  * Full-screen surface for the engineering notepad. Escape/close dismisses
  * without a discard prompt — content auto-persists via the parent.
  * See specs/011-markdown-notepad/contracts/notepad-ui-contract.md.
+ *
+ * Chrome is intentionally light: small title row, soft divider, more room
+ * for the writing surface.
  */
 export default function NotepadShell({
   open,
@@ -56,17 +59,25 @@ export default function NotepadShell({
           gap: 1,
           borderBottom: 1,
           borderColor: "divider",
-          py: 1.5,
+          py: 1,
           px: { xs: 2, md: 3 },
+          minHeight: 48,
         }}
       >
-        <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-          <NotesOutlinedIcon color="primary" />
-          <Typography variant="h6" component="span">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <StickyNote2OutlinedIcon
+            sx={{ color: "text.secondary", fontSize: "1.25rem" }}
+            aria-hidden
+          />
+          <Typography
+            variant="subtitle1"
+            component="span"
+            sx={{ fontWeight: 600, color: "text.primary" }}
+          >
             Notepad
           </Typography>
         </Stack>
-        <IconButton onClick={onClose} aria-label="Close notepad" edge="end">
+        <IconButton onClick={onClose} aria-label="Close notepad" edge="end" size="small">
           <CloseOutlinedIcon />
         </IconButton>
       </DialogTitle>
@@ -74,7 +85,7 @@ export default function NotepadShell({
         sx={{
           display: "flex",
           flexDirection: "column",
-          pt: 2.5,
+          pt: 3,
           px: { xs: 2, md: 3 },
           pb: 3,
         }}

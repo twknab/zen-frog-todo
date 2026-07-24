@@ -1,6 +1,6 @@
 "use client";
 
-import NotesOutlinedIcon from "@mui/icons-material/NotesOutlined";
+import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 
@@ -11,6 +11,9 @@ type NotepadButtonProps = {
 /**
  * Upper-right header control that opens the persistent engineering notepad.
  * Visible in Flow and Focus Mode (specs/011-markdown-notepad).
+ *
+ * Icon: StickyNote2Outlined — reads as a sticky/notepad rather than a
+ * text-orientation / list block (NotesOutlined).
  */
 export default function NotepadButton({ onClick }: NotepadButtonProps) {
   return (
@@ -20,7 +23,7 @@ export default function NotepadButton({ onClick }: NotepadButtonProps) {
         aria-label="Open notepad"
         sx={{ color: "text.secondary" }}
       >
-        <NotesOutlinedIcon />
+        <StickyNote2OutlinedIcon />
       </IconButton>
     </Tooltip>
   );

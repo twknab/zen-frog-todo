@@ -42,7 +42,13 @@ export default function MarkdownNotepad({
         onChange={(_, next: NotepadMode | null) => {
           if (next) setMode(next);
         }}
-        sx={{ mb: 1.5, alignSelf: "flex-start" }}
+        sx={{
+          // Breathing room above Write/Preview — DialogContent already pads
+          // the shell; keep a clear gap before the writing surface.
+          mt: 0.5,
+          mb: 2.5,
+          alignSelf: "flex-start",
+        }}
       >
         <ToggleButton value="write" aria-label="Write mode">
           Write
