@@ -2,11 +2,9 @@
 
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import ChecklistOutlinedIcon from "@mui/icons-material/ChecklistOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import WavesOutlinedIcon from "@mui/icons-material/WavesOutlined";
 import Box from "@mui/material/Box";
@@ -15,10 +13,8 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -38,6 +34,7 @@ import Grove from "@/components/Grove";
 import NewDayAction from "@/components/NewDayAction";
 import NotepadButton from "@/components/NotepadButton";
 import NotepadShell from "@/components/NotepadShell";
+import OptionsPanel from "@/components/OptionsPanel";
 import SandCanvas from "@/components/SandCanvas";
 import StandupSummary from "@/components/StandupSummary";
 import TaskListCard from "@/components/TaskListCard";
@@ -50,8 +47,7 @@ import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
 import { useTasks } from "@/lib/tasks";
-import { useColorMode } from "@/theme/ThemeRegistry";
-
+import { useGardenPalette } from "@/theme/ThemeRegistry";
 type CardAccent = "primary" | "secondary" | "info" | "warning" | "success" | "error";
 
 type DashboardMode = "frog" | "flow";
@@ -62,9 +58,8 @@ type DashboardMode = "frog" | "flow";
 const EPOCH = new Date(0);
 
 export default function Home() {
-  const { mode: colorMode, toggleColorMode } = useColorMode();
-  const [mode, setMode] = useState<DashboardMode>("flow");
-  const {
+  const { palette } = useGardenPalette();
+  const [mode, setMode] = useState<DashboardMode>("flow");  const {
     tasks,
     frogTask,
     otherTasks,
@@ -153,15 +148,22 @@ export default function Home() {
             <Typography
               variant="h4"
               component="h1"
-              sx={{
-                // Psychedelic gradient wordmark: spring green → cyan → violet.
-                backgroundImage: (theme) =>
-                  `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 50%, #B983FF 100%)`,
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-                width: "fit-content",
-              }}
+              sx={
+                palette === "vibrant"
+                  ? {
+                      // Vibrant-only gradient wordmark: spring green → cyan → violet.
+                      backgroundImage: (theme) =>
+                        `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 50%, #B983FF 100%)`,
+                      backgroundClip: "text",
+                      WebkitBackgroundClip: "text",
+                      color: "transparent",
+                      width: "fit-content",
+                    }
+                  : {
+                      color: "primary.main",
+                      width: "fit-content",
+                    }
+              }
             >
               Frog Garden
             </Typography>
@@ -192,33 +194,9 @@ export default function Home() {
           {/* Notepad stays reachable in Focus Mode (FR-013) — outside !isFocus gates. */}
           <NotepadButton onClick={() => setNotepadOpen(true)} />
 
-          <Tooltip title={colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-            <IconButton
-              onClick={toggleColorMode}
-              aria-label={
-                colorMode === "dark" ? "Switch to light mode" : "Switch to dark mode"
-              }
-              sx={{ color: "text.secondary" }}
-            >
-              {colorMode === "dark" ? (
-                <LightModeOutlinedIcon />
-              ) : (
-                <DarkModeOutlinedIcon />
-              )}
-            </IconButton>
-          </Tooltip>
-
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={devMode}
-                onChange={(event) => setDevMode(event.target.checked)}
-              />
-            }
-            label="Dev"
-            slotProps={{ typography: { variant: "caption", color: "text.secondary" } }}
-            sx={{ ml: 0 }}
+          <OptionsPanel
+            devMode={devMode}
+            onDevModeChange={setDevMode}
           />
         </Stack>
       </Stack>
