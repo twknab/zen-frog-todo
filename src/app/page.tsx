@@ -148,7 +148,7 @@ export default function Home() {
         }}
       >
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "2.1875rem" }} />
+          <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "5.5rem", lineHeight: 1 }} />
           <Box>
             <Typography
               variant="h4"
