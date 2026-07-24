@@ -31,4 +31,5 @@
 
 ## Notes
 
-- Validation pass 1 (2026-07-24): Spec avoids naming localStorage/MUI/ToggleButtonGroup in FRs; those belong in plan. “Manrope” appears only in FR-015 as the existing body face name already in product — acceptable as a continuity constraint. No [NEEDS CLARIFICATION] markers; Options surface shape deferred to plan (Assumption). Ready for `/speckit-clarify`.
+- Validation pass 1 (2026-07-24): Spec avoids naming localStorage/MUI/ToggleButtonGroup in FRs; those belong in plan. “Manrope” / heading faces in FR-015 are continuity constraints from the existing product. No [NEEDS CLARIFICATION] markers.
+- Clarification pass (2026-07-24): Options Popover hosts Palette + Appearance + Dev; header decluttered. Checklist still fully passing. Ready for `/speckit-plan`.
