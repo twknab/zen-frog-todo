@@ -11,6 +11,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent } from "react";
 import { useColorMode, useGardenPalette } from "@/theme/ThemeRegistry";
 import type { ColorMode, PaletteId } from "@/theme/theme";
@@ -33,6 +34,7 @@ export default function OptionsPanel({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const titleId = useId();
   const open = Boolean(anchorEl);
+  const reduceMotion = useReducedMotion();
 
   function handleOpen(event: MouseEvent<HTMLElement>) {
     setAnchorEl(event.currentTarget);
@@ -64,6 +66,7 @@ export default function OptionsPanel({
         onClose={handleClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
+        transitionDuration={reduceMotion ? 0 : undefined}
         slotProps={{
           paper: {
             role: "dialog",

@@ -106,3 +106,11 @@ T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 →
 ## MVP Scope
 
 T001–T007 deliver selectable persisted palettes with Natural default. US2/US3 required for full acceptance (Appearance + Dev in Options / header declutter) before calling the feature done.
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close gaps found by `/speckit-converge` against spec/plan/constitution
+
+- [x] T015 Honor `prefers-reduced-motion` on Options Popover open/close in `src/components/OptionsPanel.tsx` per Edge Cases / Principle IV / FR-011 (`partial`)
