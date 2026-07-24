@@ -1,9 +1,9 @@
-import { Manrope, Syne } from "next/font/google";
+import { Bricolage_Grotesque, Manrope } from "next/font/google";
 
 /**
  * Body: Manrope — clean, modern, highly legible (kept for readability).
- * Heading: Syne — a quirky, wide, design-forward display face with a
- * psychedelic-modern art vibe, for bold and distinctive headings.
+ * Heading: Bricolage Grotesque — quirky, condensed-leaning display with
+ * real personality (cool without Syne's wide/stretched glyph proportions).
  * (Experiment branch — see the bold/brighter theme exploration.)
  */
 export const zenBodyFont = Manrope({
@@ -12,7 +12,7 @@ export const zenBodyFont = Manrope({
   display: "swap",
 });
 
-export const zenHeadingFont = Syne({
+export const zenHeadingFont = Bricolage_Grotesque({
   weight: ["600", "700", "800"],
   subsets: ["latin"],
   display: "swap",

@@ -125,10 +125,12 @@ export function createZenTheme(mode: ColorMode): Theme {
     shadows: buildZenShadows(mode),
     typography: {
       fontFamily: bodyFontFamily,
-      h1: { fontFamily: headingFontFamily, fontWeight: 800, letterSpacing: -0.5 },
-      h2: { fontFamily: headingFontFamily, fontWeight: 800, letterSpacing: -0.3 },
+      // Mild tracking only — Syne + tight negative spacing was part of the
+      // "horizontally skewed" feel; Bricolage doesn't need the squeeze.
+      h1: { fontFamily: headingFontFamily, fontWeight: 800, letterSpacing: -0.2 },
+      h2: { fontFamily: headingFontFamily, fontWeight: 800, letterSpacing: -0.15 },
       h3: { fontFamily: headingFontFamily, fontWeight: 700 },
-      h4: { fontFamily: headingFontFamily, fontWeight: 700, letterSpacing: -0.2 },
+      h4: { fontFamily: headingFontFamily, fontWeight: 700, letterSpacing: -0.1 },
       h5: { fontFamily: headingFontFamily, fontWeight: 700 },
       h6: { fontFamily: headingFontFamily, fontWeight: 700 },
       body1: { lineHeight: 1.7 },
