@@ -11,6 +11,7 @@ import {
   SQUIRREL_MIN,
   type BonsaiStage,
 } from "@/lib/bonsai";
+import { FROG_ICON_PATH, SQUIRREL_ICON_PATH } from "@/lib/frogIcon";
 
 type BonsaiTreeProps = {
   stage: BonsaiStage;
@@ -58,18 +59,21 @@ function seeded(i: number, salt: number): number {
 // Frog friends gather on the ground around the pot base. Computed once; frog `i`
 // always sits in slot `i`, so the crowd grows additively without reshuffling.
 // Slot 0 is the original lone frog's spot (the baseline).
+// Scale is 2x the original hand-drawn-critter sizing (0.68..1.18 -> 1.36..2.36)
+// now that the critters render as a bolder icon silhouette instead of tiny
+// ellipses — the smallest frog is still exactly 2x its old smallest size.
 const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
-  if (i === 0) return { x: 30, y: 187, scale: 1 };
+  if (i === 0) return { x: 30, y: 187, scale: 2 };
   return {
     x: 12 + seeded(i, 1) * 136, // 12..148 across the ground band
     y: 186 + seeded(i, 2) * 13, // 186..199, clustered at the base
-    scale: 0.68 + seeded(i, 3) * 0.5, // 0.68..1.18 depth variation
+    scale: 1.36 + seeded(i, 3) * 1.0, // 1.36..2.36 depth variation
   };
 });
 
 // The squirrel's own fixed spot (distinct from the frog slots, not counted in
 // the frog cap). It only visits occasionally — see squirrelVisible.
-const SQUIRREL_SLOT = { x: 134, y: 189, scale: 1.15 };
+const SQUIRREL_SLOT = { x: 132, y: 184, scale: 2 };
 
 // Occasional + deterministic: present only once the crowd is established and
 // when a seeded hash of the count lands, so it pops in and out as frogs change
@@ -113,10 +117,13 @@ export default function BonsaiTree({
         transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
       };
 
-  const frogFill = theme.palette.primary.light;
-  const eyeFill = theme.palette.text.primary;
-  const squirrelBody = theme.palette.secondary.dark;
-  const squirrelTail = theme.palette.secondary.main;
+  // Critters are drawn as bold, solid icon silhouettes at the pot base. A
+  // "sticker halo" — a stroke in the card's own background colour, painted
+  // behind the fill — keeps each critter visually distinct even when the
+  // crowd piles up and overlaps (otherwise they merge into one green blob).
+  const frogFill = theme.palette.primary.main;
+  const squirrelBody = theme.palette.secondary.main;
+  const critterHalo = theme.palette.background.paper;
 
   const isShrub = stage === "shrub" || leaves <= 0;
   const shownLeaves = LEAF_POSITIONS.slice(0, Math.min(leaves, MAX_LEAVES));
@@ -228,12 +235,23 @@ export default function BonsaiTree({
           <AnimatePresence>
             {shownFrogs.map((p, i) => (
               <motion.g key={i} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
-                <ellipse cx={0} cy={4} rx={9} ry={6} fill={frogFill} />
-                <ellipse cx={-4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
-                <ellipse cx={4} cy={-1.5} rx={3.2} ry={3.6} fill={frogFill} />
-                <circle cx={-4} cy={-1.5} r={1.2} fill={eyeFill} />
-                <circle cx={4} cy={-1.5} r={1.2} fill={eyeFill} />
-                <path d="M-4 5 Q0 8 4 5" stroke={eyeFill} strokeWidth={1} fill="none" strokeLinecap="round" />
+                {/* Same frog mark used everywhere else in the app (favicon,
+                    header, task buttons) — see src/lib/frogIcon.ts. Path is
+                    576x512; this local transform centers and shrinks it to
+                    the same footprint the hand-drawn critter used to have.
+                    The bg-coloured, non-scaling stroke (painted behind the
+                    fill via paint-order) is the sticker halo that separates
+                    overlapping frogs — see critterHalo above. */}
+                <path
+                  d={FROG_ICON_PATH}
+                  fill={frogFill}
+                  stroke={critterHalo}
+                  strokeWidth={2.5}
+                  strokeLinejoin="round"
+                  paintOrder="stroke"
+                  vectorEffect="non-scaling-stroke"
+                  transform="translate(-8.064 -7.168) scale(0.028)"
+                />
               </motion.g>
             ))}
           </AnimatePresence>
@@ -245,16 +263,20 @@ export default function BonsaiTree({
                 transform={`translate(${SQUIRREL_SLOT.x} ${SQUIRREL_SLOT.y}) scale(${SQUIRREL_SLOT.scale})`}
                 {...appear}
               >
-                {/* bushy tail */}
-                <path d="M6 3 Q17 -4 11 -14 Q7 -19 2 -15 Q8 -10 4 -1 Z" fill={squirrelTail} />
-                {/* body */}
-                <ellipse cx={0} cy={1} rx={5.5} ry={7} fill={squirrelBody} />
-                {/* head */}
-                <circle cx={-3} cy={-6} r={3.4} fill={squirrelBody} />
-                {/* ear */}
-                <circle cx={-5} cy={-9} r={1.4} fill={squirrelBody} />
-                {/* eye */}
-                <circle cx={-4} cy={-6.2} r={0.9} fill={eyeFill} />
+                {/* Same bold, solid-fill artistic variety as the frog mark,
+                    with the same sticker halo — see src/lib/frogIcon.ts. Path
+                    is 512x512; this local transform centers and sizes it so it
+                    reads clearly at the pot base among the frogs. */}
+                <path
+                  d={SQUIRREL_ICON_PATH}
+                  fill={squirrelBody}
+                  stroke={critterHalo}
+                  strokeWidth={2.5}
+                  strokeLinejoin="round"
+                  paintOrder="stroke"
+                  vectorEffect="non-scaling-stroke"
+                  transform="translate(-9 -9) scale(0.035)"
+                />
               </motion.g>
             )}
           </AnimatePresence>

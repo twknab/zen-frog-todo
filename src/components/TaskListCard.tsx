@@ -2,12 +2,14 @@
 
 import AddIcon from "@mui/icons-material/AddOutlined";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import type { ChangeEvent, DragEvent, KeyboardEvent } from "react";
+import { FaFrog } from "react-icons/fa6";
 import { useCelebration } from "@/components/Celebration";
 import DeleteIncompleteTaskControl from "@/components/DeleteIncompleteTaskControl";
 import type { Task } from "@/lib/tasks";
@@ -125,9 +127,7 @@ export default function TaskListCard({
                 aria-label={`Make "${task.title}" today's frog`}
                 sx={{ opacity: 0, transition: "opacity 150ms ease" }}
               >
-                <span role="img" aria-hidden="true" style={{ fontSize: "1rem" }}>
-                  🐸
-                </span>
+                <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1rem" }} />
               </IconButton>
               <DeleteIncompleteTaskControl
                 taskId={task.id}
