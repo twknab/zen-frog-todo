@@ -6,48 +6,87 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { CelebrationProvider } from "@/components/Celebration";
 import { usePersistentState } from "@/lib/storage";
-import { createZenTheme, type ColorMode } from "./theme";
+import {
+  createZenTheme,
+  normalizePaletteId,
+  type ColorMode,
+  type PaletteId,
+} from "./theme";
 
 type ColorModeContextValue = {
   mode: ColorMode;
+  setColorMode: (next: ColorMode) => void;
   toggleColorMode: () => void;
+};
+
+type GardenPaletteContextValue = {
+  palette: PaletteId;
+  setPalette: (next: PaletteId) => void;
 };
 
 const ColorModeContext = createContext<ColorModeContextValue>({
   mode: "dark",
+  setColorMode: () => {},
   toggleColorMode: () => {},
 });
 
-/** Read/toggle the active light/dark color mode from anywhere in the tree. */
+const GardenPaletteContext = createContext<GardenPaletteContextValue>({
+  palette: "natural",
+  setPalette: () => {},
+});
+
+/** Read/set the active light/dark appearance from anywhere in the tree. */
 export function useColorMode() {
   return useContext(ColorModeContext);
 }
 
+/** Read/set the active garden palette from anywhere in the tree. */
+export function useGardenPalette() {
+  return useContext(GardenPaletteContext);
+}
+
 export default function ThemeRegistry({ children }: { children: ReactNode }) {
-  // Dark is the default; the choice is persisted locally (constitution
-  // Principle III — on-device only, no backend).
+  // Dark is the default appearance; Natural is the default palette.
+  // Both are persisted locally (constitution Principle III).
   const [mode, setMode] = usePersistentState<ColorMode>(
     "frog-garden:color-mode-v1",
     "dark",
   );
+  const [rawPalette, setRawPalette] = usePersistentState<PaletteId>(
+    "frog-garden:palette-v1",
+    "natural",
+  );
+  const palette = normalizePaletteId(rawPalette);
 
-  const theme = useMemo(() => createZenTheme(mode), [mode]);
+  const theme = useMemo(() => createZenTheme(mode, palette), [mode, palette]);
+
   const colorMode = useMemo<ColorModeContextValue>(
     () => ({
       mode,
+      setColorMode: (next) => setMode(next),
       toggleColorMode: () =>
         setMode((current) => (current === "dark" ? "light" : "dark")),
     }),
     [mode, setMode],
   );
 
+  const gardenPalette = useMemo<GardenPaletteContextValue>(
+    () => ({
+      palette,
+      setPalette: (next) => setRawPalette(normalizePaletteId(next)),
+    }),
+    [palette, setRawPalette],
+  );
+
   return (
     <AppRouterCacheProvider options={{ key: "mui" }}>
       <ColorModeContext.Provider value={colorMode}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <CelebrationProvider>{children}</CelebrationProvider>
-        </ThemeProvider>
+        <GardenPaletteContext.Provider value={gardenPalette}>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <CelebrationProvider>{children}</CelebrationProvider>
+          </ThemeProvider>
+        </GardenPaletteContext.Provider>
       </ColorModeContext.Provider>
     </AppRouterCacheProvider>
   );
