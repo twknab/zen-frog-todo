@@ -59,12 +59,15 @@ function seeded(i: number, salt: number): number {
 // Frog friends gather on the ground around the pot base. Computed once; frog `i`
 // always sits in slot `i`, so the crowd grows additively without reshuffling.
 // Slot 0 is the original lone frog's spot (the baseline).
+// Scale is 2x the original hand-drawn-critter sizing (0.68..1.18 -> 1.36..2.36)
+// now that the critters render as a bolder icon silhouette instead of tiny
+// ellipses — the smallest frog is still exactly 2x its old smallest size.
 const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
-  if (i === 0) return { x: 30, y: 187, scale: 1 };
+  if (i === 0) return { x: 30, y: 187, scale: 2 };
   return {
     x: 12 + seeded(i, 1) * 136, // 12..148 across the ground band
     y: 186 + seeded(i, 2) * 13, // 186..199, clustered at the base
-    scale: 0.68 + seeded(i, 3) * 0.5, // 0.68..1.18 depth variation
+    scale: 1.36 + seeded(i, 3) * 1.0, // 1.36..2.36 depth variation
   };
 });
 

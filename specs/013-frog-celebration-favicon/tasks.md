@@ -79,6 +79,12 @@
 - [X] T020 Manually verify by triggering the squirrel's seeded-probability appearance (repeated dev-mode "Complete focus session" clicks past `SQUIRREL_MIN`) and screenshotting it — the curled bushy tail, its key identifying feature, reads clearly. `tsc --noEmit` + `eslint --max-warnings=0` clean, zero console errors.
 - [X] T021 Commit this squirrel-icon change on its own, separate from the frog critter up-scaling in Amendment 4b, so either can be reverted independently.
 
+### Amendment 4b tasks — 2x frog scale (own commit, see spec.md's Amendment 4)
+
+- [X] T022 In `src/components/BonsaiTree.tsx`, double every scale factor in `FROG_POSITIONS`: the baseline frog's scale (1 → 2) and the per-frog depth-variation range (0.68..1.18 → 1.36..2.36), updating the accompanying comment to match.
+- [X] T023 Manually verify at both the single-frog baseline and a multi-frog crowd via screenshot — noticeably larger at both; documented the expected tradeoff that critters overlap more at high crowd density on the same fixed-width ground band. `tsc --noEmit` + `eslint --max-warnings=0` clean, full end-to-end smoke test zero console errors.
+- [X] T024 Commit this scale change separately from T018-T021's squirrel-icon change, then push both commits.
+
 ---
 
 ## Phase 5: Polish & Cross-Cutting Concerns
