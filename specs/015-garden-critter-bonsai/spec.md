@@ -110,7 +110,7 @@ Ground frogs and the occasional squirrel feel more cohesive with the hand-drawn 
 
 - **FR-001**: Ground frog placement MUST use a wider distribution across the ground band than the previous layout, while keeping frogs inside the bonsai scene and preserving sticker-halo / spacing practices so the pot remains readable at the raised cap.
 - **FR-002**: Ground frog visual scale MUST increase for a more comedic presence, without making individual frogs unreadable or turning the crowd into sludge at the cap.
-- **FR-003**: The frog population cap (`MAX_FROGS` or successor) MUST be raised thoughtfully above the previous ~20 bound such that density at the new cap remains calm and legible; exact value is a planning/tuning detail.
+- **FR-003**: The frog population cap MUST be raised from ~20 to **28** (dial-back knob) such that density at the new cap remains calm and legible with wider distribution and sticker-halo spacing.
 - **FR-004**: Frog positions and scales MUST remain deterministic and stable (seeded / computed without per-render randomness); arrangements grow additively (008 FR-004 / FR-005 spirit).
 - **FR-005**: The living bonsai's visual presence MUST increase (tree scale range and/or viewBox/composition) so the tree reads more bonsai-like while remaining calm and contained in the Bonsai card.
 - **FR-006**: Leaf treatment MUST be enriched (richer than the previous simple leaf marks) while staying calm, theme-aware, and legible at wilt and full growth.
