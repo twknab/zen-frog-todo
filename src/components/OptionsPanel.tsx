@@ -1,7 +1,11 @@
 "use client";
 
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import Box from "@mui/material/Box";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Divider from "@mui/material/Divider";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -16,6 +20,8 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
@@ -117,35 +123,203 @@ function OptionsSection({
 }
 
 /**
- * Calm Options Popover — Palette, Appearance, Contrast, Density, and Dev.
- * Palette is a dropdown so themes stay scannable, not crowded.
+ * Options — full-screen Dialog below `md` (phone), Popover at `md+`.
+ * Palette, Appearance, Contrast, Density, and Dev share one body.
  */
 export default function OptionsPanel({
   devMode,
   onDevModeChange,
 }: OptionsPanelProps) {
+  const theme = useTheme();
+  const isPhone = useMediaQuery(theme.breakpoints.down("md"));
   const { mode, setColorMode } = useColorMode();
   const { palette, setPalette } = useGardenPalette();
   const [hyperMinimal, setHyperMinimal] = useHyperMinimal();
   const { highContrast, setHighContrast } = useHighContrast();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [open, setOpen] = useState(false);
   const titleId = useId();
   const paletteLabelId = useId();
   const paletteHintId = useId();
-  const open = Boolean(anchorEl);
   const reduceMotion = useReducedMotion();
 
   function handleOpen(event: MouseEvent<HTMLElement>) {
     setAnchorEl(event.currentTarget);
+    setOpen(true);
   }
 
   function handleClose() {
+    setOpen(false);
     setAnchorEl(null);
   }
 
   function handlePaletteChange(event: SelectChangeEvent<PaletteId>) {
     setPalette(normalizePaletteId(event.target.value));
   }
+
+  const optionsBody = (
+    <Stack spacing={0}>
+      {!isPhone && (
+        <Typography
+          variant="subtitle2"
+          sx={{ mb: 2, color: "text.primary", fontWeight: 700 }}
+        >
+          Options
+        </Typography>
+      )}
+
+      <OptionsSection label="Palette">
+        <FormControl fullWidth size="small" disabled={highContrast}>
+          <Select
+            value={palette}
+            onChange={handlePaletteChange}
+            labelId={paletteLabelId}
+            aria-label="Palette"
+            aria-describedby={highContrast ? paletteHintId : undefined}
+            disabled={highContrast}
+            MenuProps={{
+              transitionDuration: reduceMotion ? 0 : undefined,
+              slotProps: {
+                paper: {
+                  sx: {
+                    mt: 0.5,
+                    maxHeight: "min(420px, 55vh)",
+                    borderRadius: 1.5,
+                    border: "1px solid",
+                    borderColor: "divider",
+                  },
+                },
+              },
+            }}
+            sx={{
+              bgcolor: "background.paper",
+              "& .MuiSelect-select": {
+                display: "flex",
+                alignItems: "center",
+                gap: 1.25,
+                py: 1.1,
+              },
+            }}
+            renderValue={(value) => {
+              const option = PALETTE_OPTIONS.find((item) => item.id === value);
+              return (
+                <Stack
+                  direction="row"
+                  spacing={1.25}
+                  sx={{ alignItems: "center" }}
+                >
+                  <PaletteSwatches id={value} />
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {option?.label ?? value}
+                  </Typography>
+                </Stack>
+              );
+            }}
+          >
+            {PALETTE_OPTIONS.map(({ id, label }) => (
+              <MenuItem key={id} value={id} aria-label={label}>
+                <Stack
+                  direction="row"
+                  spacing={1.25}
+                  sx={{ alignItems: "center", width: "100%" }}
+                >
+                  <PaletteSwatches id={id} />
+                  <Typography variant="body2">{label}</Typography>
+                </Stack>
+              </MenuItem>
+            ))}
+          </Select>
+          {highContrast ? (
+            <FormHelperText id={paletteHintId} sx={{ mx: 0, mt: 0.75 }}>
+              Using high contrast
+            </FormHelperText>
+          ) : null}
+        </FormControl>
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+      <OptionsSection label="Appearance">
+        <ToggleButtonGroup
+          value={mode}
+          exclusive
+          size="small"
+          fullWidth
+          aria-label="Appearance"
+          sx={optionsToggleSx}
+          onChange={(_, next: ColorMode | null) => {
+            if (next) setColorMode(next);
+          }}
+        >
+          <ToggleButton value="light" aria-label="Light">
+            Light
+          </ToggleButton>
+          <ToggleButton value="dark" aria-label="Dark">
+            Dark
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+      <OptionsSection label="Contrast">
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={highContrast}
+              onChange={(event) => setHighContrast(event.target.checked)}
+              slotProps={{ input: { "aria-label": "High Contrast" } }}
+            />
+          }
+          label="High Contrast"
+          slotProps={{
+            typography: { variant: "body2", color: "text.secondary" },
+          }}
+          sx={{ ml: 0, mr: 0 }}
+        />
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+      <OptionsSection label="Density">
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={hyperMinimal}
+              onChange={(event) => setHyperMinimal(event.target.checked)}
+              slotProps={{ input: { "aria-label": "Hyper Minimal" } }}
+            />
+          }
+          label="Hyper Minimal"
+          slotProps={{
+            typography: { variant: "body2", color: "text.secondary" },
+          }}
+          sx={{ ml: 0, mr: 0 }}
+        />
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+      <OptionsSection label="Dev">
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={devMode}
+              onChange={(event) => onDevModeChange(event.target.checked)}
+            />
+          }
+          label="Dev tools"
+          slotProps={{
+            typography: { variant: "body2", color: "text.secondary" },
+          }}
+          sx={{ ml: 0, mr: 0 }}
+        />
+      </OptionsSection>
+    </Stack>
+  );
 
   return (
     <>
@@ -162,191 +336,93 @@ export default function OptionsPanel({
         </IconButton>
       </Tooltip>
 
-      <Popover
-        id={titleId}
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-        transitionDuration={reduceMotion ? 0 : undefined}
-        slotProps={{
-          paper: {
-            role: "dialog",
-            "aria-label": "Options",
-            sx: {
-              mt: 1,
-              p: 2.25,
-              minWidth: 280,
-              maxWidth: "min(320px, calc(100vw - 24px))",
-              borderRadius: 1,
-              border: "1px solid",
-              borderColor: "divider",
-              boxShadow: 3,
+      {isPhone ? (
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          fullScreen
+          transitionDuration={reduceMotion ? 0 : undefined}
+          aria-labelledby={titleId}
+          slotProps={{
+            paper: {
+              sx: {
+                bgcolor: "background.default",
+                backgroundImage: "none",
+              },
             },
-          },
-        }}
-      >
-        <Stack spacing={0}>
-          <Typography
-            variant="subtitle2"
-            sx={{ mb: 2, color: "text.primary", fontWeight: 700 }}
+          }}
+        >
+          <DialogTitle
+            id={titleId}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1,
+              borderBottom: 1,
+              borderColor: "divider",
+              py: 1,
+              px: 2,
+              pt: "max(8px, env(safe-area-inset-top))",
+              minHeight: 48,
+            }}
           >
-            Options
-          </Typography>
-
-          <OptionsSection label="Palette">
-            <FormControl fullWidth size="small" disabled={highContrast}>
-              <Select
-                value={palette}
-                onChange={handlePaletteChange}
-                labelId={paletteLabelId}
-                aria-label="Palette"
-                aria-describedby={highContrast ? paletteHintId : undefined}
-                disabled={highContrast}
-                MenuProps={{
-                  transitionDuration: reduceMotion ? 0 : undefined,
-                  slotProps: {
-                    paper: {
-                      sx: {
-                        mt: 0.5,
-                        maxHeight: "min(420px, 55vh)",
-                        borderRadius: 1.5,
-                        border: "1px solid",
-                        borderColor: "divider",
-                      },
-                    },
-                  },
-                }}
-                sx={{
-                  bgcolor: "background.paper",
-                  "& .MuiSelect-select": {
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.25,
-                    py: 1.1,
-                  },
-                }}
-                renderValue={(value) => {
-                  const option = PALETTE_OPTIONS.find((item) => item.id === value);
-                  return (
-                    <Stack
-                      direction="row"
-                      spacing={1.25}
-                      sx={{ alignItems: "center" }}
-                    >
-                      <PaletteSwatches id={value} />
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {option?.label ?? value}
-                      </Typography>
-                    </Stack>
-                  );
-                }}
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <SettingsOutlinedIcon
+                sx={{ color: "text.secondary", fontSize: "1.25rem" }}
+                aria-hidden
+              />
+              <Typography
+                variant="subtitle1"
+                component="span"
+                sx={{ fontWeight: 600, color: "text.primary" }}
               >
-                {PALETTE_OPTIONS.map(({ id, label }) => (
-                  <MenuItem key={id} value={id} aria-label={label}>
-                    <Stack
-                      direction="row"
-                      spacing={1.25}
-                      sx={{ alignItems: "center", width: "100%" }}
-                    >
-                      <PaletteSwatches id={id} />
-                      <Typography variant="body2">{label}</Typography>
-                    </Stack>
-                  </MenuItem>
-                ))}
-              </Select>
-              {highContrast ? (
-                <FormHelperText id={paletteHintId} sx={{ mx: 0, mt: 0.75 }}>
-                  Using high contrast
-                </FormHelperText>
-              ) : null}
-            </FormControl>
-          </OptionsSection>
-
-          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
-
-          <OptionsSection label="Appearance">
-            <ToggleButtonGroup
-              value={mode}
-              exclusive
-              size="small"
-              fullWidth
-              aria-label="Appearance"
-              sx={optionsToggleSx}
-              onChange={(_, next: ColorMode | null) => {
-                if (next) setColorMode(next);
-              }}
-            >
-              <ToggleButton value="light" aria-label="Light">
-                Light
-              </ToggleButton>
-              <ToggleButton value="dark" aria-label="Dark">
-                Dark
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </OptionsSection>
-
-          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
-
-          <OptionsSection label="Contrast">
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={highContrast}
-                  onChange={(event) => setHighContrast(event.target.checked)}
-                  slotProps={{ input: { "aria-label": "High Contrast" } }}
-                />
-              }
-              label="High Contrast"
-              slotProps={{
-                typography: { variant: "body2", color: "text.secondary" },
-              }}
-              sx={{ ml: 0, mr: 0 }}
-            />
-          </OptionsSection>
-
-          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
-
-          <OptionsSection label="Density">
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={hyperMinimal}
-                  onChange={(event) => setHyperMinimal(event.target.checked)}
-                  slotProps={{ input: { "aria-label": "Hyper Minimal" } }}
-                />
-              }
-              label="Hyper Minimal"
-              slotProps={{
-                typography: { variant: "body2", color: "text.secondary" },
-              }}
-              sx={{ ml: 0, mr: 0 }}
-            />
-          </OptionsSection>
-
-          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
-
-          <OptionsSection label="Dev">
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={devMode}
-                  onChange={(event) => onDevModeChange(event.target.checked)}
-                />
-              }
-              label="Dev tools"
-              slotProps={{
-                typography: { variant: "body2", color: "text.secondary" },
-              }}
-              sx={{ ml: 0, mr: 0 }}
-            />
-          </OptionsSection>
-        </Stack>
-      </Popover>
+                Options
+              </Typography>
+            </Stack>
+            <IconButton onClick={handleClose} aria-label="Close options" edge="end">
+              <CloseOutlinedIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent
+            sx={{
+              pt: 3,
+              px: 2,
+              pb: "max(24px, env(safe-area-inset-bottom))",
+            }}
+          >
+            {optionsBody}
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Popover
+          id={titleId}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          transitionDuration={reduceMotion ? 0 : undefined}
+          slotProps={{
+            paper: {
+              role: "dialog",
+              "aria-label": "Options",
+              sx: {
+                mt: 1,
+                p: 2.25,
+                minWidth: 280,
+                maxWidth: "min(320px, calc(100vw - 24px))",
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: 3,
+              },
+            },
+          }}
+        >
+          {optionsBody}
+        </Popover>
+      )}
     </>
   );
 }

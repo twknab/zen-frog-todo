@@ -1308,6 +1308,13 @@ function buildZenMuiTheme(
         defaultProps: {
           disableRipple: true,
         },
+        styleOverrides: {
+          root: {
+            // Comfortable touch target on phone; visual glyphs stay calm/small.
+            minWidth: 44,
+            minHeight: 44,
+          },
+        },
       },
       MuiPaper: {
         styleOverrides: {

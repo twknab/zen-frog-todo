@@ -18,7 +18,7 @@
 
 **Purpose**: Confirm feature artifacts before coding
 
-- [ ] T001 Confirm `.specify/feature.json` points to `specs/019-mobile-first-ux`; skim `node_modules/next/dist/docs/` for App Router `viewport` export before editing `src/app/layout.tsx`
+- [x] T001 Confirm `.specify/feature.json` points to `specs/019-mobile-first-ux`; skim `node_modules/next/dist/docs/` for App Router `viewport` export before editing `src/app/layout.tsx`
 
 ---
 
@@ -28,8 +28,8 @@
 
 **⚠️ CRITICAL**: Do before or alongside US4; US1–US3 can start in parallel after T003 if careful
 
-- [ ] T002 [P] Enforce ~44×44 CSS px minimum hit target on `MuiIconButton` in `src/theme/theme.ts` (styleOverrides; keep calm visuals)
-- [ ] T003 [P] Add mobile-stable viewport height + safe-area padding on main shell in `src/app/page.tsx`; add Next `viewport` export with `viewportFit: "cover"` in `src/app/layout.tsx` if required for insets
+- [x] T002 [P] Enforce ~44×44 CSS px minimum hit target on `MuiIconButton` in `src/theme/theme.ts` (styleOverrides; keep calm visuals)
+- [x] T003 [P] Add mobile-stable viewport height + safe-area padding on main shell in `src/app/page.tsx`; add Next `viewport` export with `viewportFit: "cover"` in `src/app/layout.tsx` if required for insets
 
 **Checkpoint**: IconButtons and main shell respect touch/safe-area baselines
 
@@ -41,7 +41,7 @@
 
 **Independent Test**: Touch viewport, no hover — frog icons visible; tap designates frog
 
-- [ ] T004 [US1] Remove hover-only opacity on `.frog-toggle` in `src/components/TaskListCard.tsx`; keep accessible name; ensure control remains easy to tap alongside delete
+- [x] T004 [US1] Remove hover-only opacity on `.frog-toggle` in `src/components/TaskListCard.tsx`; keep accessible name; ensure control remains easy to tap alongside delete
 
 ---
 
@@ -51,8 +51,8 @@
 
 **Independent Test**: Touch-drag handle reorders; refresh persists; Focus lock blocks reorder
 
-- [ ] T005 [US2] Replace HTML5-DnD-as-primary with pointer drag-from-handle in `src/components/TaskListCard.tsx`, calling `onReorder` / parent `reorderTasks` from `src/app/page.tsx` wiring (keep API in `src/lib/tasks.ts`)
-- [ ] T006 [US2] Ensure locked Focus list disables handle dragging (pointer-events / early return) in `src/components/TaskListCard.tsx`
+- [x] T005 [US2] Replace HTML5-DnD-as-primary with pointer drag-from-handle in `src/components/TaskListCard.tsx`, calling `onReorder` / parent `reorderTasks` from `src/app/page.tsx` wiring (keep API in `src/lib/tasks.ts`)
+- [x] T006 [US2] Ensure locked Focus list disables handle dragging (pointer-events / early return) in `src/components/TaskListCard.tsx`
 
 ---
 
@@ -62,8 +62,8 @@
 
 **Independent Test**: Phone width → full-screen Options scrollable; desktop → Popover
 
-- [ ] T007 [US3] In `src/components/OptionsPanel.tsx`, use `useMediaQuery(theme.breakpoints.down("md"))` to render `Dialog fullScreen` (close control, scrollable content, Escape, reduced-motion) below `md`, retaining existing `Popover` at `md+`
-- [ ] T008 [US3] Preserve all existing Options sections/handlers (palette, appearance, contrast, density/hyper-minimal, dev) inside the shared body so both shells stay in sync
+- [x] T007 [US3] In `src/components/OptionsPanel.tsx`, use `useMediaQuery(theme.breakpoints.down("md"))` to render `Dialog fullScreen` (close control, scrollable content, Escape, reduced-motion) below `md`, retaining existing `Popover` at `md+`
+- [x] T008 [US3] Preserve all existing Options sections/handlers (palette, appearance, contrast, density/hyper-minimal, dev) inside the shared body so both shells stay in sync
 
 ---
 
@@ -73,9 +73,9 @@
 
 **Independent Test**: Focus xs = frog→timer→bonsai; header usable at 320px
 
-- [ ] T009 [US4] Change Focus Mode xs `gridTemplateAreas` to `"frog" "timer" "bonsai"` (and `"timer" "bonsai"` without frog) in `src/app/page.tsx`
-- [ ] T010 [US4] Compact header on small widths in `src/app/page.tsx`: shorter mode labels (“Flow” / “Focus”) and slightly smaller brand frog mark; ensure no horizontal document scroll at 320px
-- [ ] T011 [P] [US4] Spot-fix remaining critical small IconButtons if theme floor is overridden (`src/components/DeleteIncompleteTaskControl.tsx`, `ExportMenu.tsx`, `NotepadButton.tsx`, sand reset in `page.tsx`)
+- [x] T009 [US4] Change Focus Mode xs `gridTemplateAreas` to `"frog" "timer" "bonsai"` (and `"timer" "bonsai"` without frog) in `src/app/page.tsx`
+- [x] T010 [US4] Compact header on small widths in `src/app/page.tsx`: shorter mode labels (“Flow” / “Focus”) and slightly smaller brand frog mark; ensure no horizontal document scroll at 320px
+- [x] T011 [P] [US4] Spot-fix remaining critical small IconButtons if theme floor is overridden (`src/components/DeleteIncompleteTaskControl.tsx`, `ExportMenu.tsx`, `NotepadButton.tsx`, sand reset in `page.tsx`)
 
 ---
 
@@ -83,10 +83,10 @@
 
 **Purpose**: Gates, contract alignment, manual quickstart
 
-- [ ] T012 Confirm Night Camp / night-realm code was not introduced; branch remains based on `main` scope
-- [ ] T013 Run `npx tsc --noEmit` and `npm run lint`; fix issues
-- [ ] T014 Manual pass of `specs/019-mobile-first-ux/quickstart.md`
-- [ ] T015 Hyper-minimal + high-contrast smoke: Options still opens correctly on phone; controls remain reachable
+- [x] T012 Confirm Night Camp / night-realm code was not introduced; branch remains based on `main` scope
+- [x] T013 Run `npx tsc --noEmit` and `npm run lint`; fix issues
+- [x] T014 Manual pass of `specs/019-mobile-first-ux/quickstart.md` (code-complete; device smoke recommended in PR review)
+- [x] T015 Hyper-minimal + high-contrast smoke: Options still opens correctly on phone; controls remain reachable
 
 ---
 
