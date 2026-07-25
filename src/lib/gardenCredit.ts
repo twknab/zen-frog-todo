@@ -19,7 +19,11 @@ import { usePersistentState } from "./storage";
 
 /**
  * Credit leaves/frogs to the correct ledger for the current effective realm.
- * Night uses leaf-magnitude as weight (mirrors day task/session/frog weights).
+ *
+ * At night, any credit-worthy completion (task, focus session, frog task) that
+ * passes a leaf weight advances the Night Camp ledger — not frog-only events.
+ * Night uses leaf-magnitude as weight (mirrors day task/session/frog weights);
+ * day frogs are not minted after hours (bonsai sleeps).
  */
 export function useCreditWork() {
   const { workWindow } = useWorkWindow();
@@ -37,6 +41,7 @@ export function useCreditWork() {
         devToolsEnabled: devMode,
       });
       if (realm === "night") {
+        // Task / session / frog completions all route here via leaf weight.
         recordNightGrowth(Math.max(0, leaves));
         return;
       }

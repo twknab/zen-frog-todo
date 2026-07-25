@@ -29,10 +29,12 @@ export type NightCampSnapshot = {
 
 export type NightCampView = NightCampSnapshot & {
   fireflies: number;
-  campfireLevel: number; // 0–4
-  starDensity: number; // 0–1
-  moonFill: number; // 0–1
+  campfireLevel: number; // 0–4 — scene always shows a tiny starter fire at 0
+  starDensity: number; // 0–1 — near-zero when empty; densifies with progress
+  moonFill: number; // 0–1 — small crescent → fuller presence
   nightFrogs: number;
+  /** 0–1 — sky darkens as night ledger progress rises. */
+  skyDepth: number;
 };
 
 const DEFAULT_STATE: NightCampState = { events: [] };
@@ -79,16 +81,21 @@ export function nightStageLabel(stage: number): string {
 }
 
 /**
- * More day frogs ⇒ more camp frogs; night progress adds a few more.
- * Always at least 1 when any night progress or day frogs exist; 0 only at total rest.
+ * Frogs gather only once night work has begun — empty ledger stays quiet.
+ * Day frogs still shape the crowd once progress warrants company.
  */
 export function nightFrogCount(dayFrogs: number, progress: number): number {
-  if (dayFrogs <= 0 && progress <= 0) return 0;
-  const fromDay = Math.max(1, Math.min(12, Math.ceil(dayFrogs * 0.55)));
-  const fromNight = Math.min(6, Math.floor(progress / 3));
-  return Math.min(16, fromDay + fromNight);
+  if (progress <= 0) return 0;
+  const fromDay = Math.min(8, Math.ceil(Math.max(0, dayFrogs) * 0.4));
+  const fromNight = Math.min(5, Math.floor(progress / 3));
+  return Math.min(12, Math.max(1, fromDay + fromNight));
 }
 
+/**
+ * Derive the calm Night Camp view from ledger events.
+ * Progress (any credit-worthy night completion weight) drives stars, moon,
+ * fireflies, campfire stage, sky depth, and gathering frogs — not frog-only.
+ */
 export function deriveNightCamp(
   events: NightGrowthEvent[],
   dayFrogs = 0,
@@ -96,18 +103,25 @@ export function deriveNightCamp(
   const progress = nightProgressFromEvents(events);
   const stage = nightStageFromProgress(progress);
   const stageLabel = nightStageLabel(stage);
-  const t = stage / 4;
+  const stageT = stage / 4;
+  const progressT = progress / MAX_NIGHT_PROGRESS;
+
   return {
     progress,
     stage,
     stageLabel,
-    // More fireflies as the night deepens — they collect toward the fire in the scene.
-    fireflies: stage === 0 ? 2 : 6 + stage * 7,
+    // Sparse early; denser as the night deepens — stay understated vs day crowd.
+    fireflies: stage === 0 ? (progress > 0 ? 1 : 0) : 2 + stage * 3,
     campfireLevel: stage,
-    // Stars populate more frequently over stages.
-    starDensity: Math.min(1, 0.12 + stage * 0.22 + progress * 0.02),
-    // Moon grows with iterations/stage.
-    moonFill: Math.min(1, 0.2 + t * 0.8),
+    // Empty ledger ≈ a handful of stars; densify with stage + progress.
+    starDensity:
+      progress <= 0
+        ? 0.03
+        : Math.min(1, 0.06 + stage * 0.16 + progress * 0.028),
+    // Small crescent → fuller moon presence (never a huge spotlight early).
+    moonFill: Math.min(1, 0.1 + stageT * 0.5 + progressT * 0.4),
+    // Completions deepen the night sky.
+    skyDepth: Math.min(1, progressT * 0.75 + stageT * 0.25),
     nightFrogs: nightFrogCount(dayFrogs, progress),
   };
 }
@@ -152,6 +166,7 @@ export function useNightCamp() {
     recordNightGrowth,
     resetNightCamp,
     view,
-    deriveWithDayFrogs: (dayFrogs: number) => deriveNightCamp(state.events, dayFrogs),
+    deriveWithDayFrogs: (dayFrogs: number) =>
+      deriveNightCamp(state.events, dayFrogs),
   };
 }

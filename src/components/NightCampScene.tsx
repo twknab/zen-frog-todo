@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import { darken, lighten, useTheme } from "@mui/material/styles";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { NightCampView } from "@/lib/nightCamp";
 import { FROG_ICON_PATH } from "@/lib/frogIcon";
 
@@ -18,22 +18,61 @@ function seeded(i: number, salt: number): number {
   return v - Math.floor(v);
 }
 
-/**
- * Night Camp — central campfire, frogs gather around it, fireflies blink &
- * collect nearer the fire as stages rise, moon + stars grow with the ledger.
- * Critters use the same FaFrog mark + sticker halo as the Day Garden.
- * Joyful ambient motion (constitution v2.2.0); Framer Motion only (no new deps).
- */
-export default function NightCampScene({ view, size = 320 }: NightCampSceneProps) {
-  const theme = useTheme();
+/** Mix two hex colors by t (0..1). */
+function mixHex(a: string, b: string, t: number): string {
+  const parse = (hex: string) => {
+    const h = hex.replace("#", "");
+    const full =
+      h.length === 3
+        ? h
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : h;
+    return [
+      parseInt(full.slice(0, 2), 16),
+      parseInt(full.slice(2, 4), 16),
+      parseInt(full.slice(4, 6), 16),
+    ] as const;
+  };
+  const [ar, ag, ab] = parse(a);
+  const [br, bg, bb] = parse(b);
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  const r = clamp(ar + (br - ar) * t);
+  const g = clamp(ag + (bg - ag) * t);
+  const bch = clamp(ab + (bb - ab) * t);
+  return `#${[r, g, bch].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+}
 
-  const skyTop = theme.palette.mode === "dark" ? "#070B18" : "#12182C";
-  const skyBot = theme.palette.mode === "dark" ? "#141C32" : "#1E2740";
+/**
+ * Night Camp — understated sibling to Day's bonsai: a small central fire,
+ * sparse-then-growing sky, soft fireflies, frogs gathering only as night
+ * progress warrants. Joyful ambient motion (constitution v2.2.0); Framer + SVG.
+ */
+export default function NightCampScene({
+  view,
+  size = 240,
+}: NightCampSceneProps) {
+  const theme = useTheme();
+  const uid = useId().replace(/:/g, "");
+
+  const skyTopLight = theme.palette.mode === "dark" ? "#141A2C" : "#1A2238";
+  const skyMidLight = theme.palette.mode === "dark" ? "#1A2438" : "#243048";
+  const skyBotLight = theme.palette.mode === "dark" ? "#222C42" : "#2C3850";
+  const skyTopDeep = theme.palette.mode === "dark" ? "#03060E" : "#080C18";
+  const skyMidDeep = theme.palette.mode === "dark" ? "#070B16" : "#0E1424";
+  const skyBotDeep = theme.palette.mode === "dark" ? "#10182A" : "#161E32";
+
+  const depth = view.skyDepth;
+  const skyTop = mixHex(skyTopLight, skyTopDeep, depth);
+  const skyMid = mixHex(skyMidLight, skyMidDeep, depth);
+  const skyBot = mixHex(skyBotLight, skyBotDeep, depth);
+
   const ground = theme.palette.secondary.dark;
   const groundLight = theme.palette.secondary.main;
-  const moonFill = lighten(theme.palette.warning.light, 0.25);
+  const moonBody = lighten(theme.palette.warning.light, 0.28);
   const moonRim = theme.palette.warning.main;
-  const starFill = lighten(theme.palette.info.light, 0.35);
+  const starFill = lighten(theme.palette.info.light, 0.4);
   const fireCore = theme.palette.warning.main;
   const fireMid = theme.palette.warning.light;
   const fireOuter = theme.palette.error.light;
@@ -43,99 +82,123 @@ export default function NightCampScene({ view, size = 320 }: NightCampSceneProps
   const frogLight = theme.palette.primary.light;
   const frogDark = theme.palette.primary.dark;
   const halo = theme.palette.background.paper;
-  const firefly = lighten(theme.palette.warning.light, 0.2);
+  const firefly = lighten(theme.palette.warning.light, 0.25);
 
   const stage = view.stage;
-  const fireScale = 0.55 + view.campfireLevel * 0.22;
+  // Tiny barely-started flame at 0 → calm full fire at 4 (never a spectacle).
+  const fireScale = 0.28 + view.campfireLevel * 0.16;
 
-  // Stars densify with stage (and progress within stage via starDensity).
+  const skyGradId = `nightSky-${uid}`;
+  const fireGlowId = `fireGlow-${uid}`;
+  const moonGlowId = `moonGlow-${uid}`;
+  const softGlowId = `softGlow-${uid}`;
+  const moonClipId = `moonClip-${uid}`;
+
+  // Sparse start: ~2–3 stars when empty; denser only as ledger grows.
   const stars = useMemo(() => {
-    const count = Math.round(6 + view.starDensity * 42);
+    const count = Math.round(2 + view.starDensity * 28);
     return Array.from({ length: count }, (_, i) => ({
-      x: 8 + seeded(i, 1) * 224,
-      y: 6 + seeded(i, 2) * 100,
-      r: 0.5 + seeded(i, 3) * 1.6,
-      delay: seeded(i, 4) * 3,
-      dur: 1.8 + seeded(i, 5) * 2.4,
+      x: 10 + seeded(i, 1) * 220,
+      y: 8 + seeded(i, 2) * 88,
+      r: 0.4 + seeded(i, 3) * 1.1,
+      delay: seeded(i, 4) * 4,
+      dur: 2.4 + seeded(i, 5) * 2.8,
     }));
   }, [view.starDensity]);
 
-  // Fireflies: early stages wander wide; higher stages collect toward the fire.
+  // Soft blink; collect nearer the fire as stages rise.
   const fireflies = useMemo(() => {
     const count = view.fireflies;
-    const collect = Math.min(1, stage / 4); // 0 = scattered, 1 = around fire
+    const collect = Math.min(1, stage / 4);
     return Array.from({ length: count }, (_, i) => {
       const angle = seeded(i, 10) * Math.PI * 2;
-      const farR = 55 + seeded(i, 11) * 70;
-      const nearR = 18 + seeded(i, 12) * 28;
+      const farR = 48 + seeded(i, 11) * 58;
+      const nearR = 14 + seeded(i, 12) * 22;
       const r = farR * (1 - collect) + nearR * collect;
       const cx = 120 + Math.cos(angle) * r;
-      const cy = 95 + Math.sin(angle) * r * 0.65;
+      const cy = 108 + Math.sin(angle) * r * 0.55;
       return {
         x: cx,
         y: cy,
-        delay: seeded(i, 13) * 2.2,
-        dur: 0.7 + seeded(i, 14) * 1.1,
-        drift: 3 + seeded(i, 15) * 5,
+        delay: seeded(i, 13) * 2.6,
+        dur: 1.1 + seeded(i, 14) * 1.4,
+        drift: 2 + seeded(i, 15) * 3.5,
       };
     });
   }, [view.fireflies, stage]);
 
-  // Frogs sit in an arc around the central fire (not a flat line).
+  // Arc around the fire — only when night progress warrants company.
   const frogs = useMemo(() => {
     const n = view.nightFrogs;
     if (n <= 0) return [];
     const fills = [frogMain, frogLight, frogDark];
     return Array.from({ length: n }, (_, i) => {
-      // Arc from ~200° to ~340° under the fire (front gathering).
       const t = n === 1 ? 0.5 : i / (n - 1);
-      const angle = Math.PI * 0.15 + t * Math.PI * 0.7; // lower semicircle-ish
-      const radius = 52 + (i % 3) * 6;
-      const x = 120 + Math.cos(angle + Math.PI) * radius * 1.15;
-      const y = 148 + Math.sin(angle) * 18 + seeded(i, 20) * 6;
+      const angle = Math.PI * 0.18 + t * Math.PI * 0.64;
+      const radius = 48 + (i % 3) * 5;
+      const x = 120 + Math.cos(angle + Math.PI) * radius * 1.12;
+      const y = 152 + Math.sin(angle) * 16 + seeded(i, 20) * 5;
       return {
         x,
         y,
-        scale: 1.55 + seeded(i, 21) * 0.55,
+        scale: 1.35 + seeded(i, 21) * 0.4,
         fill: fills[i % fills.length],
         flip: seeded(i, 22) > 0.5,
       };
     });
   }, [view.nightFrogs, frogMain, frogLight, frogDark]);
 
-  const moonR = 8 + view.moonFill * 22;
+  // Modest moon: small crescent early → fuller disk later.
+  const moonR = 5 + view.moonFill * 14;
+  const crescent = view.moonFill < 0.55;
+  const crescentOffset = moonR * (0.55 - view.moonFill * 0.35);
 
   return (
     <Box sx={{ width: size, height: size, maxWidth: "100%" }} aria-hidden>
       <svg width="100%" height="100%" viewBox="0 0 240 200" overflow="visible">
         <defs>
-          <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={skyGradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={skyTop} />
+            <stop offset="48%" stopColor={skyMid} />
             <stop offset="100%" stopColor={skyBot} />
           </linearGradient>
-          <radialGradient id="fireGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={glow} stopOpacity={0.55} />
-            <stop offset="55%" stopColor={glow} stopOpacity={0.18} />
+          <radialGradient id={fireGlowId} cx="50%" cy="55%" r="50%">
+            <stop
+              offset="0%"
+              stopColor={glow}
+              stopOpacity={0.28 + stage * 0.08}
+            />
+            <stop offset="50%" stopColor={glow} stopOpacity={0.08} />
             <stop offset="100%" stopColor={glow} stopOpacity={0} />
           </radialGradient>
-          <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={moonFill} stopOpacity={0.9} />
-            <stop offset="70%" stopColor={moonRim} stopOpacity={0.35} />
+          <radialGradient id={moonGlowId} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={moonBody} stopOpacity={0.55} />
+            <stop offset="75%" stopColor={moonRim} stopOpacity={0.12} />
             <stop offset="100%" stopColor={moonRim} stopOpacity={0} />
           </radialGradient>
-          <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2.2" result="b" />
+          <filter id={softGlowId} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="1.4" result="b" />
             <feMerge>
               <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <clipPath id={moonClipId}>
+            <circle cx="198" cy="40" r={moonR} />
+          </clipPath>
         </defs>
 
-        {/* Sky */}
-        <rect x="0" y="0" width="240" height="200" rx="14" fill="url(#nightSky)" />
+        {/* Soft rounded sky plane — bonsai-card sibling, not a full-bleed stage */}
+        <rect
+          x="0"
+          y="0"
+          width="240"
+          height="200"
+          rx="14"
+          fill={`url(#${skyGradId})`}
+        />
 
-        {/* Stars — twinkle; count rises with stage */}
+        {/* Stars — few at rest; quiet twinkle */}
         {stars.map((s, i) => (
           <motion.circle
             key={`star-${i}`}
@@ -143,8 +206,8 @@ export default function NightCampScene({ view, size = 320 }: NightCampSceneProps
             cy={s.y}
             r={s.r}
             fill={starFill}
-            initial={{ opacity: 0.15 }}
-            animate={{ opacity: [0.2, 0.95, 0.25] }}
+            initial={{ opacity: 0.2 }}
+            animate={{ opacity: [0.18, 0.7, 0.22] }}
             transition={{
               duration: s.dur,
               delay: s.delay,
@@ -154,72 +217,91 @@ export default function NightCampScene({ view, size = 320 }: NightCampSceneProps
           />
         ))}
 
-        {/* Moon — grows with iterations/stage */}
-        <AnimatePresence>
-          {view.moonFill > 0.08 && (
-            <motion.g
-              key="moon"
-              initial={{ opacity: 0, scale: 0.4 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <circle cx="198" cy="42" r={moonR * 1.55} fill="url(#moonGlow)" />
-              <circle
-                cx="198"
-                cy="42"
-                r={moonR}
-                fill={moonFill}
-                stroke={moonRim}
-                strokeWidth={1.2}
-                opacity={0.95}
-              />
-              {/* Soft crater hints */}
-              <circle
-                cx={198 - moonR * 0.25}
-                cy={42 - moonR * 0.15}
-                r={moonR * 0.18}
-                fill={darken(moonFill, 0.08)}
-                opacity={0.35}
-              />
-              <circle
-                cx={198 + moonR * 0.2}
-                cy={42 + moonR * 0.25}
-                r={moonR * 0.12}
-                fill={darken(moonFill, 0.1)}
-                opacity={0.3}
-              />
-            </motion.g>
+        {/* Moon — crescent early, fuller later; modest scale */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.85 + view.moonFill * 0.15 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <circle
+            cx="198"
+            cy="40"
+            r={moonR * 1.35}
+            fill={`url(#${moonGlowId})`}
+          />
+          <circle
+            cx="198"
+            cy="40"
+            r={moonR}
+            fill={moonBody}
+            stroke={moonRim}
+            strokeWidth={0.9}
+            opacity={0.92}
+          />
+          {crescent && (
+            <circle
+              cx={198 + crescentOffset}
+              cy={40 - moonR * 0.08}
+              r={moonR * 0.92}
+              fill={skyTop}
+              opacity={0.98}
+            />
           )}
-        </AnimatePresence>
+          {!crescent && (
+            <g clipPath={`url(#${moonClipId})`}>
+              <circle
+                cx={198 - moonR * 0.22}
+                cy={40 - moonR * 0.12}
+                r={moonR * 0.14}
+                fill={darken(moonBody, 0.08)}
+                opacity={0.28}
+              />
+              <circle
+                cx={198 + moonR * 0.18}
+                cy={40 + moonR * 0.22}
+                r={moonR * 0.1}
+                fill={darken(moonBody, 0.1)}
+                opacity={0.22}
+              />
+            </g>
+          )}
+        </motion.g>
 
-        {/* Ground mound */}
-        <ellipse cx="120" cy="178" rx="98" ry="22" fill={ground} opacity={0.85} />
-        <ellipse cx="120" cy="172" rx="70" ry="12" fill={groundLight} opacity={0.35} />
+        {/* Quiet ground mound */}
+        <ellipse cx="120" cy="180" rx="92" ry="18" fill={ground} opacity={0.8} />
+        <ellipse
+          cx="120"
+          cy="174"
+          rx="62"
+          ry="10"
+          fill={groundLight}
+          opacity={0.28}
+        />
 
-        {/* Fireflies — blink + drift; collect toward fire as stage rises */}
+        {/* Fireflies — soft blink; drift nearer the fire over stages */}
         {fireflies.map((f, i) => (
           <motion.g
             key={`ff-${i}`}
             initial={{ x: f.x, y: f.y }}
             animate={{
-              x: [f.x - f.drift, f.x + f.drift, f.x - f.drift * 0.4],
-              y: [f.y + f.drift * 0.35, f.y - f.drift, f.y + f.drift * 0.2],
+              x: [f.x - f.drift, f.x + f.drift, f.x - f.drift * 0.35],
+              y: [f.y + f.drift * 0.3, f.y - f.drift, f.y + f.drift * 0.15],
             }}
             transition={{
-              duration: f.dur * 2.4,
+              duration: f.dur * 2.8,
               delay: f.delay,
               repeat: Infinity,
               ease: "easeInOut",
             }}
           >
             <motion.circle
-              r={2.4}
+              r={1.6}
               fill={firefly}
-              filter="url(#softGlow)"
-              animate={{ opacity: [0.2, 1, 0.15] }}
+              filter={`url(#${softGlowId})`}
+              animate={{ opacity: [0.15, 0.85, 0.12] }}
               transition={{
                 duration: f.dur,
-                delay: f.delay * 0.5,
+                delay: f.delay * 0.4,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
@@ -227,96 +309,112 @@ export default function NightCampScene({ view, size = 320 }: NightCampSceneProps
           </motion.g>
         ))}
 
-        {/* Central campfire — layered flame + glow */}
-        {view.campfireLevel > 0 && (
-          <g transform={`translate(120 142) scale(${fireScale})`}>
-            <motion.ellipse
-              cx="0"
-              cy="4"
-              rx="36"
-              ry="22"
-              fill="url(#fireGlow)"
-              animate={{ opacity: [0.55, 0.9, 0.6] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-            />
-            {/* Logs */}
-            <rect x="-16" y="6" width="14" height="5" rx="2" fill={darken(ground, 0.15)} transform="rotate(-18 -9 8)" />
-            <rect x="2" y="6" width="14" height="5" rx="2" fill={darken(ground, 0.05)} transform="rotate(16 9 8)" />
-            {/* Outer flame */}
-            <motion.path
-              d="M0 8 C-14 0 -12 -18 0 -34 C12 -18 14 0 0 8 Z"
-              fill={fireOuter}
-              animate={{
-                d: [
-                  "M0 8 C-14 0 -12 -18 0 -34 C12 -18 14 0 0 8 Z",
-                  "M0 8 C-12 2 -16 -16 2 -36 C10 -14 16 2 0 8 Z",
-                  "M0 8 C-16 -2 -10 -20 -2 -32 C14 -16 12 0 0 8 Z",
-                  "M0 8 C-14 0 -12 -18 0 -34 C12 -18 14 0 0 8 Z",
-                ],
-              }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-            />
-            {/* Mid flame */}
-            <motion.path
-              d="M0 6 C-8 0 -8 -12 0 -24 C8 -12 8 0 0 6 Z"
-              fill={fireMid}
-              animate={{
-                d: [
-                  "M0 6 C-8 0 -8 -12 0 -24 C8 -12 8 0 0 6 Z",
-                  "M0 6 C-6 2 -10 -10 1 -26 C7 -10 10 1 0 6 Z",
-                  "M0 6 C-10 -1 -6 -14 -1 -22 C9 -11 7 0 0 6 Z",
-                  "M0 6 C-8 0 -8 -12 0 -24 C8 -12 8 0 0 6 Z",
-                ],
-              }}
-              transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
-            />
-            {/* Core */}
-            <motion.path
-              d="M0 4 C-4 1 -4 -6 0 -14 C4 -6 4 1 0 4 Z"
-              fill={fireCore}
-              animate={{ opacity: [0.85, 1, 0.9] }}
-              transition={{ duration: 0.55, repeat: Infinity }}
-            />
-            {/* Embers rising */}
-            {[0, 1, 2, 3].map((i) => (
+        {/* Central campfire — always present; level 0 = tiny barely-lit flame */}
+        <g transform={`translate(120 148) scale(${fireScale})`}>
+          <motion.ellipse
+            cx="0"
+            cy="6"
+            rx={22 + stage * 4}
+            ry={12 + stage * 2}
+            fill={`url(#${fireGlowId})`}
+            animate={{ opacity: [0.4, 0.7, 0.45] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Logs */}
+          <rect
+            x="-12"
+            y="8"
+            width={stage === 0 ? 10 : 13}
+            height={stage === 0 ? 3.5 : 4.5}
+            rx="1.5"
+            fill={darken(ground, 0.18)}
+            transform="rotate(-16 -7 10)"
+          />
+          <rect
+            x="1"
+            y="8"
+            width={stage === 0 ? 10 : 13}
+            height={stage === 0 ? 3.5 : 4.5}
+            rx="1.5"
+            fill={darken(ground, 0.08)}
+            transform="rotate(14 8 10)"
+          />
+          {/* Outer flame — tiny at rest */}
+          <motion.path
+            d="M0 8 C-10 2 -8 -12 0 -22 C8 -12 10 2 0 8 Z"
+            fill={fireOuter}
+            opacity={stage === 0 ? 0.75 : 0.95}
+            animate={{
+              d: [
+                "M0 8 C-10 2 -8 -12 0 -22 C8 -12 10 2 0 8 Z",
+                "M0 8 C-8 3 -11 -10 1 -24 C7 -10 11 3 0 8 Z",
+                "M0 8 C-11 1 -7 -14 -1 -20 C9 -11 8 2 0 8 Z",
+                "M0 8 C-10 2 -8 -12 0 -22 C8 -12 10 2 0 8 Z",
+              ],
+            }}
+            transition={{
+              duration: stage === 0 ? 1.6 : 1.2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          {/* Mid flame */}
+          <motion.path
+            d="M0 6 C-5 1 -5 -8 0 -15 C5 -8 5 1 0 6 Z"
+            fill={fireMid}
+            animate={{
+              d: [
+                "M0 6 C-5 1 -5 -8 0 -15 C5 -8 5 1 0 6 Z",
+                "M0 6 C-4 2 -7 -7 1 -16 C4 -7 6 2 0 6 Z",
+                "M0 6 C-6 0 -4 -9 -1 -14 C6 -8 4 1 0 6 Z",
+                "M0 6 C-5 1 -5 -8 0 -15 C5 -8 5 1 0 6 Z",
+              ],
+            }}
+            transition={{
+              duration: stage === 0 ? 1.35 : 0.95,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          {/* Core */}
+          <motion.path
+            d="M0 4 C-2.5 1 -2.5 -4 0 -9 C2.5 -4 2.5 1 0 4 Z"
+            fill={fireCore}
+            animate={{ opacity: [0.8, 1, 0.85] }}
+            transition={{ duration: 0.7, repeat: Infinity }}
+          />
+          {/* Embers — fewer early */}
+          {Array.from({ length: stage === 0 ? 1 : Math.min(3, 1 + stage) }).map(
+            (_, i) => (
               <motion.circle
                 key={`ember-${i}`}
-                r={1.2}
+                r={0.9}
                 fill={ember}
-                initial={{ cx: -4 + i * 3, cy: -8, opacity: 0 }}
+                initial={{ cx: -2 + i * 2.5, cy: -4, opacity: 0 }}
                 animate={{
-                  cy: [-8, -28 - i * 4],
-                  opacity: [0, 0.9, 0],
-                  cx: [-4 + i * 3, -6 + i * 4 + (i % 2 ? 3 : -3)],
+                  cy: [-4, -16 - i * 3],
+                  opacity: [0, 0.7, 0],
+                  cx: [-2 + i * 2.5, -3 + i * 3 + (i % 2 ? 2 : -2)],
                 }}
                 transition={{
-                  duration: 1.4 + i * 0.25,
-                  delay: i * 0.35,
+                  duration: 1.8 + i * 0.3,
+                  delay: i * 0.5,
                   repeat: Infinity,
                   ease: "easeOut",
                 }}
               />
-            ))}
-          </g>
-        )}
-
-        {/* Resting coals when stage 0 */}
-        {view.campfireLevel === 0 && (
-          <g transform="translate(120 150)">
-            <ellipse cx="0" cy="6" rx="18" ry="6" fill={darken(ground, 0.2)} opacity={0.7} />
-            <circle cx="-6" cy="4" r="3" fill={darken(ember, 0.35)} opacity={0.5} />
-            <circle cx="4" cy="5" r="2.5" fill={darken(ember, 0.4)} opacity={0.4} />
-          </g>
-        )}
+            ),
+          )}
+        </g>
 
         {/* Frogs gather around the fire — same brand mark as Day Garden */}
         <AnimatePresence>
           {frogs.map((f, i) => (
             <motion.g
               key={`frog-${i}`}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: i * 0.04 }}
+              transition={{ duration: 0.5, delay: i * 0.05 }}
               transform={`translate(${f.x} ${f.y}) scale(${f.flip ? -f.scale : f.scale} ${f.scale})`}
             >
               <path
