@@ -30,7 +30,8 @@ Check `specs/` for existing feature directories. For each, note which of `spec.m
 | E | `speckit-tasks` | Generate dependency-ordered `tasks.md` by user story | User agrees with MVP scope and story breakdown |
 | F | `speckit-analyze` | Read-only cross-check of spec/plan/tasks consistency | No unresolved CRITICAL findings before `implement` |
 | G | `speckit-checklist` | Optional custom "unit tests for requirements" (security, a11y, perf, etc.) | Offer proactively for auth/PII/payments/public-API features |
-| H | `speckit-implement` | Execute `tasks.md` | All checklists pass (or user explicitly accepts gaps) |
+| — | **git commit (+ push)** | Snapshot design artifacts as a rollback point | Clean tree committed on the feature branch before code changes |
+| H | `speckit-implement` | Execute `tasks.md` | Prior commit exists; all checklists pass (or user explicitly accepts gaps) |
 | I | `speckit-converge` | Diff codebase against spec/plan/tasks, append remaining work | Loop with H until outcome is "converged" |
 | J | `speckit-taskstoissues` | Convert tasks to GitHub issues | Optional — dedupes against existing issues automatically |
 
@@ -40,11 +41,12 @@ Check `specs/` for existing feature directories. For each, note which of `spec.m
 2. **Sharpen the input to `speckit-specify` before running it.** If the user's feature description is a thin one-liner, ask 2-4 quick questions first (who's it for, core job-to-be-done, known constraints/out-of-scope, how we'll know it worked) and fold the answers into the description you pass in. A better `$ARGUMENTS` produces a better spec — don't just forward a vague sentence.
 3. **Never silently skip `speckit-clarify`.** If the user wants to jump straight to `plan`, warn them explicitly (same as the underlying skill does) that this increases downstream rework risk, and get an explicit "yes, skip it" before proceeding.
 4. **Always run `speckit-analyze` before `speckit-implement`.** It's read-only and cheap — there's no good reason to skip it. If it reports CRITICAL or HIGH findings, stop and work through remediation with the user before moving to implementation; don't just note the findings and barrel forward.
-5. **Offer `speckit-checklist` proactively**, not just on request, whenever the feature touches auth, payments, PII, or a public/external API.
-6. **Don't let `speckit-implement` run silently to completion on a large tasks.md.** Check in after each user-story phase completes, especially where the plan flagged an open design decision — this is a chance to catch drift early, not just a status update.
-7. **After implement, run `speckit-converge` and loop** (converge → implement) until the outcome is "converged" or the user says stop. Cap at 3 converge rounds before pausing to ask the user how they want to proceed — an endless loop usually means the spec itself needs revisiting, not more converge passes.
-8. **Offer `speckit-taskstoissues` once tasks exist and the user wants GitHub issue tracking for the feature.** It's safe to re-run — it dedupes against existing issues by task ID before creating new ones.
-9. **Constitution is project-level, not per-feature.** Check `.specify/memory/constitution.md` once per session — if it's still full of `[PLACEHOLDER]` tokens or missing, offer to run `speckit-constitution` first; otherwise skip straight to Phase B and just mention it's already in place.
+5. **Always commit (and push when a remote/PR branch exists) before `speckit-implement`.** After plan + tasks (+ analyze) are settled and the user is ready to implement, create a git commit of the design artifacts (and any pre-implement stubs) and push so HEAD is a clean rollback point. If implement goes sideways, the user can reset/revert to that commit without losing the spec work. Do **not** start implement with a dirty tree of uncommitted plan/tasks unless the user explicitly overrides. Prefer a clear message like `docs: plan+tasks for NNN-feature before implement`.
+6. **Offer `speckit-checklist` proactively**, not just on request, whenever the feature touches auth, payments, PII, or a public/external API.
+7. **Don't let `speckit-implement` run silently to completion on a large tasks.md.** Check in after each user-story phase completes, especially where the plan flagged an open design decision — this is a chance to catch drift early, not just a status update.
+8. **After implement, run `speckit-converge` and loop** (converge → implement) until the outcome is "converged" or the user says stop. Cap at 3 converge rounds before pausing to ask the user how they want to proceed — an endless loop usually means the spec itself needs revisiting, not more converge passes.
+9. **Offer `speckit-taskstoissues` once tasks exist and the user wants GitHub issue tracking for the feature.** It's safe to re-run — it dedupes against existing issues by task ID before creating new ones.
+10. **Constitution is project-level, not per-feature.** Check `.specify/memory/constitution.md` once per session — if it's still full of `[PLACEHOLDER]` tokens or missing, offer to run `speckit-constitution` first; otherwise skip straight to Phase B and just mention it's already in place.
 
 ## Phase-by-phase notes
 
@@ -62,7 +64,9 @@ Check `specs/` for existing feature directories. For each, note which of `spec.m
 
 **G — Checklist**: If offered and accepted, invoke `Skill(speckit-checklist, args=<domain/focus>)`. Can run multiple times for different domains (`security.md`, `ux.md`, etc.) — each appends rather than overwrites.
 
-**H — Implement**: Invoke `Skill(speckit-implement)`. Apply protocol #6.
+**Pre-H — Commit before implement**: Apply protocol #5. Stage design artifacts (`specs/<feature>/`, related constitution/docs/stubs), commit, and push the feature branch. Confirm `git status` is clean (or only unrelated noise the user accepts) before invoking implement. Tell the user the commit SHA so they can roll back if implement misfires.
+
+**H — Implement**: Invoke `Skill(speckit-implement)`. Apply protocol #7 (check in per story). Only after the pre-implement commit/push.
 
 **I — Converge**: Invoke `Skill(speckit-converge)`. If it appends tasks, loop back to H. If "converged", tell the user this feature's specified scope is done and it's ready for review/PR.
 

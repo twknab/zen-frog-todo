@@ -3,7 +3,8 @@ SYNC IMPACT REPORT
 ==================
 Version change: 2.0.0 → 2.1.0 (MINOR — new Product Model section + Principle II/V
   guidance for Day Garden & Night Camp; no removal or redefinition that breaks
-  prior MUST constraints)
+  prior MUST constraints). Later amended in-place for Dev Mode realm-testing
+  expectations under Product Model (still 2.1.0; additive clarification).
 Modified principles:
   - Principle II "Subtle Gamification, Not Scoreboards" — EXPANDED. Organic visual
     progress now explicitly includes two sibling worlds (Day Garden bonsai/frogs
@@ -109,6 +110,10 @@ Atmosphere: dim / overlay wash consistent with Principle V — never force Appea
 ### Summaries & differentiation
 
 Wherever day progress is summarized, Night Camp MUST be representable as a **sibling, differentiated** beat (poetic stage labels over raw counts). Best UX matters: two worlds should be obvious at a glance without cluttering the day-primary chrome.
+
+### Dev Mode realm testing
+
+Dev tools MUST be able to **Force night**, **Force day**, or **Follow clock** so Night Camp is testable without waiting on the wall clock (parity with Simulate +1h idle). A forced realm MUST use the same growth routing, wilt eligibility, and atmosphere rules as a clock-derived realm of that type. Force MUST NOT change Appearance or block the UI. When Dev tools are off, any stored override MUST be ignored. Dev Reset MUST clear both Day Garden and Night Camp for the cycle. While effective realm is night, Simulate +1h idle MUST NOT wilt; while day, simulate idle keeps today’s day-wilt Dev behavior.
 
 ## Technology Constraints
 

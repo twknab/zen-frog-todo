@@ -69,7 +69,7 @@ Outside the work window, the atmosphere softens (dim overlay). Completing work d
 
 **Why this priority**: This is the signature dual-world experience and the main user-facing delight of the feature.
 
-**Independent Test**: Move the clock (or temporarily set a work window that makes “now” night), complete work, and confirm: no new bonsai growth; night scene stages advance; UI remains interactive; Appearance mode unchanged.
+**Independent Test**: Prefer Dev **Force night** (or set a work window that makes “now” night), complete work, and confirm: no new bonsai growth; night scene stages advance; UI remains interactive; Appearance mode unchanged.
 
 **Acceptance Scenarios**:
 
@@ -86,18 +86,33 @@ Outside the work window, the atmosphere softens (dim overlay). Completing work d
 
 A developer (or anyone with Dev tools on) can force **Night Camp** or **Day Garden** regardless of the real clock — the same way they already simulate idle wilt — so night scenes, night-ledger credit, bonsai sleep, and frog-at-camp behavior are testable in one sitting. They can return to **Follow clock** anytime. Forcing a realm NEVER changes Appearance (light/dark) and NEVER blocks the UI.
 
+**Dev tools must behave as one coherent test harness** (same Bonsai-card Dev strip as today):
+
+| Control | Expected behavior |
+|---|---|
+| **Force night** | Effective realm = night. Atmosphere + Night Camp scene. Completions (task / focus / frog / Dev “Complete focus session”) credit **night ledger only**; bonsai does not gain day leaves/frogs. Wilt does **not** apply (including Dev “Simulate +1h idle” — no wilt while forced night). |
+| **Force day** | Effective realm = day. Day atmosphere. Completions credit **Day Garden** as normal. “Simulate +1h idle” wilts as today’s day Dev tool. |
+| **Follow clock** | Effective realm from work window + local clock only. All of the above follow the real realm. |
+| **Reset** | Clears **both** Day Garden and Night Camp progress for the current cycle (fresh shrub + resting camp), same “start over” spirit as today. |
+| Dev tools **off** | Any stored force is **ignored** (Follow clock). Normal users cannot get stuck in Force night. |
+
 **Why this priority**: Without this, Night Camp is impractical to build and polish (depends on wall clock or constantly rewriting work hours). Parity with existing day Dev tools is required for the feature to be shippable with confidence.
 
-**Independent Test**: Enable Dev tools → Force night → confirm night atmosphere/ledger path is active and completions credit night; Force day → day path; Follow clock → real window again. Appearance toggle untouched.
+**Independent Test**: Enable Dev tools → Force night → Complete focus session (night advances, bonsai unchanged) → Simulate +1h idle (no wilt) → Force day → Complete focus session (bonsai grows) → Simulate +1h idle (wilt) → Follow clock → confirm clock realm. Appearance untouched throughout.
 
 **Acceptance Scenarios**:
 
 1. **Given** Dev tools are enabled, **When** the person chooses **Force night**, **Then** the app behaves as night realm (atmosphere, bonsai sleep, night-ledger credit, Night Camp scene) even if the local clock is inside the work window.
 2. **Given** Dev tools are enabled, **When** the person chooses **Force day**, **Then** the app behaves as day realm even if the local clock is outside the work window.
 3. **Given** a forced realm is active, **When** the person chooses **Follow clock**, **Then** realm derivation returns to work-window + local clock only.
-4. **Given** a forced realm is active, **When** the person completes work or views the garden, **Then** a calm Dev-only indicator shows which realm is forced (so testers are not confused), and Appearance is unchanged.
-5. **Given** Dev tools are turned off while a force was set, **When** the person uses the app normally, **Then** forced override does not affect non-dev use (override is ignored or cleared — see Assumptions); Follow clock behavior applies for real users.
-6. **Given** keyboard/screen reader, **When** using Force night / Force day / Follow clock, **Then** controls are labelled and operable.
+4. **Given** Force night is active, **When** the person uses Dev **Complete focus session** (or completes a real task/focus/frog), **Then** Night Camp advances and Day Garden bonsai leaves/frogs do not increase.
+5. **Given** Force day is active, **When** the person uses Dev **Complete focus session**, **Then** Day Garden grows as in today’s Dev harness.
+6. **Given** Force night is active, **When** the person uses Dev **Simulate +1h idle**, **Then** the bonsai does **not** show additional wilt from that action (night = asleep).
+7. **Given** Force day is active, **When** the person uses Dev **Simulate +1h idle**, **Then** wilt behaves as the existing day Dev simulate tool.
+8. **Given** Dev tools are enabled with day and/or night progress, **When** the person uses Dev **Reset**, **Then** both Day Garden and Night Camp for the cycle return to a fresh starting state.
+9. **Given** a forced realm is active, **When** the person completes work or views the garden, **Then** a calm Dev-only indicator shows which realm is forced (so testers are not confused), and Appearance is unchanged.
+10. **Given** Dev tools are turned off while a force was set, **When** the person uses the app normally, **Then** forced override does not affect non-dev use (override is ignored); Follow clock behavior applies for real users. Turning Dev tools back on MAY restore the last override for convenience.
+11. **Given** keyboard/screen reader, **When** using Force night / Force day / Follow clock, **Then** controls are labelled and operable.
 
 ---
 
@@ -157,6 +172,8 @@ Crossing the work-window edge feels gentle (optional soft dusk/dawn crossfade), 
 - **Zero day frogs at night**: Night Camp can still advance from night completions; frog presence is minimal/baseline, not empty of all atmosphere.
 - **User changes work hours mid-cycle**: new window applies going forward for wilt/growth/night credit; existing day and night progress already earned this cycle is kept (no punitive wipe).
 - **Dev Force night while completing the Frog**: night ledger + night celebration; bonsai still sleeps.
+- **Dev Force night + Simulate +1h idle**: no additional wilt while effective realm is night.
+- **Dev Force day outside real work hours**: completions still credit Day Garden; simulate idle wilts as day Dev tool.
 - **Export / import**: night ledger and work-window preference are part of local user data portability expectations (export includes or degrades gracefully — see Assumptions).
 
 ## Requirements *(mandatory)*
@@ -178,16 +195,21 @@ Crossing the work-window edge feels gentle (optional soft dusk/dawn crossfade), 
 - **FR-013**: Live and archived summaries that describe garden state MUST present Day Garden and Night Camp as differentiated sibling worlds (scene poetry for night; not a competing scoreboard).
 - **FR-014**: All new interactive elements MUST be keyboard-operable and screen-reader labelled; night motion MUST respect `prefers-reduced-motion`; night dim MUST preserve WCAG AA for text and controls.
 - **FR-015**: Copy and visuals for night MUST vibe the person up (warm, rewarding) and MUST NOT shame late work or imply they should stop.
-- **FR-016**: When Dev tools are enabled, the system MUST provide **Force night**, **Force day**, and **Follow clock** controls (same Dev surface family as existing simulate-idle / reset tools) that override realm derivation for testing.
-- **FR-017**: A forced realm MUST drive the same atmosphere, growth routing, wilt eligibility, and Night Camp scene behavior as a real clock-derived realm of that type.
+- **FR-016**: When Dev tools are enabled, the system MUST provide **Force night**, **Force day**, and **Follow clock** controls on the same Dev surface family as existing simulate-idle / reset / complete-focus tools, overriding realm derivation for testing.
+- **FR-017**: A forced realm MUST drive the same atmosphere, growth routing, wilt eligibility, and Night Camp scene behavior as a real clock-derived realm of that type (one `resolveRealm` brain — no divergent “dev-only fake UI”).
 - **FR-018**: Forcing a realm MUST NOT change Appearance (light/dark) and MUST NOT block UI.
-- **FR-019**: While a realm is forced, the Dev UI MUST show a calm indicator of the active override so testers know why the garden looks/behaves as it does.
-- **FR-020**: Realm force MUST NOT affect normal use when Dev tools are off (ignored or cleared — documented in Assumptions).
+- **FR-019**: While a realm is forced (and Dev tools are on), the Dev UI MUST show a calm indicator of the active override so testers know why the garden looks/behaves as it does.
+- **FR-020**: Realm force MUST NOT affect normal use when Dev tools are off (override ignored; Follow clock). Turning Dev tools back on MAY restore the last stored override.
+- **FR-021**: While effective realm is **night** (forced or clock), Dev **Complete focus session** and real completions MUST credit the night ledger only and MUST NOT grow the Day Garden bonsai.
+- **FR-022**: While effective realm is **day** (forced or clock), Dev **Complete focus session** and real completions MUST credit the Day Garden as today.
+- **FR-023**: While effective realm is **night**, Dev **Simulate +1h idle** MUST NOT produce additional bonsai wilt; while effective realm is **day**, Simulate +1h idle MUST retain today’s day-wilt Dev behavior.
+- **FR-024**: Dev **Reset** MUST clear both Day Garden and Night Camp progress for the current cycle (not day-only).
 
 ### Key Entities
 
 - **Work Window**: User-configured local start/end for the day realm; default 8 AM–5 PM; drives wilt, bonsai growth eligibility, and night atmosphere/credit.
-- **Realm Override (Dev)**: Optional force of `day` | `night` | follow-clock; used only for testing; never a user-facing productivity setting.
+- **Realm Override (Dev)**: Optional force of `day` | `night` | follow-clock; used only for testing; never a user-facing productivity setting; ignored when Dev tools are off.
+- **Effective Realm**: Result of `resolveRealm` (override if Dev on + forced, else clock + work window) — single source of truth for atmosphere, growth routing, and wilt eligibility.
 - **Day Garden Ledger**: Existing day-cycle growth events for bonsai leaves and day frogs (asleep for new credit at night).
 - **Night Camp Ledger**: Separate day-cycle progress from night-realm completions; drives camp stages and night frog–trinket participation.
 - **Night Camp Scene**: Visual stage state (fireflies, campfire, stars, moon, night frogs) derived from Night Camp Ledger (+ day-frog presence).
@@ -205,7 +227,8 @@ Crossing the work-window edge feels gentle (optional soft dusk/dawn crossfade), 
 - **SC-006**: Primary flows (complete task, run focus, open Options, Start a new day) remain completable during night atmosphere with no blocking interstitial.
 - **SC-007**: After Start a new day, Grove (or equivalent) for that archived cycle shows both Day Garden and Night Camp when night progress existed; keyboard/screen-reader review finds labelled, non-shameful night summary content.
 - **SC-008**: With `prefers-reduced-motion` on, night stage changes remain perceivable without decorative motion dependence.
-- **SC-009**: With Dev tools on, a tester can switch Force night → complete work → Force day → complete work → Follow clock in under 2 minutes and observe the correct ledger/atmosphere for each step without changing Appearance.
+- **SC-009**: With Dev tools on, a tester can run Force night → Complete focus session → Simulate +1h idle → Force day → Complete focus session → Simulate +1h idle → Follow clock in under 3 minutes and observe: night credit + no wilt under Force night; day growth + wilt under Force day; Appearance never changes.
+- **SC-010**: With Dev tools off, a previously stored Force night setting has **no** effect on atmosphere or ledger routing (Follow clock only).
 
 ## Assumptions
 
@@ -215,5 +238,6 @@ Crossing the work-window edge feels gentle (optional soft dusk/dawn crossfade), 
 - “Summaries” means extending existing garden info / Grove archive surfaces rather than inventing a third dashboard; Standup Summary task bullets remain task-centric and only gain garden/night beats where garden state is already summarized.
 - **Dev Force night/day** is the primary way to test Night Camp (parity with Simulate +1h idle). Adjusting work hours remains valid but is not sufficient alone for fast scene iteration.
 - When Dev tools are turned **off**, any stored realm override is **ignored** (Follow clock) so normal use cannot accidentally stay stuck in Force night; turning Dev back on may restore the last override for convenience.
+- Dev **Reset** clearing both ledgers is intentional for test harness simplicity (same button, fuller wipe).
 - Full JSON export/import already covers app state broadly; night ledger + work window MUST persist locally and SHOULD round-trip in existing export formats when those formats are touched — graceful forward-compatible fields if export schema changes are needed. Realm override is Dev-only and need not appear in user-facing export narratives.
 - Out of scope for v1: social sharing of Night Camp, forced theme switching, calendar-midnight auto-reset, multi-device sync, soundscape tied to night (tracked separately as living-soundscape issue), postcard export (separate issue).

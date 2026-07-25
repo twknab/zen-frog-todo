@@ -50,7 +50,20 @@ day as garden stage, night as camp scene poetry — not twin scoreboards.
 
 ## Dev testing
 
-Dev tools include **Force night / Force day / Follow clock** (parity with Simulate
-+1h idle) so Night Camp can be exercised without waiting on the wall clock.
-Forcing a realm never changes Appearance and never blocks the UI. When Dev tools
-are off, any stored override is ignored.
+Dev tools are the **primary** way to exercise Night Camp (parity with Simulate +1h idle).
+Controls live on the Bonsai card Dev strip with existing day tools.
+
+| Control | Expected |
+|---|---|
+| **Force night** | Night atmosphere + camp. Completions → night ledger only; bonsai sleeps. Simulate +1h idle → **no wilt**. |
+| **Force day** | Day atmosphere. Completions → Day Garden. Simulate +1h idle → wilt as today. |
+| **Follow clock** | Realm from work window + local clock only. |
+| **Complete focus session** | Routes to day or night ledger based on **effective** realm (forced or clock). |
+| **Reset** | Clears **both** Day Garden and Night Camp for the cycle. |
+
+Rules:
+
+- Forcing a realm **never** changes Appearance and **never** blocks the UI.
+- When Dev tools are **off**, any stored override is **ignored** (Follow clock).
+- Turning Dev tools back on **may** restore the last override for convenience.
+- One shared realm resolver — forced and clock-derived night/day must behave identically for growth, wilt, and atmosphere.

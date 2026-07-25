@@ -34,4 +34,7 @@
 ## Notes
 
 - Validated against constitution v2.1.0 Product Model and pre-specify product lock (2026-07-25).
-- Ready for `/speckit-clarify` (optional) or `/speckit-plan`.
+- Dev Mode harness expanded (FR-016…024, US4 matrix) — Force night/day must route Complete focus / Simulate idle / Reset correctly.
+- Plan artifacts: `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`.
+- Tasks: `tasks.md` (T001–T034) — ready for `/speckit-implement`.
+- Ready for `/speckit-implement` (or `/speckit-analyze` first).
