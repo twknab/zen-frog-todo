@@ -1,6 +1,7 @@
 "use client";
 
 import { FROG_FROGS, FROG_LEAVES, TASK_FROGS, TASK_LEAVES, useBonsai } from "./bonsai";
+import { playFrogChorus, playRibbit, playTaskAdded } from "./sound";
 import { usePersistentState } from "./storage";
 
 export type Task = {
@@ -63,6 +64,7 @@ export function useTasks() {
         { id: makeId("task"), title: trimmed, completed: false },
       ]),
     }));
+    playTaskAdded();
   }
 
   function updateTaskTitle(id: string, title: string) {
@@ -107,6 +109,9 @@ export function useTasks() {
         isFrog ? FROG_LEAVES : TASK_LEAVES,
         isFrog ? FROG_FROGS : TASK_FROGS,
       );
+      // Joyful garden cues (additive to visual celebrations) — incomplete→complete only.
+      if (isFrog) playFrogChorus();
+      else playRibbit();
     }
   }
 
