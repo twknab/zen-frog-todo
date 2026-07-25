@@ -6,7 +6,7 @@
 
 ## Summary
 
-Add a persisted **Hyper Minimal** Options toggle (`frog-garden:hyper-minimal-v1`, default `false`) that strips decorative/instructional chrome in Flow and Focus while keeping garden visuals, interactive controls, Options, mode switch, and essential actions. Distribute the preference via `useHyperMinimal` (shared `usePersistentState` hook); hide chrome with a small conditional wrapper. Options panel chrome stays fully usable.
+Add a persisted **Hyper Minimal** Options toggle (`frog-garden:hyper-minimal-v1`, default `false`) that strips decorative/instructional chrome in Flow and Focus while keeping garden visuals, interactive controls, Options, mode switch, and essential actions. Distribute the preference via `useHyperMinimal` (shared `usePersistentState` hook); hide chrome with a small conditional wrapper. Options panel chrome stays fully usable. When Hyper Minimal is on, also omit empty panels (FR-014) so caption-less blank cards never remain.
 
 ## Technical Context
 

@@ -68,6 +68,18 @@
 - [x] T009 Run `npx tsc --noEmit` and `npm run lint` (or eslint with max-warnings 0); fix issues
 - [x] T010 Manual pass of `quickstart.md`; mark tasks complete; update feature artifacts if needed
 
+---
+
+## Phase 7: Empty panels when Hyper Minimal (FR-014)
+
+**Goal**: No blank/caption-less panel shells when Hyper Minimal is on
+
+**Independent Test**: Enable Hyper Minimal with empty Completed / Standup / Grove / no frog → those panels absent; task list, reflection, sand, timer, bonsai remain
+
+- [x] T011 [US2] In `src/app/page.tsx`, omit Frog / Completed / Standup panels when empty + Hyper Minimal; adjust Flow/Focus grid areas when frog is omitted
+- [x] T012 [P] [US2] In `src/components/Grove.tsx`, return null when Hyper Minimal and grove has no archive/today sand
+- [x] T013 Update quickstart + contract notes; run `tsc --noEmit` and eslint
+
 ## Dependencies
 
 - T002 → T003/T004/T005/T006/T007

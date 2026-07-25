@@ -25,14 +25,29 @@ Placement: near Appearance / Dev (after Appearance divider, before or after Dev 
 
 - Flow/Focus ToggleButtonGroup (with labels)
 - Export, Notepad, Options (aria-labels required)
-- Task titles, checkboxes, add/reorder/delete/frog controls
+- Task titles, checkboxes, add/reorder/delete/frog controls (task list card stays as primary workspace even with zero tasks)
 - Focus dial, time digits, Start/Cancel/Break buttons, ambient control
 - Sand canvas + reset control
 - Bonsai tree visuals (frogs, critters, fruit)
-- Grove show/hide control + day/sand interactive surfaces
+- Reflection field + new-day action (primary close-the-day workspace)
+- Grove show/hide control + day/sand interactive surfaces **when Grove has content**
 - Options popover internal labels
+
+## Empty panels omitted when ON (FR-014)
+
+Do not render blank/caption-less shells. Hide the whole panel when:
+
+| Panel | Empty when |
+|---|---|
+| Frog task card | No frog chosen |
+| Completed | Zero completed-log entries |
+| Standup Summary | No done items and no open items |
+| The Grove | No archived days and no today sand drawings |
+
+When Hyper Minimal is off, keep existing empty-state helper copy.
 
 ## A11y
 
 - No interactive control may become unlabeled when Hyper Minimal is on.
 - Decorative chrome removed from the tree (conditional render), not left as unlabeled text noise.
+- Omitting an empty panel removes its controls; remaining controls keep accessible names.

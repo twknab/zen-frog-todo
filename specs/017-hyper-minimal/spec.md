@@ -20,6 +20,12 @@ Self-resolved from the product request (no blocking questions):
 - Q: Empty-state instructional copy (e.g. "No frog chosen yet", Grove empty prose, timer session-count captions)? → A: **Hide** as instructional chrome. Interactive empty surfaces remain operable; accessible names cover meaning.
 - Q: Timer phase helper sentences ("Focus session complete…")? → A: **Hide** the helper sentences; keep the action buttons that advance the flow.
 - Q: Scope vs garden palette contrast themes? → A: **Out of scope** — this feature is Hyper Minimal only; no new color themes.
+- Q: After hiding empty-state copy, should blank/caption-less cards still render? → A: **No.** When Hyper Minimal is on, panels/sections with no content (and no active workspace the user needs right now) MUST not render — show only surfaces that have content or primary active functionality. When Hyper Minimal is off, keep existing empty-state UX.
+
+### Session 2026-07-25 (empty panels)
+
+- Q: Which empty panels hide? → A: Completed log with no entries; Standup Summary with nothing to show; Grove with no archive/sand keepsakes; Frog task card with no frog chosen. Task list (add-task workspace), reflection (writable field + new-day action), sand, timer, and bonsai stay.
+- Q: Focus vs Flow? → A: Same empty-panel rule in both modes; adjust layout so hidden frog does not leave an empty grid hole.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -55,6 +61,8 @@ With Hyper Minimal on, both Flow Mode and Focus Mode show only functional surfac
 2. **Given** Hyper Minimal is on, **When** the user switches to Focus Mode, **Then** the same preference applies — brand/tagline/section chrome stay hidden; frog task, bonsai, and timer remain operable.
 3. **Given** Hyper Minimal is on, **When** the user uses Export, Notepad, Options, sand reset, or other icon-only essential actions, **Then** those controls remain available and announce meaningful names to assistive tech even if visible captions were never present or were removed.
 4. **Given** Hyper Minimal is on, **When** the user interacts with the focus timer, **Then** dial, countdown, start/cancel/break buttons, and ambient control still work; decorative session-count or phase helper captions are hidden.
+5. **Given** Hyper Minimal is on and a panel has no content (e.g. empty Completed log, empty Standup Summary, empty Grove, no frog chosen), **When** the user views Flow or Focus, **Then** that empty panel does not render as a blank card/shell — only panels with content or primary active workspace remain.
+6. **Given** Hyper Minimal is off, **When** those same panels are empty, **Then** existing helper/empty-state copy remains as before.
 
 ---
 
@@ -79,6 +87,8 @@ Hyper Minimal removes visual instructional chrome without breaking keyboard use 
 - Corrupted or unavailable local storage → treat Hyper Minimal as off; app remains usable with full chrome; no shame/error UI.
 - Rapid toggles while Options is open → last value wins; popover stays open; UI matches stored preference.
 - Focus Mode already hides some Flow-only cards → Hyper Minimal does not re-show those cards; it only strips chrome on whatever is visible.
+- Empty panel under Hyper Minimal → omit the whole card/section (not a caption-less void); when content appears later, the panel returns.
+- Primary workspaces (task add/list, reflection field, sand, timer, bonsai) stay even if “empty” of user data, because they are where the user acts.
 - `prefers-reduced-motion` → Options open/close and existing motion fallbacks unchanged; Hyper Minimal itself is show/hide of chrome, not a motion dependency.
 - Closing Options does not reset Hyper Minimal — preference persists as last set.
 
@@ -99,6 +109,7 @@ Hyper Minimal removes visual instructional chrome without breaking keyboard use 
 - **FR-011**: Icon-only and essential controls MUST retain meaningful accessible names (`aria-label` or equivalent) when visual captions/labels are absent (constitution Principle IV).
 - **FR-012**: User-facing label for the preference MUST be **Hyper Minimal**.
 - **FR-013**: This feature MUST NOT introduce new garden color themes or contrast palettes.
+- **FR-014**: While Hyper Minimal is on, the system MUST hide (not render) UI panels/sections that are empty — no blank cards, empty shells, or caption-less voids. “Empty” means no content to show and no primary active workspace the user needs right now (e.g. Completed with zero entries, Standup with nothing to show, Grove with no history/sand, Frog card with no frog). Panels with real content OR primary active functionality (task input/list, reflection field, sand, focus timer, bonsai/garden) MUST remain. When Hyper Minimal is off, existing empty-state UX MUST remain unchanged.
 
 ### Key Entities
 
@@ -113,6 +124,7 @@ Hyper Minimal removes visual instructional chrome without breaking keyboard use 
 - **SC-003**: With Hyper Minimal on, users can still complete core flows (mark frog/task done, run focus timer, rake sand, open Options/Notepad/Export, switch Flow/Focus) without needing the hidden chrome.
 - **SC-004**: Options remains open across Hyper Minimal toggles; users can disable Hyper Minimal from Options without hunting for a hidden control.
 - **SC-005**: Keyboard and screen-reader users can operate primary controls with Hyper Minimal on (meaningful names present).
+- **SC-006**: With Hyper Minimal on and no completed entries / standup items / grove history / frog, those empty panels are absent from the UI (no blank shells); enabling content makes them reappear.
 
 ## Assumptions
 

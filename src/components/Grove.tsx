@@ -67,6 +67,9 @@ export default function Grove() {
     [todayDrawings],
   );
 
+  // Hyper Minimal (FR-014): omit the Grove shell when there is nothing to show.
+  if (hyperMinimal && showEmptyCopy) return null;
+
   return (
     <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }} aria-label="The Grove">
       <CardContent sx={{ p: 0 }}>

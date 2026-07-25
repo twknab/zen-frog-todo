@@ -107,6 +107,14 @@ export default function Home() {
   // surviving cards animate to fill the space the rest leave behind.
   const isFocus = mode === "frog";
 
+  // Hyper Minimal (FR-014): omit empty shells — show only content or primary workspaces.
+  const showFrogCard = !hyperMinimal || Boolean(frogTask);
+  const showCompletedPanel = !hyperMinimal || completedLog.length > 0;
+  const showStandupPanel =
+    !hyperMinimal ||
+    completedLog.length > 0 ||
+    tasks.some((task) => !task.completed);
+
   // Set the real clock after mount, and refresh it whenever anything that
   // affects the tree changes — growth events, or the dev toggle/sim — so the
   // bonsai always re-derives against the current time (and reflects Dev being
@@ -126,6 +134,26 @@ export default function Home() {
     now,
     idleOffsetHours,
   });
+
+  const gridTemplateColumns = isFocus
+    ? showFrogCard
+      ? { xs: "1fr", md: "repeat(3, 1fr)" }
+      : { xs: "1fr", md: "repeat(2, 1fr)" }
+    : { xs: "1fr", md: "repeat(4, 1fr)" };
+
+  const gridTemplateAreas = isFocus
+    ? showFrogCard
+      ? { xs: `"bonsai" "frog" "timer"`, md: `"frog bonsai timer"` }
+      : { xs: `"bonsai" "timer"`, md: `"bonsai timer"` }
+    : showFrogCard
+      ? {
+          xs: `"frog" "timer" "bonsai" "garden" "tasks" "reflection"`,
+          md: `"frog frog garden garden" "timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
+        }
+      : {
+          xs: `"timer" "bonsai" "garden" "tasks" "reflection"`,
+          md: `"timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
+        };
 
   return (
     <Box
@@ -237,76 +265,71 @@ export default function Home() {
         sx={{
           display: "grid",
           gap: 3,
-          gridTemplateColumns: isFocus
-            ? { xs: "1fr", md: "repeat(3, 1fr)" }
-            : { xs: "1fr", md: "repeat(4, 1fr)" },
-          gridTemplateAreas: isFocus
-            ? { xs: `"bonsai" "frog" "timer"`, md: `"frog bonsai timer"` }
-            : {
-                xs: `"frog" "timer" "bonsai" "garden" "tasks" "reflection"`,
-                md: `"frog frog garden garden" "timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
-              },
+          gridTemplateColumns,
+          gridTemplateAreas,
         }}
       >
-        <BentoCard area="frog" accent="primary" ariaLabel="Frog task">
-          <Chrome>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
-              <Box
-                component={FaFrog}
-                aria-hidden
-                sx={{ color: "primary.main", fontSize: "1.3rem" }}
-              />
-              <Chip label="Largest Task" color="primary" size="small" />
-            </Stack>
-          </Chrome>
-          {frogTask ? (
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
-              <Checkbox
-                checked={frogTask.completed}
-                disabled={frogTask.completed}
-                slotProps={{
-                  input: {
-                    "aria-label": frogTask.completed
-                      ? "Frog completed — designate a new frog to move on"
-                      : `Mark "${frogTask.title}" complete`,
-                  },
-                }}
-                onChange={(event) => {
-                  if (frogTask.completed) return;
-                  if (event.target.checked) {
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "frog");
-                  }
-                  toggleTaskCompleted(frogTask.id);
-                }}
-              />
-              <Typography
-                variant="h5"
-                component="h2"
-                sx={{
-                  color: frogTask.completed ? "text.disabled" : "text.primary",
-                  textDecoration: frogTask.completed ? "line-through" : "none",
-                  flexGrow: 1,
-                }}
-              >
-                {frogTask.title}
-              </Typography>
-              {!frogTask.completed && (
-                <DeleteIncompleteTaskControl
-                  taskId={frogTask.id}
-                  taskTitle={frogTask.title}
-                  onDelete={deleteTask}
-                />
-              )}
-            </Stack>
-          ) : (
+        {showFrogCard && (
+          <BentoCard area="frog" accent="primary" ariaLabel="Frog task">
             <Chrome>
-              <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
-                No frog chosen yet
-              </Typography>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
+                <Box
+                  component={FaFrog}
+                  aria-hidden
+                  sx={{ color: "primary.main", fontSize: "1.3rem" }}
+                />
+                <Chip label="Largest Task" color="primary" size="small" />
+              </Stack>
             </Chrome>
-          )}
-        </BentoCard>
+            {frogTask ? (
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
+                <Checkbox
+                  checked={frogTask.completed}
+                  disabled={frogTask.completed}
+                  slotProps={{
+                    input: {
+                      "aria-label": frogTask.completed
+                        ? "Frog completed — designate a new frog to move on"
+                        : `Mark "${frogTask.title}" complete`,
+                    },
+                  }}
+                  onChange={(event) => {
+                    if (frogTask.completed) return;
+                    if (event.target.checked) {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "frog");
+                    }
+                    toggleTaskCompleted(frogTask.id);
+                  }}
+                />
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  sx={{
+                    color: frogTask.completed ? "text.disabled" : "text.primary",
+                    textDecoration: frogTask.completed ? "line-through" : "none",
+                    flexGrow: 1,
+                  }}
+                >
+                  {frogTask.title}
+                </Typography>
+                {!frogTask.completed && (
+                  <DeleteIncompleteTaskControl
+                    taskId={frogTask.id}
+                    taskTitle={frogTask.title}
+                    onDelete={deleteTask}
+                  />
+                )}
+              </Stack>
+            ) : (
+              <Chrome>
+                <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
+                  No frog chosen yet
+                </Typography>
+              </Chrome>
+            )}
+          </BentoCard>
+        )}
 
         <AnimatePresence>
           {!isFocus && (
@@ -517,7 +540,7 @@ export default function Home() {
       />
 
       <AnimatePresence>
-        {!isFocus && (
+        {!isFocus && showCompletedPanel && (
           <motion.div
             key="completed"
             initial={{ opacity: 0, y: 8 }}
@@ -546,7 +569,7 @@ export default function Home() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {!isFocus && (
+        {!isFocus && showStandupPanel && (
           <motion.div
             key="standup-summary"
             initial={{ opacity: 0, y: 8 }}

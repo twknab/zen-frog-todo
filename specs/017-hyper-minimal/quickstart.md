@@ -15,5 +15,8 @@
 6. [ ] Export / Notepad / Options still work; icon controls have accessible names.
 7. [ ] Reload → Hyper Minimal still on.
 8. [ ] Open Options (labels visible) → disable Hyper Minimal → chrome restored.
-9. [ ] Keyboard: tab through header + primary controls with Hyper Minimal on.
-10. [ ] `tsc --noEmit` and `eslint --max-warnings=0` clean.
+9. [ ] With Hyper Minimal on and empty data: Completed, Standup, Grove, and frog card (no frog) are absent — no blank shells. Task list, reflection, sand, timer, bonsai remain.
+10. [ ] Complete a task / choose a frog / archive sand → corresponding panels reappear under Hyper Minimal.
+11. [ ] Hyper Minimal off → empty-state helper copy returns for those panels.
+12. [ ] Keyboard: tab through header + primary controls with Hyper Minimal on.
+13. [ ] `tsc --noEmit` and `eslint --max-warnings=0` clean.
