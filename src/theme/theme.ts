@@ -1145,15 +1145,76 @@ function buildZenShadows(mode: ColorMode): Shadows {
   return shadows as unknown as Shadows;
 }
 
-export function createZenTheme(
+/**
+ * Internal override id for the Options High Contrast toggle.
+ * Not a PaletteId — never listed in the Palette dropdown.
+ */
+export const HIGH_CONTRAST_THEME_ID = "highContrast" as const;
+
+/**
+ * High Contrast — hard-set override (018). Near-white / near-black surfaces,
+ * AAA-ish text where practical, AA minimum for chrome. Green-family moss kept
+ * only where button contrast still passes.
+ */
+const highContrastLight: ZenPalette = {
+  bgDefault: "#FFFFFF",
+  bgPaper: "#FFFFFF",
+  ink: "#0A0A0A",
+  inkSoft: "#1F1F1F",
+  mist: "#D0D0D0",
+  tooltipBg: "#0A0A0A",
+  moss: "#0B5C2E",
+  mossLight: "#147A3F",
+  mossDark: "#074422",
+  clay: "#2A2A2A",
+  clayLight: "#4A4A4A",
+  clayDark: "#141414",
+  rust: "#8B1E1E",
+  ochre: "#7A5A00",
+  dusk: "#1A3A6E",
+  contrastText: "#FFFFFF",
+};
+
+const highContrastDark: ZenPalette = {
+  bgDefault: "#0A0A0A",
+  bgPaper: "#121212",
+  ink: "#FFFFFF",
+  inkSoft: "#E8E8E8",
+  mist: "rgba(255, 255, 255, 0.28)",
+  tooltipBg: "#1A1A1A",
+  moss: "#3DDC84",
+  mossLight: "#6EE7A8",
+  mossDark: "#22B86A",
+  clay: "#E0E0E0",
+  clayLight: "#F5F5F5",
+  clayDark: "#BDBDBD",
+  rust: "#FF8A80",
+  ochre: "#FFD54F",
+  dusk: "#90CAF9",
+  contrastText: "#0A0A0A",
+};
+
+type BuildZenThemeOptions = {
+  displayHeading: boolean;
+  headingFontFamily: string;
+  /** Stronger focus rings for the High Contrast override. */
+  strongFocus?: boolean;
+};
+
+function buildZenMuiTheme(
   mode: ColorMode,
-  palette: PaletteId = "natural",
+  zen: ZenPalette,
+  options: BuildZenThemeOptions,
 ): Theme {
-  const id = normalizePaletteId(palette);
-  const pair = tokensByPalette[id];
-  const zen = mode === "dark" ? pair.dark : pair.light;
-  const headingFontFamily = headingFontFamilyFor(id);
-  const displayHeading = usesDisplayHeading(id);
+  const { displayHeading, headingFontFamily, strongFocus = false } = options;
+  const focusRing = strongFocus
+    ? {
+        "&.Mui-focusVisible": {
+          outline: `3px solid ${zen.moss}`,
+          outlineOffset: 2,
+        },
+      }
+    : {};
 
   return createTheme({
     palette: {
@@ -1222,6 +1283,9 @@ export function createZenTheme(
       MuiButtonBase: {
         defaultProps: {
           disableRipple: true,
+        },
+        styleOverrides: {
+          root: focusRing,
         },
       },
       MuiButton: {
@@ -1304,6 +1368,32 @@ export function createZenTheme(
         },
       },
     },
+  });
+}
+
+export function createZenTheme(
+  mode: ColorMode,
+  palette: PaletteId = "natural",
+): Theme {
+  const id = normalizePaletteId(palette);
+  const pair = tokensByPalette[id];
+  const zen = mode === "dark" ? pair.dark : pair.light;
+  return buildZenMuiTheme(mode, zen, {
+    displayHeading: usesDisplayHeading(id),
+    headingFontFamily: headingFontFamilyFor(id),
+  });
+}
+
+/**
+ * Dedicated High Contrast override theme (018). Ignores garden PaletteId.
+ * Light + dark variants both target WCAG AA (AAA-ish text where practical).
+ */
+export function createHighContrastTheme(mode: ColorMode): Theme {
+  const zen = mode === "dark" ? highContrastDark : highContrastLight;
+  return buildZenMuiTheme(mode, zen, {
+    displayHeading: false,
+    headingFontFamily: headingFontFamilyFor("natural"),
+    strongFocus: true,
   });
 }
 

@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import Popover from "@mui/material/Popover";
@@ -18,7 +19,11 @@ import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
-import { useColorMode, useGardenPalette } from "@/theme/ThemeRegistry";
+import {
+  useColorMode,
+  useGardenPalette,
+  useHighContrast,
+} from "@/theme/ThemeRegistry";
 import {
   normalizePaletteId,
   PALETTE_OPTIONS,
@@ -112,13 +117,8 @@ function OptionsSection({
 }
 
 /**
- * Calm Options Popover — single home for Palette, Appearance, Hyper Minimal,
- * and Dev. Palette is a dropdown so themes stay scannable, not crowded.
- * Keeps the main header free of settings chrome.
- *
- * Radius: uses theme.shape.borderRadius (16) — one step softer than cards
- * (24px), not the previous `borderRadius: 3` (= 48px) which felt bubbly
- * for a compact settings surface.
+ * Calm Options Popover — Palette, Appearance, Contrast, Density, and Dev.
+ * Palette is a dropdown so themes stay scannable, not crowded.
  */
 export default function OptionsPanel({
   devMode,
@@ -127,9 +127,11 @@ export default function OptionsPanel({
   const { mode, setColorMode } = useColorMode();
   const { palette, setPalette } = useGardenPalette();
   const [hyperMinimal, setHyperMinimal] = useHyperMinimal();
+  const { highContrast, setHighContrast } = useHighContrast();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const titleId = useId();
   const paletteLabelId = useId();
+  const paletteHintId = useId();
   const open = Boolean(anchorEl);
   const reduceMotion = useReducedMotion();
 
@@ -194,12 +196,14 @@ export default function OptionsPanel({
           </Typography>
 
           <OptionsSection label="Palette">
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth size="small" disabled={highContrast}>
               <Select
                 value={palette}
                 onChange={handlePaletteChange}
                 labelId={paletteLabelId}
                 aria-label="Palette"
+                aria-describedby={highContrast ? paletteHintId : undefined}
+                disabled={highContrast}
                 MenuProps={{
                   transitionDuration: reduceMotion ? 0 : undefined,
                   slotProps: {
@@ -252,6 +256,11 @@ export default function OptionsPanel({
                   </MenuItem>
                 ))}
               </Select>
+              {highContrast ? (
+                <FormHelperText id={paletteHintId} sx={{ mx: 0, mt: 0.75 }}>
+                  Using high contrast
+                </FormHelperText>
+              ) : null}
             </FormControl>
           </OptionsSection>
 
@@ -276,6 +285,26 @@ export default function OptionsPanel({
                 Dark
               </ToggleButton>
             </ToggleButtonGroup>
+          </OptionsSection>
+
+          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+          <OptionsSection label="Contrast">
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={highContrast}
+                  onChange={(event) => setHighContrast(event.target.checked)}
+                  slotProps={{ input: { "aria-label": "High Contrast" } }}
+                />
+              }
+              label="High Contrast"
+              slotProps={{
+                typography: { variant: "body2", color: "text.secondary" },
+              }}
+              sx={{ ml: 0, mr: 0 }}
+            />
           </OptionsSection>
 
           <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
