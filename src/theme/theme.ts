@@ -7,14 +7,24 @@ import {
 
 export type ColorMode = "light" | "dark";
 
-/** Visual garden palette — orthogonal to light/dark appearance. */
+/**
+ * Visual garden palette — orthogonal to light/dark appearance.
+ *
+ * Primary (`moss`) stays in the green family so ground frogs + canopy leaves
+ * read as a living pile (015 split). Personality lives in surfaces, atmosphere,
+ * and non-green accents (clay / rust / ochre / dusk) for canopy frog-fruit.
+ */
 export type PaletteId =
   | "natural"
   | "vibrant"
   | "dusk"
   | "guestbook"
   | "sunlily"
-  | "tidepool";
+  | "tidepool"
+  | "aurora"
+  | "disco"
+  | "floss"
+  | "nebula";
 
 export const PALETTE_IDS: readonly PaletteId[] = [
   "natural",
@@ -23,18 +33,52 @@ export const PALETTE_IDS: readonly PaletteId[] = [
   "guestbook",
   "sunlily",
   "tidepool",
+  "aurora",
+  "disco",
+  "floss",
+  "nebula",
 ] as const;
+
+/** Display labels for Options + a11y — single source of truth. */
+export const PALETTE_OPTIONS: readonly { id: PaletteId; label: string }[] = [
+  { id: "natural", label: "Natural" },
+  { id: "vibrant", label: "Vibrant" },
+  { id: "dusk", label: "Dusk" },
+  { id: "guestbook", label: "Guestbook" },
+  { id: "sunlily", label: "Sunlily" },
+  { id: "tidepool", label: "Tide Pool" },
+  { id: "aurora", label: "Aurora" },
+  { id: "disco", label: "Disco" },
+  { id: "floss", label: "Cotton Floss" },
+  { id: "nebula", label: "Nebula" },
+] as const;
+
+/**
+ * Tiny preview dots for the Options dropdown (light-mode accent samples).
+ * Order: moss-ish · warm accent · cool accent.
+ */
+export const PALETTE_PREVIEWS: Record<
+  PaletteId,
+  readonly [string, string, string]
+> = {
+  natural: ["#6B8F71", "#B98C5B", "#7A93A6"],
+  vibrant: ["#16A34A", "#E11D6B", "#0E9BB8"],
+  dusk: ["#5F8F6E", "#C4A35A", "#7B6BA8"],
+  guestbook: ["#157A2C", "#C41E6A", "#0E9BB8"],
+  sunlily: ["#6E8A42", "#C24E32", "#E8895A"],
+  tidepool: ["#1A7A70", "#C45A5A", "#3ECFBE"],
+  aurora: ["#2DB86A", "#E040A0", "#5B6CFF"],
+  disco: ["#3CCF5A", "#FF2D95", "#FFD84A"],
+  floss: ["#5ECF9A", "#FF6BB5", "#6BB8FF"],
+  nebula: ["#4ADE80", "#C084FC", "#F472B6"],
+};
 
 export function normalizePaletteId(value: unknown): PaletteId {
   if (
-    value === "natural" ||
-    value === "vibrant" ||
-    value === "dusk" ||
-    value === "guestbook" ||
-    value === "sunlily" ||
-    value === "tidepool"
+    typeof value === "string" &&
+    (PALETTE_IDS as readonly string[]).includes(value)
   ) {
-    return value;
+    return value as PaletteId;
   }
   return "natural";
 }
@@ -106,7 +150,6 @@ const naturalDark: ZenPalette = {
  * Opt-in only; Natural remains default (Principle V compatibility).
  */
 const vibrantLight: ZenPalette = {
-  // Slightly warmer lilac base — atmosphere wash supplies the psychedelic kick.
   bgDefault: "#F3EEFF",
   bgPaper: "#FFFBFF",
   ink: "#231C33",
@@ -126,7 +169,6 @@ const vibrantLight: ZenPalette = {
 };
 
 const vibrantDark: ZenPalette = {
-  // Deeper violet night — richer canvas for neon wash layers.
   bgDefault: "#120E1F",
   bgPaper: "#1F1830",
   ink: "#F2EDFB",
@@ -230,7 +272,8 @@ const guestbookDark: ZenPalette = {
 };
 
 /**
- * Sunlily — golden-hour / sunset lily: apricot, coral, soft gold.
+ * Sunlily — golden-hour / sunset lily. Warm olive moss (ground frogs stay green);
+ * apricot / coral / soft gold accents for fruit + chrome.
  */
 const sunlilyLight: ZenPalette = {
   bgDefault: "#FFF4E8",
@@ -239,13 +282,12 @@ const sunlilyLight: ZenPalette = {
   inkSoft: "#8A6550",
   mist: "#F0DDD0",
   tooltipBg: "#3A2418",
-  moss: "#C24E32",
-  mossLight: "#E07055",
-  mossDark: "#9A3A22",
-  // Gold secondary kept deep enough for white contrastText (WCAG AA).
-  clay: "#9A6E20",
-  clayLight: "#C4923A",
-  clayDark: "#7A5618",
+  moss: "#6E8A42",
+  mossLight: "#92B05A",
+  mossDark: "#516832",
+  clay: "#C24E32",
+  clayLight: "#E07055",
+  clayDark: "#9A3A22",
   rust: "#B84040",
   ochre: "#C4923A",
   dusk: "#E8895A",
@@ -259,12 +301,12 @@ const sunlilyDark: ZenPalette = {
   inkSoft: "#D4B098",
   mist: "rgba(232, 160, 90, 0.14)",
   tooltipBg: "#403028",
-  moss: "#E8895A",
-  mossLight: "#F0A878",
-  mossDark: "#C86840",
-  clay: "#E8C06A",
-  clayLight: "#F0D498",
-  clayDark: "#C09840",
+  moss: "#A8C46A",
+  mossLight: "#C4DC8A",
+  mossDark: "#7A9A48",
+  clay: "#E8895A",
+  clayLight: "#F0A878",
+  clayDark: "#C86840",
   rust: "#F08070",
   ochre: "#F0C060",
   dusk: "#F0A060",
@@ -284,7 +326,6 @@ const tidepoolLight: ZenPalette = {
   moss: "#1A7A70",
   mossLight: "#3AAFA0",
   mossDark: "#125A54",
-  // Cool teal secondary — AA against white contrastText.
   clay: "#247A90",
   clayLight: "#4A9EB0",
   clayDark: "#1A5A6A",
@@ -313,20 +354,196 @@ const tidepoolDark: ZenPalette = {
   contrastText: "#0E2428",
 };
 
-const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> = {
-  natural: { light: naturalLight, dark: naturalDark },
-  vibrant: { light: vibrantLight, dark: vibrantDark },
-  dusk: { light: duskLight, dark: duskDark },
-  guestbook: { light: guestbookLight, dark: guestbookDark },
-  sunlily: { light: sunlilyLight, dark: sunlilyDark },
-  tidepool: { light: tidepoolLight, dark: tidepoolDark },
+/**
+ * Aurora — northern-lights garden: electric moss, magenta + indigo sky fruit.
+ */
+const auroraLight: ZenPalette = {
+  bgDefault: "#EEF6FF",
+  bgPaper: "#F7FBFF",
+  ink: "#1A2048",
+  inkSoft: "#5A6288",
+  mist: "#D4E4F8",
+  tooltipBg: "#1A2048",
+  moss: "#1E9A52",
+  mossLight: "#3CCF78",
+  mossDark: "#157A3E",
+  clay: "#C02888",
+  clayLight: "#E050A8",
+  clayDark: "#9A1A68",
+  rust: "#E04070",
+  ochre: "#E8A830",
+  dusk: "#4A5CE8",
+  contrastText: "#FFFFFF",
 };
+
+const auroraDark: ZenPalette = {
+  bgDefault: "#0A1028",
+  bgPaper: "#121A38",
+  ink: "#E8F0FF",
+  inkSoft: "#A0A8D4",
+  mist: "rgba(90, 108, 255, 0.16)",
+  tooltipBg: "#1C2850",
+  moss: "#4ADE80",
+  mossLight: "#86EFAC",
+  mossDark: "#22C55E",
+  clay: "#F472B6",
+  clayLight: "#F9A8D4",
+  clayDark: "#DB2777",
+  rust: "#FB7185",
+  ochre: "#FBBF24",
+  dusk: "#818CF8",
+  contrastText: "#0A1028",
+};
+
+/**
+ * Disco — mirror-ball pond: hot pink, gold, electric lime — pure party frogs.
+ */
+const discoLight: ZenPalette = {
+  bgDefault: "#FFF0F8",
+  bgPaper: "#FFF8FC",
+  ink: "#2A1030",
+  inkSoft: "#7A4A70",
+  mist: "#F0D8E8",
+  tooltipBg: "#2A1030",
+  moss: "#1A9A38",
+  mossLight: "#3CCF5A",
+  mossDark: "#127A28",
+  clay: "#D01878",
+  clayLight: "#F0409A",
+  clayDark: "#A01058",
+  rust: "#E02850",
+  ochre: "#D4A020",
+  dusk: "#7A30C8",
+  contrastText: "#FFFFFF",
+};
+
+const discoDark: ZenPalette = {
+  bgDefault: "#1A0A1E",
+  bgPaper: "#2A1230",
+  ink: "#FFF0FA",
+  inkSoft: "#D4A0C8",
+  mist: "rgba(255, 45, 149, 0.14)",
+  tooltipBg: "#3A1A48",
+  moss: "#4ADE80",
+  mossLight: "#86EFAC",
+  mossDark: "#22C55E",
+  clay: "#FF2D95",
+  clayLight: "#FF6BB5",
+  clayDark: "#E01070",
+  rust: "#FF4D6D",
+  ochre: "#FFD84A",
+  dusk: "#C084FC",
+  contrastText: "#1A0A1E",
+};
+
+/**
+ * Cotton Floss — sugar-rush pastels: bubblegum pink, sky blue, mint joy.
+ */
+const flossLight: ZenPalette = {
+  bgDefault: "#FFF0F6",
+  bgPaper: "#FFFAFC",
+  ink: "#3A2040",
+  inkSoft: "#8A6080",
+  mist: "#F5DCE8",
+  tooltipBg: "#3A2040",
+  moss: "#2AAA78",
+  mossLight: "#5ECF9A",
+  mossDark: "#1E8A5E",
+  clay: "#E04098",
+  clayLight: "#FF6BB5",
+  clayDark: "#B02878",
+  rust: "#E85870",
+  ochre: "#E8B040",
+  dusk: "#4A98E8",
+  contrastText: "#FFFFFF",
+};
+
+const flossDark: ZenPalette = {
+  bgDefault: "#221028",
+  bgPaper: "#321838",
+  ink: "#FFF0F8",
+  inkSoft: "#D4A8C8",
+  mist: "rgba(255, 107, 181, 0.14)",
+  tooltipBg: "#402048",
+  moss: "#5ECF9A",
+  mossLight: "#8AE8BC",
+  mossDark: "#3AAA78",
+  clay: "#FF6BB5",
+  clayLight: "#FF9AD0",
+  clayDark: "#E04098",
+  rust: "#FF8A9A",
+  ochre: "#FFD06A",
+  dusk: "#6BB8FF",
+  contrastText: "#221028",
+};
+
+/**
+ * Nebula — cosmic garden: deep space violet, starfruit pink, nova gold.
+ */
+const nebulaLight: ZenPalette = {
+  bgDefault: "#F4EEFF",
+  bgPaper: "#FBF0FF",
+  ink: "#241848",
+  inkSoft: "#6A5888",
+  mist: "#E4D8F8",
+  tooltipBg: "#241848",
+  moss: "#2A9A58",
+  mossLight: "#4ADE80",
+  mossDark: "#1E7A44",
+  clay: "#8B3AD4",
+  clayLight: "#A855F7",
+  clayDark: "#6B21A8",
+  rust: "#DB2777",
+  ochre: "#D97706",
+  dusk: "#7C3AED",
+  contrastText: "#FFFFFF",
+};
+
+const nebulaDark: ZenPalette = {
+  bgDefault: "#100818",
+  bgPaper: "#1A1028",
+  ink: "#F5EDFF",
+  inkSoft: "#B8A0D4",
+  mist: "rgba(192, 132, 252, 0.16)",
+  tooltipBg: "#2A1840",
+  moss: "#4ADE80",
+  mossLight: "#86EFAC",
+  mossDark: "#22C55E",
+  clay: "#C084FC",
+  clayLight: "#D8B4FE",
+  clayDark: "#A855F7",
+  rust: "#F472B6",
+  ochre: "#FBBF24",
+  dusk: "#A78BFA",
+  contrastText: "#100818",
+};
+
+const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> =
+  {
+    natural: { light: naturalLight, dark: naturalDark },
+    vibrant: { light: vibrantLight, dark: vibrantDark },
+    dusk: { light: duskLight, dark: duskDark },
+    guestbook: { light: guestbookLight, dark: guestbookDark },
+    sunlily: { light: sunlilyLight, dark: sunlilyDark },
+    tidepool: { light: tidepoolLight, dark: tidepoolDark },
+    aurora: { light: auroraLight, dark: auroraDark },
+    disco: { light: discoLight, dark: discoDark },
+    floss: { light: flossLight, dark: flossDark },
+    nebula: { light: nebulaLight, dark: nebulaDark },
+  };
 
 const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial, sans-serif`;
 
-/** Playful display headings for Vibrant + Guestbook; calm Zen face otherwise. */
+/** Playful display headings for high-energy opt-in palettes. */
 function usesDisplayHeading(palette: PaletteId): boolean {
-  return palette === "vibrant" || palette === "guestbook";
+  return (
+    palette === "vibrant" ||
+    palette === "guestbook" ||
+    palette === "aurora" ||
+    palette === "disco" ||
+    palette === "floss" ||
+    palette === "nebula"
+  );
 }
 
 function headingFontFamilyFor(palette: PaletteId): string {
@@ -334,6 +551,40 @@ function headingFontFamilyFor(palette: PaletteId): string {
     ? zenHeadingFontVibrant
     : zenHeadingFontNatural;
   return `${heading.style.fontFamily}, ${bodyFontFamily}`;
+}
+
+/**
+ * Joyful gradient wordmark for opt-in palettes.
+ * Natural + Dusk stay solid primary (calm brand baseline).
+ */
+export function gardenWordmarkGradient(
+  palette: PaletteId,
+  themePalette: Theme["palette"],
+): string | null {
+  const { primary, secondary, info, error, warning } = themePalette;
+  switch (palette) {
+    case "natural":
+    case "dusk":
+      return null;
+    case "guestbook":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 45%, ${secondary.main} 100%)`;
+    case "vibrant":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 50%, #B983FF 100%)`;
+    case "sunlily":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 45%, ${secondary.main} 100%)`;
+    case "tidepool":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 50%, ${secondary.main} 100%)`;
+    case "aurora":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 40%, ${secondary.main} 100%)`;
+    case "disco":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 35%, ${secondary.main} 70%, ${info.main} 100%)`;
+    case "floss":
+      return `linear-gradient(100deg, ${secondary.main} 0%, ${info.main} 50%, ${primary.main} 100%)`;
+    case "nebula":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 40%, ${error.main} 100%)`;
+    default:
+      return null;
+  }
 }
 
 /** A soft, low-opacity shadow scale — never a hard drop shadow. */
@@ -490,6 +741,22 @@ export function createZenTheme(
           tooltip: {
             backgroundColor: zen.tooltipBg,
             borderRadius: 10,
+          },
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+          },
+        },
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            borderRadius: 10,
+            marginInline: 6,
+            marginBlock: 2,
           },
         },
       },

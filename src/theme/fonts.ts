@@ -3,7 +3,8 @@ import { Bricolage_Grotesque, Manrope, Zen_Maru_Gothic } from "next/font/google"
 /**
  * Body: Manrope — clean, modern, highly legible (all palettes).
  * Calm headings (Natural / Dusk / Sunlily / Tide Pool): Zen Maru Gothic.
- * Display headings (Vibrant / Guestbook): Bricolage Grotesque.
+ * Display headings (Vibrant / Guestbook / Aurora / Disco / Cotton Floss /
+ * Nebula): Bricolage Grotesque.
  *
  * Fonts are referenced via `.style.fontFamily` in `createZenTheme`; importing
  * this module (through the theme) registers the Next.js `@font-face` rules.

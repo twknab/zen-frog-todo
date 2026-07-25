@@ -1,6 +1,6 @@
 # UI Contract: More Garden Palettes (extends / supersedes 014)
 
-> **Authority**: For six-palette behavior and Options Palette layout, this contract supersedes
+> **Authority**: For multi-palette behavior and Options Palette layout, this contract supersedes
 > `specs/014-garden-palette/contracts/garden-palette-ui-contract.md` where they conflict.
 > 014 remains the historical contract for the original three-palette delivery.
 
@@ -10,7 +10,7 @@
 
 | Field | Type | Notes |
 |---|---|---|
-| `palette` | `PaletteId` | `"natural" \| "vibrant" \| "dusk" \| "guestbook" \| "sunlily" \| "tidepool"` |
+| `palette` | `PaletteId` | See `PALETTE_IDS` in `src/theme/theme.ts` (ten ids) |
 | `setPalette` | `(next: PaletteId) => void` | Persists immediately via normalize |
 
 ### `normalizePaletteId(value: unknown): PaletteId`
@@ -24,8 +24,9 @@
 createZenTheme(mode: ColorMode, palette: PaletteId = "natural"): Theme
 ```
 
-- Selects token set for `palette` × `mode` (six palettes × two appearances).
-- Heading face: Bricolage for `vibrant` and `guestbook`; Zen Maru Gothic otherwise.
+- Selects token set for `palette` × `mode` (ten palettes × two appearances).
+- **Primary (`moss`) MUST stay green-family** so ground frogs + canopy leaves read as a living pile (015 frog/fruit split). Non-green personality lives in secondary / error / warning / info (canopy frog-fruit).
+- Heading face: Bricolage for `vibrant`, `guestbook`, `aurora`, `disco`, `floss`, `nebula`; Zen Maru Gothic otherwise.
 - Default palette argument `"natural"`.
 
 ## Atmosphere
@@ -34,18 +35,19 @@ createZenTheme(mode: ColorMode, palette: PaletteId = "natural"): Theme
 getGardenAtmosphere(palette: PaletteId, mode: ColorMode): GardenAtmosphere
 ```
 
-- MUST define distinct wash/mist for `guestbook`, `sunlily`, and `tidepool` (no silent Natural fallthrough for those ids).
+- MUST define distinct wash/mist for every non-Natural palette (no silent Natural fallthrough for known ids).
 
 ## OptionsPanel — Palette control
 
 | Requirement | Detail |
 |---|---|
-| Options count | Exactly six: Natural, Vibrant, Dusk, Guestbook, Sunlily, Tide Pool |
+| Options count | Exactly ten: Natural, Vibrant, Dusk, Guestbook, Sunlily, Tide Pool, Aurora, Disco, Cotton Floss, Nebula |
 | Selection | Exclusive; only one active |
-| Layout | Wrap/grid — target **2×3** on typical phone widths; MUST NOT be a single cramped row of six |
-| Labels | Visible text + `aria-label` matching display names |
-| Group | `aria-label="Palette"` |
-| Stay open | Changing palette MUST NOT close the Popover |
+| Control | **Dropdown `Select`** (not a ToggleButton grid) with color swatch previews |
+| Labels | Visible text + accessible names matching display names |
+| Group | `aria-label="Palette"` on the Select |
+| Stay open | Changing palette MUST NOT close the Options Popover |
+| Menu | Scrollable if needed; MUST NOT overflow the viewport awkwardly on narrow phones |
 
 Appearance (Light/Dark) and Dev controls unchanged in behavior.
 
@@ -53,16 +55,14 @@ Appearance (Light/Dark) and Dev controls unchanged in behavior.
 
 | Palette | Treatment |
 |---|---|
-| `natural`, `dusk`, `sunlily`, `tidepool` | Solid color (`primary.main`) |
-| `vibrant`, `guestbook` | Gradient wordmark allowed |
-
-Guestbook gradient intent: lime/spring → cyan → magenta family (exact stops implementer’s choice).
+| `natural`, `dusk` | Solid color (`primary.main`) |
+| All other palettes | Joyful gradient wordmark via `gardenWordmarkGradient` |
 
 ## Persistence keys
 
 | Key | Value |
 |---|---|
-| `frog-garden:palette-v1` | one of six ids above |
+| `frog-garden:palette-v1` | one of ten ids above |
 | `frog-garden:color-mode-v1` | `light` \| `dark` (unchanged) |
 | `frog-garden:dev-mode-v1` | boolean (unchanged) |
 
