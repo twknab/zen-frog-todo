@@ -40,7 +40,9 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+[Gates determined based on constitution file — include Core Principles I–VII
+and, when the feature touches day/night, wilt, work hours, or garden summaries,
+the binding **Product Model: Day Garden & Night Camp** section.]
 
 ## Project Structure
 

@@ -42,6 +42,11 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useDailyRollover } from "@/lib/dayArchive";
 import { useFocusStats } from "@/lib/focusStats";
+import {
+  normalizeRealmOverride,
+  resolveRealm,
+  type RealmOverride,
+} from "@/lib/gardenRealm";
 import { useNotepad } from "@/lib/notepad";
 import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
@@ -81,6 +86,16 @@ export default function Home() {
     useBonsai();
   const [now, setNow] = useState<Date>(EPOCH);
   const [devMode, setDevMode] = usePersistentState("frog-garden:dev-mode-v1", false);
+  const [realmOverride, setRealmOverride] = usePersistentState<RealmOverride>(
+    "frog-garden:realm-override-v1",
+    null,
+  );
+  const safeRealmOverride = normalizeRealmOverride(realmOverride);
+  const gardenRealm = resolveRealm({
+    now,
+    override: safeRealmOverride,
+    devToolsEnabled: devMode,
+  });
   const { resetSand } = useSandReset();
   const [sandSpin, setSandSpin] = useState(0);
   const reduceMotion = useReducedMotion();
@@ -111,7 +126,7 @@ export default function Home() {
     // a legitimate external-sync, not a cascading render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
-  }, [bonsaiEvents, idleOffsetHours]);
+  }, [bonsaiEvents, idleOffsetHours, devMode, safeRealmOverride]);
 
   // The bonsai is derived from today's growth events minus active-window idle
   // wilt, plus any persisted simulated-idle offset (applied always — see
@@ -373,34 +388,80 @@ export default function Home() {
             />
             {devMode && (
               <Stack
-                direction="row"
                 spacing={1}
-                sx={{ mt: 1.5, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}
+                sx={{ mt: 1.5, alignItems: "center", width: "100%" }}
               >
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="inherit"
-                  onClick={devCompleteFocusSession}
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}
                 >
-                  Complete focus session
-                </Button>
-                <Button
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    onClick={devCompleteFocusSession}
+                  >
+                    Complete focus session
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    onClick={() => addIdleHours(1)}
+                  >
+                    Simulate +1h idle
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    onClick={resetBonsai}
+                  >
+                    Reset
+                  </Button>
+                </Stack>
+                <ToggleButtonGroup
                   size="small"
-                  variant="outlined"
-                  color="inherit"
-                  onClick={() => addIdleHours(1)}
+                  exclusive
+                  value={safeRealmOverride ?? "clock"}
+                  aria-label="Dev garden realm"
+                  onChange={(_, next: "clock" | "day" | "night" | null) => {
+                    if (next == null) return;
+                    setRealmOverride(next === "clock" ? null : next);
+                  }}
+                  sx={{
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    "& .MuiToggleButton-root": {
+                      px: 1.25,
+                      py: 0.5,
+                      typography: "caption",
+                      textTransform: "none",
+                    },
+                  }}
                 >
-                  Simulate +1h idle
-                </Button>
-                <Button
-                  size="small"
-                  variant="text"
-                  color="inherit"
-                  onClick={resetBonsai}
+                  <ToggleButton value="clock" aria-label="Follow clock">
+                    Follow clock
+                  </ToggleButton>
+                  <ToggleButton value="day" aria-label="Force day garden">
+                    Force day
+                  </ToggleButton>
+                  <ToggleButton value="night" aria-label="Force night camp">
+                    Force night
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ textAlign: "center" }}
                 >
-                  Reset
-                </Button>
+                  {safeRealmOverride
+                    ? `Dev: ${gardenRealm === "night" ? "Night Camp" : "Day Garden"} (forced)`
+                    : `Realm: ${gardenRealm === "night" ? "Night Camp" : "Day Garden"} (clock)`}
+                  {" · "}
+                  Night scenes wire up with 017 — override is ready for testing.
+                </Typography>
               </Stack>
             )}
           </Stack>
