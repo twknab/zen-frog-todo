@@ -12,6 +12,9 @@
  * legible at small sizes (confirmed by rendering candidates at true 16px) —
  * see page.tsx/TaskListCard.tsx, which render the equivalent `<FaFrog />`.
  *
+ * Also used for canopy frog-fruit in BonsaiTree (specs/015) at a smaller
+ * scale with theme-token fills — one brand mark for ground friends + fruit.
+ *
  * Path data: Font Awesome 6 "Frog" (https://fontawesome.com/icons/frog),
  * CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/ — via react-icons.
  */

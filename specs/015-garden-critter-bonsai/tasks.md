@@ -20,8 +20,8 @@
 
 **Purpose**: Confirm active feature + read Next docs if touching App Router (this feature is mostly client SVG)
 
-- [ ] T001 Confirm `.specify/feature.json` points at `specs/015-garden-critter-bonsai` and skim `node_modules/next/dist/docs/` only if App Router files change
-- [ ] T002 [P] Skim prior art: `specs/006-growing-bonsai/`, `specs/008-frog-friends/contracts/bonsai-render-contract.md`, current `src/components/BonsaiTree.tsx` + `src/lib/bonsai.ts` + `src/lib/frogIcon.ts`
+- [x] T001 Confirm `.specify/feature.json` points at `specs/015-garden-critter-bonsai` and skim `node_modules/next/dist/docs/` only if App Router files change
+- [x] T002 [P] Skim prior art: `specs/006-growing-bonsai/`, `specs/008-frog-friends/contracts/bonsai-render-contract.md`, current `src/components/BonsaiTree.tsx` + `src/lib/bonsai.ts` + `src/lib/frogIcon.ts`
 
 ---
 
@@ -31,8 +31,8 @@
 
 **⚠️ CRITICAL**: US1 placement depends on MAX_FROGS
 
-- [ ] T003 Raise `MAX_FROGS` from 20 to **28** in `src/lib/bonsai.ts`; update nearby comment; keep reward weights unchanged
-- [ ] T004 [P] Document dial-back knobs comment block near placement/scale constants in `src/components/BonsaiTree.tsx` (or link to contract)
+- [x] T003 Raise `MAX_FROGS` from 20 to **28** in `src/lib/bonsai.ts`; update nearby comment; keep reward weights unchanged
+- [x] T004 [P] Document dial-back knobs comment block near placement/scale constants in `src/components/BonsaiTree.tsx` (or link to contract)
 
 **Checkpoint**: Cap raised; ready for visual stories
 
@@ -46,9 +46,9 @@
 
 ### Implementation
 
-- [ ] T005 [US1] Regenerate `FROG_POSITIONS` in `src/components/BonsaiTree.tsx` for `MAX_FROGS=28` with wider x-band, slightly deeper y-band, comedy scale range (~1.7–2.9); keep seeded helper; preserve slot 0 baseline spirit
-- [ ] T006 [US1] Preserve sticker-halo stroke / `paintOrder` / `vectorEffect` on ground frog paths; tweak halo strokeWidth only if needed for larger scales
-- [ ] T007 [US1] Manually verify density at cap is calm; if sludge, dial scale/band before continuing
+- [x] T005 [US1] Regenerate `FROG_POSITIONS` in `src/components/BonsaiTree.tsx` for `MAX_FROGS=28` with wider x-band, slightly deeper y-band, comedy scale range (~1.7–2.9); keep seeded helper; preserve slot 0 baseline spirit
+- [x] T006 [US1] Preserve sticker-halo stroke / `paintOrder` / `vectorEffect` on ground frog paths; tweak halo strokeWidth only if needed for larger scales
+- [x] T007 [US1] Manually verify density at cap is calm; if sludge, dial scale/band before continuing
 
 **Checkpoint**: US1 visually lands without fruit/tree changes required
 
@@ -62,10 +62,10 @@
 
 ### Implementation
 
-- [ ] T008 [US2] Increase `treeScale` base/delta in `src/components/BonsaiTree.tsx` (~15–25% mature presence)
-- [ ] T009 [US2] Optional small canopy center / composition nudge if scale alone feels cramped; keep `viewBox` unless clearly better
-- [ ] T010 [US2] Enrich leaves in `src/components/BonsaiTree.tsx`: oval/leaf-ish ellipses with slight rotation + existing three-tone fills (FR-006; was underscoped under US4)
-- [ ] T010b [US2] Confirm shrub stage still proportionate; Grove card sizes still look fine
+- [x] T008 [US2] Increase `treeScale` base/delta in `src/components/BonsaiTree.tsx` (~15–25% mature presence)
+- [x] T009 [US2] Optional small canopy center / composition nudge if scale alone feels cramped; keep `viewBox` unless clearly better
+- [x] T010 [US2] Enrich leaves in `src/components/BonsaiTree.tsx`: oval/leaf-ish ellipses with slight rotation + existing three-tone fills (FR-006; was underscoped under US4)
+- [x] T010b [US2] Confirm shrub stage still proportionate; Grove card sizes still look fine
 
 **Checkpoint**: Tree presence + richer leaves improved
 
@@ -79,10 +79,10 @@
 
 ### Implementation
 
-- [ ] T011 [US3] Replace blossom `motion.circle` rendering in `src/components/BonsaiTree.tsx` with small scaled frog paths using `FROG_ICON_PATH` at canopy slots (`BLOSSOM_SLOTS` / `blossoms` count)
-- [ ] T012 [US3] Theme-token color rotation for fruit fills (primary/secondary/error/success accents); fun not garish
-- [ ] T013 [US3] Move frog-fruit into critter (non-wilt) layer alongside ground frogs/squirrel so fruit stays cheerful when `isWilting`
-- [ ] T014 [US3] Keep decorative/a11y: no new interactive targets; parent `role="img"` unchanged; reduced-motion `appear` reused
+- [x] T011 [US3] Replace blossom `motion.circle` rendering in `src/components/BonsaiTree.tsx` with small scaled frog paths using `FROG_ICON_PATH` at canopy slots (`BLOSSOM_SLOTS` / `blossoms` count)
+- [x] T012 [US3] Theme-token color rotation for fruit fills (primary/secondary/error/success accents); fun not garish
+- [x] T013 [US3] Move frog-fruit into critter (non-wilt) layer alongside ground frogs/squirrel so fruit stays cheerful when `isWilting`
+- [x] T014 [US3] Keep decorative/a11y: no new interactive targets; parent `role="img"` unchanged; reduced-motion `appear` reused
 
 **Checkpoint**: Pink dots gone; frog-fruit at blossom pacing
 
@@ -96,8 +96,8 @@
 
 ### Implementation
 
-- [ ] T015 [US4] Polish critter transforms/halo/scale consistency in `src/components/BonsaiTree.tsx` (+ comments in `src/lib/frogIcon.ts` if helpful)
-- [ ] T016 [US4] Confirm no new dependency added to `package.json` (leaf enrichment lives in T010 / US2)
+- [x] T015 [US4] Polish critter transforms/halo/scale consistency in `src/components/BonsaiTree.tsx` (+ comments in `src/lib/frogIcon.ts` if helpful)
+- [x] T016 [US4] Confirm no new dependency added to `package.json` (leaf enrichment lives in T010 / US2)
 
 **Checkpoint**: Art cohesion + richer leaves
 
@@ -130,7 +130,7 @@ Phase 7 Polish
 
 **Story completion order**: US1 → US2 → US3 → US4 (US2/US3 both P1; implement tree before fruit so canopy scale is settled).
 
-**Parallel opportunities**: T002 with T001; T004 with T003; T018/T019 in polish; US4 leaf work (T016) can start after T008.
+**Parallel opportunities**: T002 with T001; T004 with T003; T018/T019 in polish; US4 cohesion (T015) can start after US1.
 
 ## Implementation Strategy
 

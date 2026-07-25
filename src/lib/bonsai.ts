@@ -42,7 +42,8 @@ export const ACTIVE_END = 17; // wilt-active window end (local hour)
 export const TASK_FROGS = 1; // frogs per completed regular task
 export const SESSION_FROGS = 2; // frogs per focus session
 export const FROG_FROGS = 3; // frogs per completing the day's frog
-export const MAX_FROGS = 20; // full crowd, including the baseline (bounded)
+// Raised in specs/015-garden-critter-bonsai (dial-back knob: try 24 if dense).
+export const MAX_FROGS = 28; // full crowd, including the baseline (bounded)
 export const BASELINE_FROGS = 1; // the lone frog always present (index 0)
 export const SQUIRREL_MIN = 6; // min crowd before a squirrel may appear
 // -------------------------------------------------------------------------
