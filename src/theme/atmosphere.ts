@@ -594,3 +594,26 @@ export function getGardenAtmosphere(
   const pairForPalette = atmospheres[id] ?? atmospheres.natural;
   return mode === "dark" ? pairForPalette.dark : pairForPalette.light;
 }
+
+/**
+ * Simplified High Contrast atmosphere (018) — flatter washes so contrast
+ * is not washed out. Used when the Options High Contrast override is on.
+ */
+const highContrastAtmosphere: AtmospherePair = pair(
+  {
+    wash: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
+    mist: "radial-gradient(ellipse 40% 28% at 50% 40%, rgba(11, 92, 46, 0.04), transparent 70%)",
+    grainOpacity: 0.02,
+  },
+  {
+    wash: "linear-gradient(180deg, #0A0A0A 0%, #0A0A0A 100%)",
+    mist: "radial-gradient(ellipse 35% 24% at 50% 45%, rgba(61, 220, 132, 0.05), transparent 65%)",
+    grainOpacity: 0.04,
+  },
+);
+
+export function getHighContrastAtmosphere(mode: ColorMode): GardenAtmosphere {
+  return mode === "dark"
+    ? highContrastAtmosphere.dark
+    : highContrastAtmosphere.light;
+}

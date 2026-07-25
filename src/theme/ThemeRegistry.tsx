@@ -9,6 +9,7 @@ import { CelebrationProvider } from "@/components/Celebration";
 import GardenBackdrop from "@/components/GardenBackdrop";
 import { usePersistentState } from "@/lib/storage";
 import {
+  createHighContrastTheme,
   createZenTheme,
   normalizePaletteId,
   type ColorMode,
@@ -26,6 +27,11 @@ type GardenPaletteContextValue = {
   setPalette: (next: PaletteId) => void;
 };
 
+type HighContrastContextValue = {
+  highContrast: boolean;
+  setHighContrast: (next: boolean) => void;
+};
+
 const ColorModeContext = createContext<ColorModeContextValue>({
   mode: "dark",
   setColorMode: () => {},
@@ -37,6 +43,11 @@ const GardenPaletteContext = createContext<GardenPaletteContextValue>({
   setPalette: () => {},
 });
 
+const HighContrastContext = createContext<HighContrastContextValue>({
+  highContrast: false,
+  setHighContrast: () => {},
+});
+
 /** Read/set the active light/dark appearance from anywhere in the tree. */
 export function useColorMode() {
   return useContext(ColorModeContext);
@@ -45,6 +56,11 @@ export function useColorMode() {
 /** Read/set the active garden palette from anywhere in the tree. */
 export function useGardenPalette() {
   return useContext(GardenPaletteContext);
+}
+
+/** Read/set the High Contrast override (018) from anywhere in the tree. */
+export function useHighContrast() {
+  return useContext(HighContrastContext);
 }
 
 export default function ThemeRegistry({ children }: { children: ReactNode }) {
@@ -58,9 +74,21 @@ export default function ThemeRegistry({ children }: { children: ReactNode }) {
     "frog-garden:palette-v1",
     "natural",
   );
+  const [highContrast, setHighContrast] = usePersistentState<boolean>(
+    "frog-garden:high-contrast-v1",
+    false,
+  );
   const palette = normalizePaletteId(rawPalette);
 
-  const theme = useMemo(() => createZenTheme(mode, palette), [mode, palette]);
+  // HC override sits above PaletteId — stored palette is preserved but ignored
+  // visually while High Contrast is on.
+  const theme = useMemo(
+    () =>
+      highContrast
+        ? createHighContrastTheme(mode)
+        : createZenTheme(mode, palette),
+    [highContrast, mode, palette],
+  );
 
   const colorMode = useMemo<ColorModeContextValue>(
     () => ({
@@ -80,17 +108,31 @@ export default function ThemeRegistry({ children }: { children: ReactNode }) {
     [palette, setRawPalette],
   );
 
+  const highContrastValue = useMemo<HighContrastContextValue>(
+    () => ({
+      highContrast,
+      setHighContrast: (next) => setHighContrast(Boolean(next)),
+    }),
+    [highContrast, setHighContrast],
+  );
+
   return (
     <AppRouterCacheProvider options={{ key: "mui" }}>
       <ColorModeContext.Provider value={colorMode}>
         <GardenPaletteContext.Provider value={gardenPalette}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <GardenBackdrop palette={palette} mode={mode} />
-            <Box sx={{ position: "relative", zIndex: 1, minHeight: "100%" }}>
-              <CelebrationProvider>{children}</CelebrationProvider>
-            </Box>
-          </ThemeProvider>
+          <HighContrastContext.Provider value={highContrastValue}>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              <GardenBackdrop
+                palette={palette}
+                mode={mode}
+                highContrast={highContrast}
+              />
+              <Box sx={{ position: "relative", zIndex: 1, minHeight: "100%" }}>
+                <CelebrationProvider>{children}</CelebrationProvider>
+              </Box>
+            </ThemeProvider>
+          </HighContrastContext.Provider>
         </GardenPaletteContext.Provider>
       </ColorModeContext.Provider>
     </AppRouterCacheProvider>

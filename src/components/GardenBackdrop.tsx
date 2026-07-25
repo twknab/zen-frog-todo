@@ -4,12 +4,15 @@ import Box from "@mui/material/Box";
 import {
   GARDEN_GRAIN_URL,
   getGardenAtmosphere,
+  getHighContrastAtmosphere,
 } from "@/theme/atmosphere";
 import type { ColorMode, PaletteId } from "@/theme/theme";
 
 type GardenBackdropProps = {
   palette: PaletteId;
   mode: ColorMode;
+  /** When true, use the simplified High Contrast atmosphere (018). */
+  highContrast?: boolean;
 };
 
 /**
@@ -17,8 +20,14 @@ type GardenBackdropProps = {
  * Layers: wash gradients → soft mist → subtle SVG grain.
  * Honors calm UX — no motion; grain is static CSS.
  */
-export default function GardenBackdrop({ palette, mode }: GardenBackdropProps) {
-  const atmosphere = getGardenAtmosphere(palette, mode);
+export default function GardenBackdrop({
+  palette,
+  mode,
+  highContrast = false,
+}: GardenBackdropProps) {
+  const atmosphere = highContrast
+    ? getHighContrastAtmosphere(mode)
+    : getGardenAtmosphere(palette, mode);
 
   return (
     <Box

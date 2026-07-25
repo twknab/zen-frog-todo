@@ -49,7 +49,7 @@ import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
 import { useTasks } from "@/lib/tasks";
-import { useGardenPalette } from "@/theme/ThemeRegistry";
+import { useGardenPalette, useHighContrast } from "@/theme/ThemeRegistry";
 import { gardenWordmarkGradient } from "@/theme/theme";
 type CardAccent = "primary" | "secondary" | "info" | "warning" | "success" | "error";
 
@@ -63,6 +63,7 @@ const EPOCH = new Date(0);
 export default function Home() {
   const { palette } = useGardenPalette();
   const [hyperMinimal] = useHyperMinimal();
+  const { highContrast } = useHighContrast();
   const [mode, setMode] = useState<DashboardMode>("flow");
   const {
     tasks,
@@ -204,7 +205,10 @@ export default function Home() {
                 variant="h4"
                 component="h1"
                 sx={(theme) => {
-                  const gradient = gardenWordmarkGradient(palette, theme.palette);
+                  // High Contrast: solid primary keeps wordmark AA-strong (no gradient wash).
+                  const gradient = highContrast
+                    ? null
+                    : gardenWordmarkGradient(palette, theme.palette);
                   if (!gradient) {
                     return { color: "primary.main", width: "fit-content" };
                   }
