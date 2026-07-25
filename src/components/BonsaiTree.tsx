@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import { darken, lighten, useTheme, type Theme } from "@mui/material/styles";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import {
   BASELINE_FROGS,
   bonsaiStageLabel,
@@ -13,6 +13,7 @@ import {
   type BonsaiStage,
 } from "@/lib/bonsai";
 import { FROG_ICON_PATH, SQUIRREL_ICON_PATH } from "@/lib/frogIcon";
+import { playSquirrelChuckle } from "@/lib/sound";
 
 type BonsaiTreeProps = {
   stage: BonsaiStage;
@@ -162,6 +163,8 @@ export default function BonsaiTree({
   // Unique per instance so multiple trees (e.g. The Grove) never share gradient
   // ids. Colons from useId are stripped to keep url(#…) references clean.
   const gradientPrefix = `fruit${useId().replace(/:/g, "")}`;
+  // null = not hydrated yet (skip first paint so load/Grove mounts stay quiet).
+  const prevSquirrelVisible = useRef<boolean | null>(null);
 
   const leafTone = {
     main: theme.palette.primary.main,
@@ -211,6 +214,19 @@ export default function BonsaiTree({
     .map((p, slot) => ({ ...p, slot }))
     .sort((a, b) => a.y - b.y);
   const showSquirrel = squirrelVisible(frogCount);
+
+  // Chuckle once on absent → present; ignore re-renders while it stays visible.
+  // First effect run only syncs state (Principle VII: no unprompted load audio).
+  useEffect(() => {
+    if (prevSquirrelVisible.current === null) {
+      prevSquirrelVisible.current = showSquirrel;
+      return;
+    }
+    if (showSquirrel && !prevSquirrelVisible.current) {
+      playSquirrelChuckle();
+    }
+    prevSquirrelVisible.current = showSquirrel;
+  }, [showSquirrel]);
 
   // Wilt dims only the living tree/pot layer — frog friends, squirrel, and
   // canopy frog-fruit stay full-color (work already done / cheerful rewards).

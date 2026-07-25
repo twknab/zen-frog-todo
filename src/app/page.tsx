@@ -359,6 +359,9 @@ export default function Home() {
                 <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
                   No frog chosen yet
                 </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Hover a task, then click its frog to choose today&apos;s frog.
+                </Typography>
               </Chrome>
             )}
           </BentoCard>

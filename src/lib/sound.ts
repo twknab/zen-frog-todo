@@ -42,27 +42,31 @@ function getAudioContext(): AudioContext | null {
  * Principle III) with no licensing concerns.
  */
 export function playChime(variant: ChimeVariant = "focus-complete") {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-  const now = ctx.currentTime;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
 
-  CHIME_NOTES[variant].forEach((frequency, index) => {
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const start = now + index * 0.22;
+    CHIME_NOTES[variant].forEach((frequency, index) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const start = now + index * 0.22;
 
-    oscillator.type = "sine";
-    oscillator.frequency.value = frequency;
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
 
-    gain.gain.setValueAtTime(0, start);
-    gain.gain.linearRampToValueAtTime(0.18, start + 0.04);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.8);
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.8);
 
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start(start);
-    oscillator.stop(start + 1.9);
-  });
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 1.9);
+    });
+  } catch {
+    // Audio must never block or surface errors to the UI.
+  }
 }
 
 /**
@@ -71,34 +75,198 @@ export function playChime(variant: ChimeVariant = "focus-complete") {
  * playChime.
  */
 export function playRake() {
-  const ctx = getAudioContext();
-  if (!ctx) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
-  const durationSeconds = 0.22;
-  const bufferSize = Math.floor(ctx.sampleRate * durationSeconds);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i += 1) {
-    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    const durationSeconds = 0.22;
+    const bufferSize = Math.floor(ctx.sampleRate * durationSeconds);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 1100 + Math.random() * 400;
+    filter.Q.value = 0.6;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durationSeconds);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + durationSeconds + 0.02);
+  } catch {
+    // Audio must never block or surface errors to the UI.
   }
+}
 
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-
+/**
+ * One soft frog "ribbit" — a gentle down-gliding tone with a touch of
+ * texture. Used for regular (non-frog) task completion.
+ */
+function scheduleRibbit(
+  ctx: AudioContext,
+  startAt: number,
+  {
+    peakGain = 0.14,
+    startHz = 420,
+    endHz = 180,
+    duration = 0.16,
+  }: {
+    peakGain?: number;
+    startHz?: number;
+    endHz?: number;
+    duration?: number;
+  } = {},
+) {
+  const osc = ctx.createOscillator();
+  const body = ctx.createGain();
   const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 1100 + Math.random() * 400;
-  filter.Q.value = 0.6;
 
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.16, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durationSeconds);
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(startHz, startAt);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(endHz, 40), startAt + duration);
 
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-  noise.start();
-  noise.stop(ctx.currentTime + durationSeconds + 0.02);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(900, startAt);
+  filter.frequency.exponentialRampToValueAtTime(320, startAt + duration);
+  filter.Q.value = 1.2;
+
+  body.gain.setValueAtTime(0, startAt);
+  body.gain.linearRampToValueAtTime(peakGain, startAt + 0.018);
+  body.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  osc.connect(filter);
+  filter.connect(body);
+  body.connect(ctx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + duration + 0.02);
+}
+
+/** Single light ribbit — non-frog task completed. */
+export function playRibbit() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    scheduleRibbit(ctx, ctx.currentTime, { peakGain: 0.12, startHz: 400, endHz: 170 });
+  } catch {
+    // silent
+  }
+}
+
+/**
+ * Short cheerful ribbit chorus for completing today's frog — a cascade of a
+ * few soft ribbits, delightful and brief (not spammy).
+ */
+export function playFrogChorus() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const notes = [
+      { at: 0, startHz: 380, endHz: 160, peakGain: 0.11 },
+      { at: 0.11, startHz: 440, endHz: 190, peakGain: 0.13 },
+      { at: 0.22, startHz: 360, endHz: 150, peakGain: 0.1 },
+      { at: 0.34, startHz: 480, endHz: 200, peakGain: 0.12 },
+      { at: 0.48, startHz: 400, endHz: 165, peakGain: 0.09 },
+    ];
+    for (const note of notes) {
+      scheduleRibbit(ctx, now + note.at, {
+        startHz: note.startHz,
+        endHz: note.endHz,
+        peakGain: note.peakGain,
+        duration: 0.14,
+      });
+    }
+  } catch {
+    // silent
+  }
+}
+
+/**
+ * Soft squirrel-like chuckle — a few short, warm chirps. Played once when the
+ * bonsai squirrel transitions from absent → present.
+ */
+export function playSquirrelChuckle() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const chirps = [
+      { at: 0, hz: 620, dur: 0.05 },
+      { at: 0.07, hz: 540, dur: 0.045 },
+      { at: 0.13, hz: 680, dur: 0.055 },
+      { at: 0.2, hz: 500, dur: 0.04 },
+    ];
+    for (const chirp of chirps) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      const start = now + chirp.at;
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(chirp.hz, start);
+      osc.frequency.exponentialRampToValueAtTime(chirp.hz * 0.72, start + chirp.dur);
+
+      filter.type = "bandpass";
+      filter.frequency.value = chirp.hz;
+      filter.Q.value = 2.5;
+
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.1, start + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + chirp.dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + chirp.dur + 0.02);
+    }
+  } catch {
+    // silent
+  }
+}
+
+/**
+ * Short positive reward pluck when a task is added — distinct from ribbits
+ * and from the focus-session chime (softer, quicker, different intervals).
+ */
+export function playTaskAdded() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Soft ascending fourth (G4 → C5), short plucks — not the chime's C5–E5 bell.
+    const notes = [392.0, 523.25];
+    notes.forEach((frequency, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const start = now + index * 0.07;
+
+      osc.type = "sine";
+      osc.frequency.value = frequency;
+
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.12, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.32);
+    });
+  } catch {
+    // silent
+  }
 }
 
 export type AmbientLoop = {
