@@ -10,7 +10,7 @@
 
 | Field | Type | Notes |
 |---|---|---|
-| `palette` | `PaletteId` | See `PALETTE_IDS` in `src/theme/theme.ts` (fifteen ids) |
+| `palette` | `PaletteId` | See `PALETTE_IDS` in `src/theme/theme.ts` (twenty ids) |
 | `setPalette` | `(next: PaletteId) => void` | Persists immediately via normalize |
 
 ### `normalizePaletteId(value: unknown): PaletteId`
@@ -25,9 +25,9 @@
 createZenTheme(mode: ColorMode, palette: PaletteId = "natural"): Theme
 ```
 
-- Selects token set for `palette` × `mode` (fifteen palettes × two appearances).
-- **Primary (`moss`) MUST stay green-family** so ground frogs + canopy leaves read as a living pile (015 frog/fruit split). Non-green personality lives in secondary / error / warning / info (canopy frog-fruit).
-- Heading face: Bricolage for high-energy ids (`prism`, `webring`, `borealis`, `mirrorball`, `sugarrush`, `starfruit`, `firefly`, `tropic`, `emberglow`); Zen Maru Gothic otherwise.
+- Selects token set for `palette` × `mode` (twenty palettes × two appearances).
+- **Primary (`moss`) MUST stay green-family** so ground frogs + canopy leaves read as a living pile (015 frog/fruit split). Non-green personality lives in secondary / error / warning / info (canopy frog-fruit). Greyscale themes may mute fruit to greys / silvers / sparse cool accents.
+- Heading face: Bricolage for high-energy ids (`prism`, `webring`, `borealis`, `mirrorball`, `sugarrush`, `starfruit`, `firefly`, `tropic`, `emberglow`); Zen Maru Gothic otherwise (including all five high-contrast greyscale ids).
 - Default palette argument `"natural"` (display name **Quiet Grove**).
 
 ## Atmosphere
@@ -42,7 +42,7 @@ getGardenAtmosphere(palette: PaletteId, mode: ColorMode): GardenAtmosphere
 
 | Requirement | Detail |
 |---|---|
-| Options count | Exactly fifteen named palettes (see `PALETTE_OPTIONS`) |
+| Options count | Exactly twenty named palettes (see `PALETTE_OPTIONS`) |
 | Selection | Exclusive; only one active |
 | Control | **Dropdown `Select`** with color swatch previews |
 | Labels | Cool display names from `PALETTE_OPTIONS` |
@@ -56,14 +56,25 @@ Appearance (Light/Dark) and Dev controls unchanged in behavior.
 
 | Palette | Treatment |
 |---|---|
-| `natural`, `violethour` | Solid color (`primary.main`) |
+| `natural`, `violethour`, `ashterrace`, `bone` | Solid color (`primary.main`) |
+| `graphite`, `inkwell`, `obsidian` | Subtle moss→steel gradient via `gardenWordmarkGradient` |
 | All other palettes | Joyful gradient wordmark via `gardenWordmarkGradient` |
+
+## High-contrast / greyscale roster (ids)
+
+| Id | Label | Vibe |
+|---|---|---|
+| `graphite` | Graphite Grove | Cool charcoal / slate, crisp contrast |
+| `inkwell` | Ink Well | Noir near-black, sharp white/ink text |
+| `ashterrace` | Ash Terrace | Warm concrete greys |
+| `obsidian` | Obsidian Pond | Deep void black + sparse cool silver/teal accent |
+| `bone` | Bone Quiet | Chalk/bone light-leaning true greyscale |
 
 ## Persistence keys
 
 | Key | Value |
 |---|---|
-| `frog-garden:palette-v1` | one of fifteen canonical ids (or a legacy alias that normalizes) |
+| `frog-garden:palette-v1` | one of twenty canonical ids (or a legacy alias that normalizes) |
 | `frog-garden:color-mode-v1` | `light` \| `dark` (unchanged) |
 | `frog-garden:dev-mode-v1` | boolean (unchanged) |
 

@@ -454,6 +454,115 @@ const atmospheres: Record<PaletteId, AtmospherePair> = {
       grainOpacity: 0.055,
     },
   ),
+
+  graphite: pair(
+    {
+      wash: [
+        "radial-gradient(ellipse 90% 65% at 12% 0%, rgba(106, 120, 136, 0.14), transparent 55%)",
+        "radial-gradient(ellipse 65% 50% at 90% 80%, rgba(79, 122, 90, 0.1), transparent 55%)",
+        "radial-gradient(ellipse 45% 35% at 50% 40%, rgba(250, 251, 252, 0.55), transparent 55%)",
+        "linear-gradient(168deg, #F5F6F8 0%, #F2F3F5 50%, #EEEFF2 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 50% 35% at 32% 60%, rgba(216, 220, 226, 0.55), transparent 70%)",
+      grainOpacity: 0.04,
+    },
+    {
+      wash: [
+        "radial-gradient(ellipse 85% 60% at 15% 8%, rgba(122, 176, 138, 0.1), transparent 55%)",
+        "radial-gradient(ellipse 70% 50% at 90% 75%, rgba(138, 154, 172, 0.1), transparent 55%)",
+        "linear-gradient(172deg, #16181C 0%, #121416 50%, #1A1D21 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 45% 30% at 35% 65%, rgba(168, 174, 182, 0.06), transparent 65%)",
+      grainOpacity: 0.06,
+    },
+  ),
+
+  inkwell: pair(
+    {
+      wash: [
+        "radial-gradient(ellipse 80% 55% at 20% 5%, rgba(46, 122, 69, 0.1), transparent 55%)",
+        "radial-gradient(ellipse 60% 45% at 85% 85%, rgba(58, 58, 58, 0.08), transparent 55%)",
+        "linear-gradient(170deg, #FAFAF8 0%, #F7F7F5 50%, #F2F2F0 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 45% 30% at 40% 55%, rgba(220, 220, 216, 0.5), transparent 70%)",
+      grainOpacity: 0.045,
+    },
+    {
+      wash: [
+        "radial-gradient(ellipse 90% 65% at 18% 0%, rgba(94, 207, 122, 0.12), transparent 55%)",
+        "radial-gradient(ellipse 55% 40% at 80% 90%, rgba(200, 200, 200, 0.06), transparent 55%)",
+        "linear-gradient(175deg, #0A0A0A 0%, #050505 50%, #101010 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 40% 28% at 45% 60%, rgba(250, 250, 250, 0.04), transparent 65%)",
+      grainOpacity: 0.07,
+    },
+  ),
+
+  ashterrace: pair(
+    {
+      wash: [
+        "radial-gradient(ellipse 90% 65% at 15% 0%, rgba(138, 126, 114, 0.14), transparent 55%)",
+        "radial-gradient(ellipse 65% 50% at 88% 80%, rgba(90, 138, 82, 0.1), transparent 55%)",
+        "linear-gradient(168deg, #F8F5F1 0%, #F5F2EE 50%, #F0EBE4 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 50% 35% at 35% 58%, rgba(226, 220, 212, 0.55), transparent 70%)",
+      grainOpacity: 0.04,
+    },
+    {
+      wash: [
+        "radial-gradient(ellipse 85% 60% at 12% 8%, rgba(143, 176, 138, 0.1), transparent 55%)",
+        "radial-gradient(ellipse 65% 50% at 90% 78%, rgba(168, 152, 136, 0.1), transparent 55%)",
+        "linear-gradient(172deg, #1E1C1A 0%, #1A1816 50%, #24211E 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 45% 30% at 38% 62%, rgba(184, 175, 164, 0.06), transparent 65%)",
+      grainOpacity: 0.055,
+    },
+  ),
+
+  obsidian: pair(
+    {
+      wash: [
+        "radial-gradient(ellipse 90% 65% at 10% 0%, rgba(90, 152, 168, 0.12), transparent 55%)",
+        "radial-gradient(ellipse 65% 50% at 90% 85%, rgba(47, 138, 80, 0.1), transparent 55%)",
+        "linear-gradient(168deg, #F7F9FB 0%, #F4F6F8 50%, #EEF1F4 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 48% 32% at 30% 60%, rgba(212, 218, 224, 0.5), transparent 70%)",
+      grainOpacity: 0.04,
+    },
+    {
+      wash: [
+        "radial-gradient(ellipse 95% 70% at 15% 0%, rgba(74, 222, 128, 0.14), transparent 55%)",
+        "radial-gradient(ellipse 70% 50% at 88% 80%, rgba(122, 184, 200, 0.14), transparent 55%)",
+        "linear-gradient(175deg, #080A0E 0%, #05070A 50%, #0E1218 100%)",
+      ].join(", "),
+      mist: [
+        "radial-gradient(circle at 30% 45%, rgba(74, 222, 128, 0.08), transparent 38%)",
+        "radial-gradient(circle at 75% 58%, rgba(122, 184, 200, 0.08), transparent 40%)",
+      ].join(", "),
+      grainOpacity: 0.065,
+    },
+  ),
+
+  bone: pair(
+    {
+      wash: [
+        "radial-gradient(ellipse 90% 65% at 18% 0%, rgba(154, 149, 140, 0.12), transparent 55%)",
+        "radial-gradient(ellipse 60% 45% at 88% 85%, rgba(74, 122, 82, 0.08), transparent 55%)",
+        "linear-gradient(165deg, #FCFBF8 0%, #FAF8F5 50%, #F5F2EC 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 50% 35% at 35% 55%, rgba(232, 228, 220, 0.55), transparent 70%)",
+      grainOpacity: 0.035,
+    },
+    {
+      wash: [
+        "radial-gradient(ellipse 85% 60% at 14% 8%, rgba(143, 184, 151, 0.1), transparent 55%)",
+        "radial-gradient(ellipse 60% 45% at 88% 80%, rgba(184, 178, 168, 0.08), transparent 55%)",
+        "linear-gradient(172deg, #1A1816 0%, #161513 50%, #201E1C 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 42% 28% at 40% 60%, rgba(247, 245, 240, 0.04), transparent 65%)",
+      grainOpacity: 0.055,
+    },
+  ),
 };
 
 export function getGardenAtmosphere(

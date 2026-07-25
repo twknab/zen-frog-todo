@@ -29,7 +29,12 @@ export type PaletteId =
   | "tropic"
   | "emberglow"
   | "frostbloom"
-  | "sakura";
+  | "sakura"
+  | "graphite"
+  | "inkwell"
+  | "ashterrace"
+  | "obsidian"
+  | "bone";
 
 export const PALETTE_IDS: readonly PaletteId[] = [
   "natural",
@@ -47,6 +52,11 @@ export const PALETTE_IDS: readonly PaletteId[] = [
   "emberglow",
   "frostbloom",
   "sakura",
+  "graphite",
+  "inkwell",
+  "ashterrace",
+  "obsidian",
+  "bone",
 ] as const;
 
 /** Display labels for Options + a11y — single source of truth. */
@@ -66,6 +76,11 @@ export const PALETTE_OPTIONS: readonly { id: PaletteId; label: string }[] = [
   { id: "emberglow", label: "Emberglow" },
   { id: "frostbloom", label: "Frostbloom" },
   { id: "sakura", label: "Sakura Drift" },
+  { id: "graphite", label: "Graphite Grove" },
+  { id: "inkwell", label: "Ink Well" },
+  { id: "ashterrace", label: "Ash Terrace" },
+  { id: "obsidian", label: "Obsidian Pond" },
+  { id: "bone", label: "Bone Quiet" },
 ] as const;
 
 /**
@@ -91,6 +106,11 @@ export const PALETTE_PREVIEWS: Record<
   emberglow: ["#6B8F3A", "#E85A20", "#FFB020"],
   frostbloom: ["#5A9A7A", "#6AB0E8", "#C8A0E8"],
   sakura: ["#6AAA70", "#E878A0", "#C06090"],
+  graphite: ["#5A8F6A", "#8A9098", "#6A7888"],
+  inkwell: ["#2E7A45", "#3A3A3A", "#8A8A8A"],
+  ashterrace: ["#5A8A52", "#8A7E72", "#A09890"],
+  obsidian: ["#2F8A50", "#6A7480", "#7AB8C8"],
+  bone: ["#4A7A52", "#9A958C", "#6E6A62"],
 };
 
 /** Older persisted ids → current canonical ids (016 renames). */
@@ -751,6 +771,211 @@ const sakuraDark: ZenPalette = {
   contrastText: "#1E1018",
 };
 
+/**
+ * Graphite Grove — cool charcoal greys, crisp slate contrast. Living green moss.
+ */
+const graphiteLight: ZenPalette = {
+  bgDefault: "#F2F3F5",
+  bgPaper: "#FAFBFC",
+  ink: "#1A1D21",
+  inkSoft: "#5A6068",
+  mist: "#D8DCE2",
+  tooltipBg: "#1A1D21",
+  moss: "#4F7A5A",
+  mossLight: "#6A9A78",
+  mossDark: "#3A5C44",
+  clay: "#7A828C",
+  clayLight: "#9AA2AC",
+  clayDark: "#5A626C",
+  rust: "#6E747C",
+  ochre: "#8A9098",
+  dusk: "#6A7888",
+  contrastText: "#FFFFFF",
+};
+
+const graphiteDark: ZenPalette = {
+  bgDefault: "#121416",
+  bgPaper: "#1A1D21",
+  ink: "#F0F2F4",
+  inkSoft: "#A8AEB6",
+  mist: "rgba(168, 174, 182, 0.14)",
+  tooltipBg: "#2A2E34",
+  moss: "#7AB08A",
+  mossLight: "#9CC8A8",
+  mossDark: "#5A8F6A",
+  clay: "#9AA2AC",
+  clayLight: "#B8C0C8",
+  clayDark: "#7A828C",
+  rust: "#8A9098",
+  ochre: "#A8AEB6",
+  dusk: "#8A9AAC",
+  contrastText: "#121416",
+};
+
+/**
+ * Ink Well — noir near-black with sharp white/ink text. High-contrast mono energy.
+ */
+const inkwellLight: ZenPalette = {
+  bgDefault: "#F7F7F5",
+  bgPaper: "#FFFFFF",
+  ink: "#0A0A0A",
+  inkSoft: "#4A4A4A",
+  mist: "#DCDCD8",
+  tooltipBg: "#0A0A0A",
+  moss: "#2E7A45",
+  mossLight: "#4A9A62",
+  mossDark: "#1E5A32",
+  clay: "#3A3A3A",
+  clayLight: "#5A5A5A",
+  clayDark: "#242424",
+  rust: "#505050",
+  ochre: "#6E6E6E",
+  dusk: "#8A8A8A",
+  contrastText: "#FFFFFF",
+};
+
+const inkwellDark: ZenPalette = {
+  bgDefault: "#050505",
+  bgPaper: "#141414",
+  ink: "#FAFAFA",
+  inkSoft: "#B0B0B0",
+  mist: "rgba(250, 250, 250, 0.1)",
+  tooltipBg: "#222222",
+  moss: "#5ECF7A",
+  mossLight: "#86E098",
+  mossDark: "#3AAA58",
+  clay: "#C8C8C8",
+  clayLight: "#E0E0E0",
+  clayDark: "#A0A0A0",
+  rust: "#9A9A9A",
+  ochre: "#B8B8B8",
+  dusk: "#D0D0D0",
+  contrastText: "#050505",
+};
+
+/**
+ * Ash Terrace — warm concrete greys (not pure cold). Soft stone mood, living moss.
+ */
+const ashterraceLight: ZenPalette = {
+  bgDefault: "#F5F2EE",
+  bgPaper: "#FCFAF7",
+  ink: "#2C2824",
+  inkSoft: "#6B645C",
+  mist: "#E2DCD4",
+  tooltipBg: "#2C2824",
+  moss: "#5A8A52",
+  mossLight: "#78A86E",
+  mossDark: "#42683C",
+  clay: "#8A7E72",
+  clayLight: "#A89888",
+  clayDark: "#6A6054",
+  rust: "#7A6E64",
+  ochre: "#9A8E80",
+  dusk: "#A09890",
+  contrastText: "#FFFFFF",
+};
+
+const ashterraceDark: ZenPalette = {
+  bgDefault: "#1A1816",
+  bgPaper: "#24211E",
+  ink: "#F0EBE4",
+  inkSoft: "#B8AFA4",
+  mist: "rgba(184, 175, 164, 0.14)",
+  tooltipBg: "#322E28",
+  moss: "#8FB08A",
+  mossLight: "#AEC8AA",
+  mossDark: "#6A8A66",
+  clay: "#A89888",
+  clayLight: "#C4B6A6",
+  clayDark: "#8A7E72",
+  rust: "#9A8E84",
+  ochre: "#B8A898",
+  dusk: "#C0B8B0",
+  contrastText: "#1A1816",
+};
+
+/**
+ * Obsidian Pond — deep void black with a sparse cool silver/teal accent; moss stays green.
+ */
+const obsidianLight: ZenPalette = {
+  bgDefault: "#F4F6F8",
+  bgPaper: "#FBFCFD",
+  ink: "#0E1218",
+  inkSoft: "#5A6570",
+  mist: "#D4DAE0",
+  tooltipBg: "#0E1218",
+  moss: "#2F8A50",
+  mossLight: "#4AAA6E",
+  mossDark: "#1E6A3A",
+  clay: "#6A7480",
+  clayLight: "#8A94A0",
+  clayDark: "#4A5460",
+  rust: "#5A646E",
+  ochre: "#7A8490",
+  dusk: "#5A98A8",
+  contrastText: "#FFFFFF",
+};
+
+const obsidianDark: ZenPalette = {
+  bgDefault: "#05070A",
+  bgPaper: "#0E1218",
+  ink: "#F2F5F8",
+  inkSoft: "#A8B4C0",
+  mist: "rgba(122, 184, 200, 0.12)",
+  tooltipBg: "#1A222C",
+  moss: "#4ADE80",
+  mossLight: "#86EFAC",
+  mossDark: "#22C55E",
+  clay: "#8A94A0",
+  clayLight: "#A8B4C0",
+  clayDark: "#6A7480",
+  rust: "#7A8490",
+  ochre: "#9AA4B0",
+  dusk: "#7AB8C8",
+  contrastText: "#05070A",
+};
+
+/**
+ * Bone Quiet — chalk/bone light-leaning true greyscale with strong AA contrast.
+ */
+const boneLight: ZenPalette = {
+  bgDefault: "#FAF8F5",
+  bgPaper: "#FFFEFB",
+  ink: "#1F1E1C",
+  inkSoft: "#6B6860",
+  mist: "#E8E4DC",
+  tooltipBg: "#1F1E1C",
+  moss: "#4A7A52",
+  mossLight: "#6A9A72",
+  mossDark: "#345A3A",
+  clay: "#9A958C",
+  clayLight: "#B8B2A8",
+  clayDark: "#7A756C",
+  rust: "#7A7670",
+  ochre: "#A8A298",
+  dusk: "#6E6A62",
+  contrastText: "#FFFFFF",
+};
+
+const boneDark: ZenPalette = {
+  bgDefault: "#161513",
+  bgPaper: "#201E1C",
+  ink: "#F7F5F0",
+  inkSoft: "#B0AAA0",
+  mist: "rgba(247, 245, 240, 0.1)",
+  tooltipBg: "#2E2C28",
+  moss: "#8FB897",
+  mossLight: "#AED0B4",
+  mossDark: "#6A9072",
+  clay: "#B8B2A8",
+  clayLight: "#D0CAC0",
+  clayDark: "#9A958C",
+  rust: "#A09A90",
+  ochre: "#C0BAB0",
+  dusk: "#C8C2B8",
+  contrastText: "#161513",
+};
+
 const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> =
   {
     natural: { light: naturalLight, dark: naturalDark },
@@ -768,6 +993,11 @@ const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }
     emberglow: { light: emberglowLight, dark: emberglowDark },
     frostbloom: { light: frostbloomLight, dark: frostbloomDark },
     sakura: { light: sakuraLight, dark: sakuraDark },
+    graphite: { light: graphiteLight, dark: graphiteDark },
+    inkwell: { light: inkwellLight, dark: inkwellDark },
+    ashterrace: { light: ashterraceLight, dark: ashterraceDark },
+    obsidian: { light: obsidianLight, dark: obsidianDark },
+    bone: { light: boneLight, dark: boneDark },
   };
 
 const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial, sans-serif`;
@@ -796,7 +1026,8 @@ function headingFontFamilyFor(palette: PaletteId): string {
 
 /**
  * Joyful gradient wordmark for opt-in palettes.
- * Quiet Grove + Violet Hour stay solid primary (calm brand baseline).
+ * Quiet Grove, Violet Hour, Ash Terrace, and Bone Quiet stay solid primary.
+ * High-contrast greyscale themes use a subtle moss→steel wash (premium, not carnival).
  */
 export function gardenWordmarkGradient(
   palette: PaletteId,
@@ -807,6 +1038,8 @@ export function gardenWordmarkGradient(
   switch (id) {
     case "natural":
     case "violethour":
+    case "ashterrace":
+    case "bone":
       return null;
     case "webring":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 45%, ${secondary.main} 100%)`;
@@ -834,6 +1067,12 @@ export function gardenWordmarkGradient(
       return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
     case "sakura":
       return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
+    case "graphite":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 55%, ${secondary.main} 100%)`;
+    case "inkwell":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
+    case "obsidian":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 55%, ${secondary.main} 100%)`;
     default:
       return null;
   }
