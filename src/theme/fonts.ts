@@ -4,7 +4,7 @@ import { Bricolage_Grotesque, Manrope, Zen_Maru_Gothic } from "next/font/google"
  * Body: Manrope — clean, modern, highly legible (all palettes).
  * Calm headings (Quiet Grove / Violet Hour / Golden Hour / Tideglass /
  * Frostbloom / Sakura Drift): Zen Maru Gothic.
- * Display headings (Acid Bloom / Web Ring / Borealis / Mirrorball /
+ * Display headings (Prism Bloom / Web Ring / Borealis / Mirrorball /
  * Sugar Rush / Starfruit / Firefly / Tropic Punch / Emberglow):
  * Bricolage Grotesque.
  *

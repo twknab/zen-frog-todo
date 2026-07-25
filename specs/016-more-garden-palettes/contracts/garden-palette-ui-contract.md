@@ -16,7 +16,7 @@
 ### `normalizePaletteId(value: unknown): PaletteId`
 
 - Known ids returned as-is.
-- Legacy aliases (`vibrant` → `acid`, `dusk` → `violethour`, `guestbook` → `webring`, `sunlily` → `goldhour`, `tidepool` → `tideglass`, `aurora` → `borealis`, `disco` → `mirrorball`, `floss` → `sugarrush`, `nebula` → `starfruit`) map to current ids.
+- Legacy aliases (`vibrant` → `prism`, `acid` → `prism`, `dusk` → `violethour`, `guestbook` → `webring`, `sunlily` → `goldhour`, `tidepool` → `tideglass`, `aurora` → `borealis`, `disco` → `mirrorball`, `floss` → `sugarrush`, `nebula` → `starfruit`) map to current ids.
 - Anything else → `"natural"`.
 
 ## Theme factory
@@ -27,7 +27,7 @@ createZenTheme(mode: ColorMode, palette: PaletteId = "natural"): Theme
 
 - Selects token set for `palette` × `mode` (fifteen palettes × two appearances).
 - **Primary (`moss`) MUST stay green-family** so ground frogs + canopy leaves read as a living pile (015 frog/fruit split). Non-green personality lives in secondary / error / warning / info (canopy frog-fruit).
-- Heading face: Bricolage for high-energy ids (`acid`, `webring`, `borealis`, `mirrorball`, `sugarrush`, `starfruit`, `firefly`, `tropic`, `emberglow`); Zen Maru Gothic otherwise.
+- Heading face: Bricolage for high-energy ids (`prism`, `webring`, `borealis`, `mirrorball`, `sugarrush`, `starfruit`, `firefly`, `tropic`, `emberglow`); Zen Maru Gothic otherwise.
 - Default palette argument `"natural"` (display name **Quiet Grove**).
 
 ## Atmosphere

@@ -64,7 +64,7 @@ const atmospheres: Record<PaletteId, AtmospherePair> = {
     },
   ),
 
-  acid: pair(
+  prism: pair(
     {
       wash: [
         "radial-gradient(ellipse 95% 75% at 8% 5%, rgba(185, 120, 255, 0.32), transparent 55%)",

@@ -17,7 +17,7 @@ Creative and product choices were delegated to the implementer (“you choose”
 - Q: First three new palettes? → A: **Guestbook** (90s web), **Sunlily** (golden hour), **Tide Pool** (seafoam).
 - Q: How should Options show many palettes without crowding? → A: **Dropdown Select** with color swatch previews (supersedes earlier 2×3 grid once count grew past six).
 - Q: Four more wild themes? → A: **Borealis**, **Mirrorball**, **Sugar Rush**, **Starfruit** (plus later five: Firefly, Tropic Punch, Emberglow, Frostbloom, Sakura Drift).
-- Q: Cool rename pass? → A: All display names get a punchy garden identity (e.g. Natural → Quiet Grove, Vibrant → Acid Bloom, Guestbook → Web Ring). Canonical ids renamed where needed; legacy ids alias via `normalizePaletteId`.
+- Q: Cool rename pass? → A: All display names get a punchy garden identity (e.g. Natural → Quiet Grove, Vibrant → Prism Bloom, Guestbook → Web Ring). Canonical ids renamed where needed; legacy ids (`vibrant`, `acid`, …) alias via `normalizePaletteId`.
 - Q: Frog/fruit split (015)? → A: Primary/`moss` stays green-family for ground frogs + leaves; clay/rust/ochre/dusk carry colorful canopy fruit.
 - Q: Does this invent a second theming stack? → A: No — extend `PaletteId`, token bags, atmosphere, Options picker, and normalize/persist paths from 014 only.
 

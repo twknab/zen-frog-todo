@@ -16,7 +16,7 @@ export type ColorMode = "light" | "dark";
  */
 export type PaletteId =
   | "natural"
-  | "acid"
+  | "prism"
   | "violethour"
   | "webring"
   | "goldhour"
@@ -33,7 +33,7 @@ export type PaletteId =
 
 export const PALETTE_IDS: readonly PaletteId[] = [
   "natural",
-  "acid",
+  "prism",
   "violethour",
   "webring",
   "goldhour",
@@ -52,7 +52,7 @@ export const PALETTE_IDS: readonly PaletteId[] = [
 /** Display labels for Options + a11y — single source of truth. */
 export const PALETTE_OPTIONS: readonly { id: PaletteId; label: string }[] = [
   { id: "natural", label: "Quiet Grove" },
-  { id: "acid", label: "Acid Bloom" },
+  { id: "prism", label: "Prism Bloom" },
   { id: "violethour", label: "Violet Hour" },
   { id: "webring", label: "Web Ring" },
   { id: "goldhour", label: "Golden Hour" },
@@ -77,7 +77,7 @@ export const PALETTE_PREVIEWS: Record<
   readonly [string, string, string]
 > = {
   natural: ["#6B8F71", "#B98C5B", "#7A93A6"],
-  acid: ["#16A34A", "#E11D6B", "#0E9BB8"],
+  prism: ["#16A34A", "#E11D6B", "#0E9BB8"],
   violethour: ["#5F8F6E", "#C4A35A", "#7B6BA8"],
   webring: ["#157A2C", "#C41E6A", "#0E9BB8"],
   goldhour: ["#6E8A42", "#C24E32", "#E8895A"],
@@ -95,7 +95,8 @@ export const PALETTE_PREVIEWS: Record<
 
 /** Older persisted ids → current canonical ids (016 renames). */
 const PALETTE_ALIASES: Record<string, PaletteId> = {
-  vibrant: "acid",
+  vibrant: "prism",
+  acid: "prism",
   dusk: "violethour",
   guestbook: "webring",
   sunlily: "goldhour",
@@ -177,9 +178,9 @@ const naturalDark: ZenPalette = {
 };
 
 /**
- * Acid Bloom — neon psychedelic garden (PR #11 lineage). Opt-in only.
+ * Prism Bloom — colorful prismatic garden (PR #11 lineage). Opt-in only.
  */
-const acidLight: ZenPalette = {
+const prismLight: ZenPalette = {
   bgDefault: "#F3EEFF",
   bgPaper: "#FFFBFF",
   ink: "#231C33",
@@ -198,7 +199,7 @@ const acidLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const acidDark: ZenPalette = {
+const prismDark: ZenPalette = {
   bgDefault: "#120E1F",
   bgPaper: "#1F1830",
   ink: "#F2EDFB",
@@ -753,7 +754,7 @@ const sakuraDark: ZenPalette = {
 const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> =
   {
     natural: { light: naturalLight, dark: naturalDark },
-    acid: { light: acidLight, dark: acidDark },
+    prism: { light: prismLight, dark: prismDark },
     violethour: { light: violethourLight, dark: violethourDark },
     webring: { light: webringLight, dark: webringDark },
     goldhour: { light: goldhourLight, dark: goldhourDark },
@@ -774,7 +775,7 @@ const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial
 /** Playful display headings for high-energy opt-in palettes. */
 function usesDisplayHeading(palette: PaletteId): boolean {
   return (
-    palette === "acid" ||
+    palette === "prism" ||
     palette === "webring" ||
     palette === "borealis" ||
     palette === "mirrorball" ||
@@ -809,7 +810,7 @@ export function gardenWordmarkGradient(
       return null;
     case "webring":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 45%, ${secondary.main} 100%)`;
-    case "acid":
+    case "prism":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 50%, #B983FF 100%)`;
     case "goldhour":
       return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 45%, ${secondary.main} 100%)`;
