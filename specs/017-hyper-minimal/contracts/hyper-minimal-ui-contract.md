@@ -1,0 +1,54 @@
+# UI Contract: Hyper Minimal
+
+## Storage
+
+| Key | Type | Default |
+|---|---|---|
+| `frog-garden:hyper-minimal-v1` | boolean | `false` |
+
+## Options surface
+
+| Control | Type | Label | Behavior |
+|---|---|---|---|
+| Hyper Minimal | Switch | "Hyper Minimal" | Toggles preference; must not close Options popover |
+
+Placement: near Appearance / Dev (after Appearance divider, before or after Dev — calm grouping of density/dev prefs).
+
+## Chrome hidden when ON
+
+- Header: FaFrog brand mark, "Frog Garden" wordmark, tagline
+- Card/section title rows (text + decorative icons): Largest Task chip row chrome, Sand Mode, Task list, Focus, Bonsai (+ optional decorative info if treated as chrome-only — info button MAY remain if it is a control), Close the day, Completed, Standup Summary, The Grove heading row icon+title
+- Helper / instructional captions: sand rake hint, timer "minutes" caption optional keep if it labels the dial number — prefer hide session-count and phase helper sentences; empty-state prose
+- Grove empty instructional copy
+
+## Always visible / functional when ON
+
+- Flow/Focus ToggleButtonGroup (with labels)
+- Export, Notepad, Options (aria-labels required)
+- Task titles, checkboxes, add/reorder/delete/frog controls (task list card stays as primary workspace even with zero tasks)
+- Focus dial, time digits, Start/Cancel/Break buttons, ambient control
+- Sand canvas + reset control
+- Bonsai tree visuals (frogs, critters, fruit)
+- Reflection field + new-day action (primary close-the-day workspace)
+- Grove show/hide control + day/sand interactive surfaces **when Grove has content**
+- Options popover internal labels
+- **Standup / day-summary body when present (FR-015)**: “What I did” / “What’s next” (or “What was done”) labels and their completed/open-task prose — card title may hide; body MUST remain. Omit the whole panel only when genuinely empty (FR-014).
+
+## Empty panels omitted when ON (FR-014)
+
+Do not render blank/caption-less shells. Hide the whole panel when:
+
+| Panel | Empty when |
+|---|---|
+| Frog task card | No frog chosen |
+| Completed | Zero completed-log entries |
+| Standup Summary | No done items and no open items |
+| The Grove | No archived days and no today sand drawings |
+
+When Hyper Minimal is off, keep existing empty-state helper copy.
+
+## A11y
+
+- No interactive control may become unlabeled when Hyper Minimal is on.
+- Decorative chrome removed from the tree (conditional render), not left as unlabeled text noise.
+- Omitting an empty panel removes its controls; remaining controls keep accessible names.

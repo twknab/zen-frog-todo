@@ -8,9 +8,11 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
+import Chrome from "./Chrome";
 import FocusDial from "./FocusDial";
 import { SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useFocusStats } from "@/lib/focusStats";
+import { useHyperMinimal } from "@/lib/hyperMinimal";
 import { playChime, startAmbientLoop } from "@/lib/sound";
 
 type Phase = "idle" | "working" | "work-done" | "break" | "break-done";
@@ -36,6 +38,7 @@ export default function FocusTimer() {
   const endTimeRef = useRef<number | null>(null);
   const { completedSessions, recordSessionComplete } = useFocusStats();
   const { recordGrowth } = useBonsai();
+  const [hyperMinimal] = useHyperMinimal();
 
   // Ambient wind follows the toggle alone — once on, it keeps playing across
   // phase changes (work → break → done) and only stops when toggled off.
@@ -117,7 +120,15 @@ export default function FocusTimer() {
   }
 
   return (
-    <Stack spacing={2} sx={{ alignItems: "center" }}>
+    <Stack
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        // Hyper Minimal hides the card "Focus" title row — a little top padding
+        // keeps the dial from sitting flush against the card edge.
+        pt: hyperMinimal ? 1.5 : 0,
+      }}
+    >
       <FocusDial
         fraction={fraction}
         interactive={phase === "idle"}
@@ -128,15 +139,25 @@ export default function FocusTimer() {
         centerLabel={
           phase === "idle" ? (
             <Stack sx={{ alignItems: "center" }}>
-              <Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+              <Typography
+                variant="h4"
+                sx={{ fontVariantNumeric: "tabular-nums" }}
+                aria-label={`${workMinutes} minutes`}
+              >
                 {workMinutes}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                minutes
-              </Typography>
+              <Chrome>
+                <Typography variant="caption" color="text.secondary">
+                  minutes
+                </Typography>
+              </Chrome>
             </Stack>
           ) : (
-            <Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+            <Typography
+              variant="h4"
+              sx={{ fontVariantNumeric: "tabular-nums" }}
+              aria-label={`${formatClock(secondsLeft)} remaining`}
+            >
               {formatClock(secondsLeft)}
             </Typography>
           )
@@ -165,11 +186,13 @@ export default function FocusTimer() {
         </IconButton>
       </Stack>
 
-      <Typography variant="caption" color="text.secondary">
-        {completedSessions === 1
-          ? "1 focus session completed"
-          : `${completedSessions} focus sessions completed`}
-      </Typography>
+      <Chrome>
+        <Typography variant="caption" color="text.secondary">
+          {completedSessions === 1
+            ? "1 focus session completed"
+            : `${completedSessions} focus sessions completed`}
+        </Typography>
+      </Chrome>
 
       <div aria-live="polite">
         {phase === "idle" && (
@@ -186,11 +209,13 @@ export default function FocusTimer() {
 
         {phase === "work-done" && (
           <Stack spacing={1} sx={{ alignItems: "center" }}>
-            <Typography variant="body2" color="text.secondary">
-              Focus session complete. Take a 5 minute break?
-            </Typography>
+            <Chrome>
+              <Typography variant="body2" color="text.secondary">
+                Focus session complete. Take a 5 minute break?
+              </Typography>
+            </Chrome>
             <Button variant="contained" color="secondary" onClick={acknowledgeAndStartBreak}>
-              Start 5 min break
+              {hyperMinimal ? "5 min break" : "Start 5 min break"}
             </Button>
           </Stack>
         )}
@@ -203,9 +228,11 @@ export default function FocusTimer() {
 
         {phase === "break-done" && (
           <Stack spacing={1} sx={{ alignItems: "center" }}>
-            <Typography variant="body2" color="text.secondary">
-              Break&rsquo;s over whenever you are.
-            </Typography>
+            <Chrome>
+              <Typography variant="body2" color="text.secondary">
+                Break&rsquo;s over whenever you are.
+              </Typography>
+            </Chrome>
             <Button variant="contained" onClick={reset}>
               Back to focus
             </Button>

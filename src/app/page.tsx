@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import { FaFrog } from "react-icons/fa6";
 import BonsaiTree from "@/components/BonsaiTree";
 import { useCelebration } from "@/components/Celebration";
+import Chrome from "@/components/Chrome";
 import CompletedLog from "@/components/CompletedLog";
 import DeleteIncompleteTaskControl from "@/components/DeleteIncompleteTaskControl";
 import ExportMenu from "@/components/ExportMenu";
@@ -42,6 +43,7 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useDailyRollover } from "@/lib/dayArchive";
 import { useFocusStats } from "@/lib/focusStats";
+import { useHyperMinimal } from "@/lib/hyperMinimal";
 import { useNotepad } from "@/lib/notepad";
 import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
@@ -60,6 +62,7 @@ const EPOCH = new Date(0);
 
 export default function Home() {
   const { palette } = useGardenPalette();
+  const [hyperMinimal] = useHyperMinimal();
   const [mode, setMode] = useState<DashboardMode>("flow");
   const {
     tasks,
@@ -104,6 +107,14 @@ export default function Home() {
   // surviving cards animate to fill the space the rest leave behind.
   const isFocus = mode === "frog";
 
+  // Hyper Minimal (FR-014): omit empty shells — show only content or primary workspaces.
+  const showFrogCard = !hyperMinimal || Boolean(frogTask);
+  const showCompletedPanel = !hyperMinimal || completedLog.length > 0;
+  const showStandupPanel =
+    !hyperMinimal ||
+    completedLog.length > 0 ||
+    tasks.some((task) => !task.completed);
+
   // Set the real clock after mount, and refresh it whenever anything that
   // affects the tree changes — growth events, or the dev toggle/sim — so the
   // bonsai always re-derives against the current time (and reflects Dev being
@@ -124,6 +135,26 @@ export default function Home() {
     idleOffsetHours,
   });
 
+  const gridTemplateColumns = isFocus
+    ? showFrogCard
+      ? { xs: "1fr", md: "repeat(3, 1fr)" }
+      : { xs: "1fr", md: "repeat(2, 1fr)" }
+    : { xs: "1fr", md: "repeat(4, 1fr)" };
+
+  const gridTemplateAreas = isFocus
+    ? showFrogCard
+      ? { xs: `"bonsai" "frog" "timer"`, md: `"frog bonsai timer"` }
+      : { xs: `"bonsai" "timer"`, md: `"bonsai timer"` }
+    : showFrogCard
+      ? {
+          xs: `"frog" "timer" "bonsai" "garden" "tasks" "reflection"`,
+          md: `"frog frog garden garden" "timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
+        }
+      : {
+          xs: `"timer" "bonsai" "garden" "tasks" "reflection"`,
+          md: `"timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
+        };
+
   return (
     <Box
       component="main"
@@ -139,40 +170,70 @@ export default function Home() {
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
         sx={{
-          mb: 5,
+          mb: hyperMinimal ? 2.5 : 5,
           justifyContent: "space-between",
           alignItems: { xs: "flex-start", sm: "center" },
         }}
       >
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "5.5rem", lineHeight: 1 }} />
-          <Box>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={(theme) => {
-                const gradient = gardenWordmarkGradient(palette, theme.palette);
-                if (!gradient) {
-                  return { color: "primary.main", width: "fit-content" };
-                }
-                return {
-                  backgroundImage: gradient,
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  color: "transparent",
-                  width: "fit-content",
-                };
-              }}
-            >
-              Frog Garden
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Swallow the frog first. Let the rest flow naturally.
-            </Typography>
-          </Box>
-        </Stack>
+        {hyperMinimal ? (
+          <Typography
+            component="h1"
+            sx={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              p: 0,
+              m: -1,
+              overflow: "hidden",
+              clip: "rect(0 0 0 0)",
+              whiteSpace: "nowrap",
+              border: 0,
+            }}
+          >
+            Frog Garden
+          </Typography>
+        ) : (
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            <Box
+              component={FaFrog}
+              aria-hidden
+              sx={{ color: "primary.main", fontSize: "5.5rem", lineHeight: 1 }}
+            />
+            <Box>
+              <Typography
+                variant="h4"
+                component="h1"
+                sx={(theme) => {
+                  const gradient = gardenWordmarkGradient(palette, theme.palette);
+                  if (!gradient) {
+                    return { color: "primary.main", width: "fit-content" };
+                  }
+                  return {
+                    backgroundImage: gradient,
+                    backgroundClip: "text",
+                    WebkitBackgroundClip: "text",
+                    color: "transparent",
+                    width: "fit-content",
+                  };
+                }}
+              >
+                Frog Garden
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Swallow the frog first. Let the rest flow naturally.
+              </Typography>
+            </Box>
+          </Stack>
+        )}
 
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            ml: hyperMinimal ? "auto" : undefined,
+          }}
+        >
           <ToggleButtonGroup
             value={mode}
             exclusive
@@ -204,81 +265,95 @@ export default function Home() {
         sx={{
           display: "grid",
           gap: 3,
-          gridTemplateColumns: isFocus
-            ? { xs: "1fr", md: "repeat(3, 1fr)" }
-            : { xs: "1fr", md: "repeat(4, 1fr)" },
-          gridTemplateAreas: isFocus
-            ? { xs: `"bonsai" "frog" "timer"`, md: `"frog bonsai timer"` }
-            : {
-                xs: `"frog" "timer" "bonsai" "garden" "tasks" "reflection"`,
-                md: `"frog frog garden garden" "timer timer garden garden" "bonsai bonsai garden garden" "tasks tasks tasks tasks" "reflection reflection reflection reflection"`,
-              },
+          gridTemplateColumns,
+          gridTemplateAreas,
         }}
       >
-        <BentoCard area="frog" accent="primary">
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
-            <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1.3rem" }} />
-            <Chip
-              label="Largest Task"
-              color="primary"
-              size="small"
-            />
-          </Stack>
-          {frogTask ? (
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
-              <Checkbox
-                checked={frogTask.completed}
-                disabled={frogTask.completed}
-                slotProps={{
-                  input: {
-                    "aria-label": frogTask.completed
-                      ? "Frog completed — designate a new frog to move on"
-                      : `Mark "${frogTask.title}" complete`,
-                  },
-                }}
-                onChange={(event) => {
-                  if (frogTask.completed) return;
-                  if (event.target.checked) {
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "frog");
-                  }
-                  toggleTaskCompleted(frogTask.id);
-                }}
-              />
-              <Typography
-                variant="h5"
-                component="h2"
-                sx={{
-                  color: frogTask.completed ? "text.disabled" : "text.primary",
-                  textDecoration: frogTask.completed ? "line-through" : "none",
-                  flexGrow: 1,
-                }}
-              >
-                {frogTask.title}
-              </Typography>
-              {!frogTask.completed && (
-                <DeleteIncompleteTaskControl
-                  taskId={frogTask.id}
-                  taskTitle={frogTask.title}
-                  onDelete={deleteTask}
+        {showFrogCard && (
+          <BentoCard area="frog" accent="primary" ariaLabel="Frog task">
+            <Chrome>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
+                <Box
+                  component={FaFrog}
+                  aria-hidden
+                  sx={{ color: "primary.main", fontSize: "1.3rem" }}
                 />
-              )}
-            </Stack>
-          ) : (
-            <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
-              No frog chosen yet
-            </Typography>
-          )}
-        </BentoCard>
+                <Chip label="Largest Task" color="primary" size="small" />
+              </Stack>
+            </Chrome>
+            {frogTask ? (
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
+                <Checkbox
+                  checked={frogTask.completed}
+                  disabled={frogTask.completed}
+                  slotProps={{
+                    input: {
+                      "aria-label": frogTask.completed
+                        ? "Frog completed — designate a new frog to move on"
+                        : `Mark "${frogTask.title}" complete`,
+                    },
+                  }}
+                  onChange={(event) => {
+                    if (frogTask.completed) return;
+                    if (event.target.checked) {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "frog");
+                    }
+                    toggleTaskCompleted(frogTask.id);
+                  }}
+                />
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  sx={{
+                    color: frogTask.completed ? "text.disabled" : "text.primary",
+                    textDecoration: frogTask.completed ? "line-through" : "none",
+                    flexGrow: 1,
+                  }}
+                >
+                  {frogTask.title}
+                </Typography>
+                {!frogTask.completed && (
+                  <DeleteIncompleteTaskControl
+                    taskId={frogTask.id}
+                    taskTitle={frogTask.title}
+                    onDelete={deleteTask}
+                  />
+                )}
+              </Stack>
+            ) : (
+              <Chrome>
+                <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
+                  No frog chosen yet
+                </Typography>
+              </Chrome>
+            )}
+          </BentoCard>
+        )}
 
         <AnimatePresence>
           {!isFocus && (
-            <BentoCard key="garden" area="garden" accent="info" fill animatePresence>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-                <WavesOutlinedIcon color="info" />
-                <Typography variant="h6" component="h2">
-                  Sand Mode
-                </Typography>
+            <BentoCard
+              key="garden"
+              area="garden"
+              accent="info"
+              fill
+              animatePresence
+              ariaLabel="Sand"
+            >
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: "center", mb: hyperMinimal ? 1 : 1.5 }}
+              >
+                <Chrome>
+                  <WavesOutlinedIcon color="info" />
+                </Chrome>
+                <Chrome>
+                  <Typography variant="h6" component="h2">
+                    Sand Mode
+                  </Typography>
+                </Chrome>
                 <Tooltip title="Smooth the sand">
                   <IconButton
                     size="small"
@@ -299,9 +374,11 @@ export default function Home() {
                   </IconButton>
                 </Tooltip>
               </Stack>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                Rake a little to calm your mind.
-              </Typography>
+              <Chrome>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  Rake a little to calm your mind.
+                </Typography>
+              </Chrome>
               <Box sx={{ flexGrow: 1, minHeight: 220, display: "flex" }}>
                 <SandCanvas />
               </Box>
@@ -311,13 +388,21 @@ export default function Home() {
 
         <AnimatePresence>
           {!isFocus && (
-            <BentoCard key="tasks" area="tasks" accent="secondary" animatePresence>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-                <CheckCircleOutlineIcon color="secondary" />
-                <Typography variant="h6" component="h2">
-                  Task list
-                </Typography>
-              </Stack>
+            <BentoCard
+              key="tasks"
+              area="tasks"
+              accent="secondary"
+              animatePresence
+              ariaLabel="Task list"
+            >
+              <Chrome>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                  <CheckCircleOutlineIcon color="secondary" />
+                  <Typography variant="h6" component="h2">
+                    Task list
+                  </Typography>
+                </Stack>
+              </Chrome>
               <TaskListCard
                 tasks={otherTasks}
                 onUpdateTitle={updateTaskTitle}
@@ -331,36 +416,40 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        <BentoCard area="timer" accent="warning">
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <TimerOutlinedIcon color="warning" />
-            <Typography variant="h6" component="h2">
-              Focus
-            </Typography>
-          </Stack>
+        <BentoCard area="timer" accent="warning" ariaLabel="Focus timer">
+          <Chrome>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+              <TimerOutlinedIcon color="warning" />
+              <Typography variant="h6" component="h2">
+                Focus
+              </Typography>
+            </Stack>
+          </Chrome>
           <FocusTimer />
         </BentoCard>
 
         {/* Bonsai lives in BOTH modes — front-and-center in Focus Mode. */}
-        <BentoCard area="bonsai" accent="success" fill>
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-            <SpaOutlinedIcon color="success" />
-            <Typography variant="h6" component="h2">
-              Bonsai
-            </Typography>
-            <Tooltip
-              title="Grows as you finish tasks and focus sessions."
-              slotProps={{ transition: { timeout: reduceMotion ? 0 : undefined } }}
-            >
-              <IconButton
-                size="small"
-                aria-label="About the bonsai"
-                sx={{ color: "text.secondary" }}
+        <BentoCard area="bonsai" accent="success" fill ariaLabel="Bonsai garden">
+          <Chrome>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+              <SpaOutlinedIcon color="success" />
+              <Typography variant="h6" component="h2">
+                Bonsai
+              </Typography>
+              <Tooltip
+                title="Grows as you finish tasks and focus sessions."
+                slotProps={{ transition: { timeout: reduceMotion ? 0 : undefined } }}
               >
-                <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Stack>
+                <IconButton
+                  size="small"
+                  aria-label="About the bonsai"
+                  sx={{ color: "text.secondary" }}
+                >
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Chrome>
           <Stack sx={{ alignItems: "center", justifyContent: "center", flexGrow: 1 }}>
             <BonsaiTree
               stage={bonsai.stage}
@@ -407,17 +496,29 @@ export default function Home() {
 
         <AnimatePresence>
           {!isFocus && (
-            <BentoCard key="reflection" area="reflection" accent="success" animatePresence>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-                <EditNoteOutlinedIcon color="success" />
-                <Typography variant="h6" component="h2">
-                  Close the day
-                </Typography>
-              </Stack>
+            <BentoCard
+              key="reflection"
+              area="reflection"
+              accent="success"
+              animatePresence
+              ariaLabel="Close the day"
+            >
+              <Chrome>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                  <EditNoteOutlinedIcon color="success" />
+                  <Typography variant="h6" component="h2">
+                    Close the day
+                  </Typography>
+                </Stack>
+              </Chrome>
               <TextField
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="How did today go and what did we learn? Remember every day we have different capacity, needs and goals so don't beat yourself up if you didn't get everything done. Get some rest. Tomorrow is a new day to crush it."
+                placeholder={
+                  hyperMinimal
+                    ? "Reflection…"
+                    : "How did today go and what did we learn? Remember every day we have different capacity, needs and goals so don't beat yourself up if you didn't get everything done. Get some rest. Tomorrow is a new day to crush it."
+                }
                 multiline
                 minRows={2}
                 fullWidth
@@ -439,7 +540,7 @@ export default function Home() {
       />
 
       <AnimatePresence>
-        {!isFocus && (
+        {!isFocus && showCompletedPanel && (
           <motion.div
             key="completed"
             initial={{ opacity: 0, y: 8 }}
@@ -447,14 +548,19 @@ export default function Home() {
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
+            <Card
+              sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}
+              aria-label="Completed"
+            >
               <CardContent sx={{ p: 0 }}>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-                  <HistoryOutlinedIcon color="primary" />
-                  <Typography variant="h6" component="h2">
-                    Completed
-                  </Typography>
-                </Stack>
+                <Chrome>
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                    <HistoryOutlinedIcon color="primary" />
+                    <Typography variant="h6" component="h2">
+                      Completed
+                    </Typography>
+                  </Stack>
+                </Chrome>
                 <CompletedLog entries={completedLog} onUpdateNote={updateCompletedNote} />
               </CardContent>
             </Card>
@@ -463,7 +569,7 @@ export default function Home() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {!isFocus && (
+        {!isFocus && showStandupPanel && (
           <motion.div
             key="standup-summary"
             initial={{ opacity: 0, y: 8 }}
@@ -471,14 +577,19 @@ export default function Home() {
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
+            <Card
+              sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}
+              aria-label="Standup summary"
+            >
               <CardContent sx={{ p: 0 }}>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-                  <ChecklistOutlinedIcon color="secondary" />
-                  <Typography variant="h6" component="h2">
-                    Standup Summary
-                  </Typography>
-                </Stack>
+                <Chrome>
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                    <ChecklistOutlinedIcon color="secondary" />
+                    <Typography variant="h6" component="h2">
+                      Standup Summary
+                    </Typography>
+                  </Stack>
+                </Chrome>
                 <StandupSummary tasks={tasks} completedLog={completedLog} />
               </CardContent>
             </Card>
@@ -508,6 +619,7 @@ function BentoCard({
   accent,
   fill = false,
   animatePresence = false,
+  ariaLabel,
   children,
 }: {
   area: string;
@@ -516,6 +628,8 @@ function BentoCard({
   fill?: boolean;
   /** When true, fade/scale in and out (for cards hidden in Focus Mode). */
   animatePresence?: boolean;
+  /** Accessible name when the visible heading is stripped (Hyper Minimal). */
+  ariaLabel?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -528,6 +642,7 @@ function BentoCard({
       style={{ gridArea: area, minWidth: 0, display: "flex", flexDirection: "column" }}
     >
       <Card
+        aria-label={ariaLabel}
         sx={{
           flexGrow: 1,
           height: "100%",

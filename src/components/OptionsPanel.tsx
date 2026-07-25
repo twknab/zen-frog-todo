@@ -17,6 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
+import { useHyperMinimal } from "@/lib/hyperMinimal";
 import { useColorMode, useGardenPalette } from "@/theme/ThemeRegistry";
 import {
   normalizePaletteId,
@@ -111,8 +112,13 @@ function OptionsSection({
 }
 
 /**
- * Calm Options Popover — single home for Palette, Appearance, and Dev.
- * Palette is a dropdown so ten joyful themes stay scannable, not crowded.
+ * Calm Options Popover — single home for Palette, Appearance, Hyper Minimal,
+ * and Dev. Palette is a dropdown so themes stay scannable, not crowded.
+ * Keeps the main header free of settings chrome.
+ *
+ * Radius: uses theme.shape.borderRadius (16) — one step softer than cards
+ * (24px), not the previous `borderRadius: 3` (= 48px) which felt bubbly
+ * for a compact settings surface.
  */
 export default function OptionsPanel({
   devMode,
@@ -120,6 +126,7 @@ export default function OptionsPanel({
 }: OptionsPanelProps) {
   const { mode, setColorMode } = useColorMode();
   const { palette, setPalette } = useGardenPalette();
+  const [hyperMinimal, setHyperMinimal] = useHyperMinimal();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const titleId = useId();
   const paletteLabelId = useId();
@@ -269,6 +276,26 @@ export default function OptionsPanel({
                 Dark
               </ToggleButton>
             </ToggleButtonGroup>
+          </OptionsSection>
+
+          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+          <OptionsSection label="Density">
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={hyperMinimal}
+                  onChange={(event) => setHyperMinimal(event.target.checked)}
+                  slotProps={{ input: { "aria-label": "Hyper Minimal" } }}
+                />
+              }
+              label="Hyper Minimal"
+              slotProps={{
+                typography: { variant: "body2", color: "text.secondary" },
+              }}
+              sx={{ ml: 0, mr: 0 }}
+            />
           </OptionsSection>
 
           <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />

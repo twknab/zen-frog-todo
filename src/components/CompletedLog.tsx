@@ -3,6 +3,7 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Chrome from "@/components/Chrome";
 import type { CompletedLogEntry } from "@/lib/tasks";
 
 type CompletedLogProps = {
@@ -22,9 +23,11 @@ function formatCompletedAt(iso: string) {
 export default function CompletedLog({ entries, onUpdateNote }: CompletedLogProps) {
   if (entries.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Nothing finished yet — completed tasks will collect here.
-      </Typography>
+      <Chrome>
+        <Typography variant="body2" color="text.secondary">
+          Nothing finished yet — completed tasks will collect here.
+        </Typography>
+      </Chrome>
     );
   }
 
