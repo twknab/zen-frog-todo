@@ -10,12 +10,13 @@
 
 | Field | Type | Notes |
 |---|---|---|
-| `palette` | `PaletteId` | See `PALETTE_IDS` in `src/theme/theme.ts` (ten ids) |
+| `palette` | `PaletteId` | See `PALETTE_IDS` in `src/theme/theme.ts` (fifteen ids) |
 | `setPalette` | `(next: PaletteId) => void` | Persists immediately via normalize |
 
 ### `normalizePaletteId(value: unknown): PaletteId`
 
 - Known ids returned as-is.
+- Legacy aliases (`vibrant` → `acid`, `dusk` → `violethour`, `guestbook` → `webring`, `sunlily` → `goldhour`, `tidepool` → `tideglass`, `aurora` → `borealis`, `disco` → `mirrorball`, `floss` → `sugarrush`, `nebula` → `starfruit`) map to current ids.
 - Anything else → `"natural"`.
 
 ## Theme factory
@@ -24,10 +25,10 @@
 createZenTheme(mode: ColorMode, palette: PaletteId = "natural"): Theme
 ```
 
-- Selects token set for `palette` × `mode` (ten palettes × two appearances).
+- Selects token set for `palette` × `mode` (fifteen palettes × two appearances).
 - **Primary (`moss`) MUST stay green-family** so ground frogs + canopy leaves read as a living pile (015 frog/fruit split). Non-green personality lives in secondary / error / warning / info (canopy frog-fruit).
-- Heading face: Bricolage for `vibrant`, `guestbook`, `aurora`, `disco`, `floss`, `nebula`; Zen Maru Gothic otherwise.
-- Default palette argument `"natural"`.
+- Heading face: Bricolage for high-energy ids (`acid`, `webring`, `borealis`, `mirrorball`, `sugarrush`, `starfruit`, `firefly`, `tropic`, `emberglow`); Zen Maru Gothic otherwise.
+- Default palette argument `"natural"` (display name **Quiet Grove**).
 
 ## Atmosphere
 
@@ -41,13 +42,13 @@ getGardenAtmosphere(palette: PaletteId, mode: ColorMode): GardenAtmosphere
 
 | Requirement | Detail |
 |---|---|
-| Options count | Exactly ten: Natural, Vibrant, Dusk, Guestbook, Sunlily, Tide Pool, Aurora, Disco, Cotton Floss, Nebula |
+| Options count | Exactly fifteen named palettes (see `PALETTE_OPTIONS`) |
 | Selection | Exclusive; only one active |
-| Control | **Dropdown `Select`** (not a ToggleButton grid) with color swatch previews |
-| Labels | Visible text + accessible names matching display names |
+| Control | **Dropdown `Select`** with color swatch previews |
+| Labels | Cool display names from `PALETTE_OPTIONS` |
 | Group | `aria-label="Palette"` on the Select |
 | Stay open | Changing palette MUST NOT close the Options Popover |
-| Menu | Scrollable if needed; MUST NOT overflow the viewport awkwardly on narrow phones |
+| Menu | Scrollable; MUST remain usable on narrow phones |
 
 Appearance (Light/Dark) and Dev controls unchanged in behavior.
 
@@ -55,14 +56,14 @@ Appearance (Light/Dark) and Dev controls unchanged in behavior.
 
 | Palette | Treatment |
 |---|---|
-| `natural`, `dusk` | Solid color (`primary.main`) |
+| `natural`, `violethour` | Solid color (`primary.main`) |
 | All other palettes | Joyful gradient wordmark via `gardenWordmarkGradient` |
 
 ## Persistence keys
 
 | Key | Value |
 |---|---|
-| `frog-garden:palette-v1` | one of ten ids above |
+| `frog-garden:palette-v1` | one of fifteen canonical ids (or a legacy alias that normalizes) |
 | `frog-garden:color-mode-v1` | `light` \| `dark` (unchanged) |
 | `frog-garden:dev-mode-v1` | boolean (unchanged) |
 

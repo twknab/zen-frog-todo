@@ -16,41 +16,56 @@ export type ColorMode = "light" | "dark";
  */
 export type PaletteId =
   | "natural"
-  | "vibrant"
-  | "dusk"
-  | "guestbook"
-  | "sunlily"
-  | "tidepool"
-  | "aurora"
-  | "disco"
-  | "floss"
-  | "nebula";
+  | "acid"
+  | "violethour"
+  | "webring"
+  | "goldhour"
+  | "tideglass"
+  | "borealis"
+  | "mirrorball"
+  | "sugarrush"
+  | "starfruit"
+  | "firefly"
+  | "tropic"
+  | "emberglow"
+  | "frostbloom"
+  | "sakura";
 
 export const PALETTE_IDS: readonly PaletteId[] = [
   "natural",
-  "vibrant",
-  "dusk",
-  "guestbook",
-  "sunlily",
-  "tidepool",
-  "aurora",
-  "disco",
-  "floss",
-  "nebula",
+  "acid",
+  "violethour",
+  "webring",
+  "goldhour",
+  "tideglass",
+  "borealis",
+  "mirrorball",
+  "sugarrush",
+  "starfruit",
+  "firefly",
+  "tropic",
+  "emberglow",
+  "frostbloom",
+  "sakura",
 ] as const;
 
 /** Display labels for Options + a11y — single source of truth. */
 export const PALETTE_OPTIONS: readonly { id: PaletteId; label: string }[] = [
-  { id: "natural", label: "Natural" },
-  { id: "vibrant", label: "Vibrant" },
-  { id: "dusk", label: "Dusk" },
-  { id: "guestbook", label: "Guestbook" },
-  { id: "sunlily", label: "Sunlily" },
-  { id: "tidepool", label: "Tide Pool" },
-  { id: "aurora", label: "Aurora" },
-  { id: "disco", label: "Disco" },
-  { id: "floss", label: "Cotton Floss" },
-  { id: "nebula", label: "Nebula" },
+  { id: "natural", label: "Quiet Grove" },
+  { id: "acid", label: "Acid Bloom" },
+  { id: "violethour", label: "Violet Hour" },
+  { id: "webring", label: "Web Ring" },
+  { id: "goldhour", label: "Golden Hour" },
+  { id: "tideglass", label: "Tideglass" },
+  { id: "borealis", label: "Borealis" },
+  { id: "mirrorball", label: "Mirrorball" },
+  { id: "sugarrush", label: "Sugar Rush" },
+  { id: "starfruit", label: "Starfruit" },
+  { id: "firefly", label: "Firefly" },
+  { id: "tropic", label: "Tropic Punch" },
+  { id: "emberglow", label: "Emberglow" },
+  { id: "frostbloom", label: "Frostbloom" },
+  { id: "sakura", label: "Sakura Drift" },
 ] as const;
 
 /**
@@ -62,25 +77,41 @@ export const PALETTE_PREVIEWS: Record<
   readonly [string, string, string]
 > = {
   natural: ["#6B8F71", "#B98C5B", "#7A93A6"],
-  vibrant: ["#16A34A", "#E11D6B", "#0E9BB8"],
-  dusk: ["#5F8F6E", "#C4A35A", "#7B6BA8"],
-  guestbook: ["#157A2C", "#C41E6A", "#0E9BB8"],
-  sunlily: ["#6E8A42", "#C24E32", "#E8895A"],
-  tidepool: ["#1A7A70", "#C45A5A", "#3ECFBE"],
-  aurora: ["#2DB86A", "#E040A0", "#5B6CFF"],
-  disco: ["#3CCF5A", "#FF2D95", "#FFD84A"],
-  floss: ["#5ECF9A", "#FF6BB5", "#6BB8FF"],
-  nebula: ["#4ADE80", "#C084FC", "#F472B6"],
+  acid: ["#16A34A", "#E11D6B", "#0E9BB8"],
+  violethour: ["#5F8F6E", "#C4A35A", "#7B6BA8"],
+  webring: ["#157A2C", "#C41E6A", "#0E9BB8"],
+  goldhour: ["#6E8A42", "#C24E32", "#E8895A"],
+  tideglass: ["#1A7A70", "#C45A5A", "#3ECFBE"],
+  borealis: ["#2DB86A", "#E040A0", "#5B6CFF"],
+  mirrorball: ["#3CCF5A", "#FF2D95", "#FFD84A"],
+  sugarrush: ["#5ECF9A", "#FF6BB5", "#6BB8FF"],
+  starfruit: ["#4ADE80", "#C084FC", "#F472B6"],
+  firefly: ["#7CDE3A", "#F0C020", "#3EE0C0"],
+  tropic: ["#2E9A4A", "#F08A20", "#FF4D8D"],
+  emberglow: ["#6B8F3A", "#E85A20", "#FFB020"],
+  frostbloom: ["#5A9A7A", "#6AB0E8", "#C8A0E8"],
+  sakura: ["#6AAA70", "#E878A0", "#C06090"],
+};
+
+/** Older persisted ids → current canonical ids (016 renames). */
+const PALETTE_ALIASES: Record<string, PaletteId> = {
+  vibrant: "acid",
+  dusk: "violethour",
+  guestbook: "webring",
+  sunlily: "goldhour",
+  tidepool: "tideglass",
+  aurora: "borealis",
+  disco: "mirrorball",
+  floss: "sugarrush",
+  nebula: "starfruit",
 };
 
 export function normalizePaletteId(value: unknown): PaletteId {
-  if (
-    typeof value === "string" &&
-    (PALETTE_IDS as readonly string[]).includes(value)
-  ) {
+  if (typeof value !== "string") return "natural";
+  if ((PALETTE_IDS as readonly string[]).includes(value)) {
     return value as PaletteId;
   }
-  return "natural";
+  return PALETTE_ALIASES[value] ?? "natural";
 }
 
 /**
@@ -106,7 +137,7 @@ type ZenPalette = {
   contrastText: string;
 };
 
-/** Pre-experiment muted constitution palette (Natural). */
+/** Quiet Grove — muted constitution baseline (default). */
 const naturalLight: ZenPalette = {
   bgDefault: "#F6F3EC",
   bgPaper: "#FBF9F4",
@@ -146,10 +177,9 @@ const naturalDark: ZenPalette = {
 };
 
 /**
- * Neon garden (Vibrant) — from bold-psychedelic experiment / PR #11 inspiration.
- * Opt-in only; Natural remains default (Principle V compatibility).
+ * Acid Bloom — neon psychedelic garden (PR #11 lineage). Opt-in only.
  */
-const vibrantLight: ZenPalette = {
+const acidLight: ZenPalette = {
   bgDefault: "#F3EEFF",
   bgPaper: "#FFFBFF",
   ink: "#231C33",
@@ -168,7 +198,7 @@ const vibrantLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const vibrantDark: ZenPalette = {
+const acidDark: ZenPalette = {
   bgDefault: "#120E1F",
   bgPaper: "#1F1830",
   ink: "#F2EDFB",
@@ -188,10 +218,9 @@ const vibrantDark: ZenPalette = {
 };
 
 /**
- * Dusk — calm night-garden: indigo/violet surfaces, lilac mist, muted gold,
- * moss green retained for frog identity.
+ * Violet Hour — calm night-garden: indigo/violet surfaces, lilac mist, muted gold.
  */
-const duskLight: ZenPalette = {
+const violethourLight: ZenPalette = {
   bgDefault: "#F3F0F8",
   bgPaper: "#FAF8FC",
   ink: "#2A2450",
@@ -210,7 +239,7 @@ const duskLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const duskDark: ZenPalette = {
+const violethourDark: ZenPalette = {
   bgDefault: "#16122A",
   bgPaper: "#1F1A36",
   ink: "#EDE7F8",
@@ -230,10 +259,9 @@ const duskDark: ZenPalette = {
 };
 
 /**
- * Guestbook — playful 90s-web / GeoCities garden (lime, magenta, cyan).
- * Opt-in joy; readable, not illegible neon chaos.
+ * Web Ring — playful 90s-web / GeoCities garden (lime, magenta, cyan).
  */
-const guestbookLight: ZenPalette = {
+const webringLight: ZenPalette = {
   bgDefault: "#F7F4E8",
   bgPaper: "#FFFCF0",
   ink: "#2A1838",
@@ -252,7 +280,7 @@ const guestbookLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const guestbookDark: ZenPalette = {
+const webringDark: ZenPalette = {
   bgDefault: "#14182A",
   bgPaper: "#1C2238",
   ink: "#F5F0FF",
@@ -272,10 +300,9 @@ const guestbookDark: ZenPalette = {
 };
 
 /**
- * Sunlily — golden-hour / sunset lily. Warm olive moss (ground frogs stay green);
- * apricot / coral / soft gold accents for fruit + chrome.
+ * Golden Hour — sunset lily. Warm olive moss; apricot / coral / soft gold fruit.
  */
-const sunlilyLight: ZenPalette = {
+const goldhourLight: ZenPalette = {
   bgDefault: "#FFF4E8",
   bgPaper: "#FFF9F2",
   ink: "#3A2418",
@@ -294,7 +321,7 @@ const sunlilyLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const sunlilyDark: ZenPalette = {
+const goldhourDark: ZenPalette = {
   bgDefault: "#241810",
   bgPaper: "#322218",
   ink: "#FFF0E0",
@@ -314,9 +341,9 @@ const sunlilyDark: ZenPalette = {
 };
 
 /**
- * Tide Pool — seafoam + turquoise candy pond; fresh and cheerful.
+ * Tideglass — seafoam + turquoise candy pond; fresh and cheerful.
  */
-const tidepoolLight: ZenPalette = {
+const tideglassLight: ZenPalette = {
   bgDefault: "#E8F8F4",
   bgPaper: "#F4FCFA",
   ink: "#14353A",
@@ -335,7 +362,7 @@ const tidepoolLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const tidepoolDark: ZenPalette = {
+const tideglassDark: ZenPalette = {
   bgDefault: "#0E2428",
   bgPaper: "#163238",
   ink: "#E6FAF6",
@@ -355,9 +382,9 @@ const tidepoolDark: ZenPalette = {
 };
 
 /**
- * Aurora — northern-lights garden: electric moss, magenta + indigo sky fruit.
+ * Borealis — northern-lights garden: electric moss, magenta + indigo sky fruit.
  */
-const auroraLight: ZenPalette = {
+const borealisLight: ZenPalette = {
   bgDefault: "#EEF6FF",
   bgPaper: "#F7FBFF",
   ink: "#1A2048",
@@ -376,7 +403,7 @@ const auroraLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const auroraDark: ZenPalette = {
+const borealisDark: ZenPalette = {
   bgDefault: "#0A1028",
   bgPaper: "#121A38",
   ink: "#E8F0FF",
@@ -396,9 +423,9 @@ const auroraDark: ZenPalette = {
 };
 
 /**
- * Disco — mirror-ball pond: hot pink, gold, electric lime — pure party frogs.
+ * Mirrorball — hot pink, gold, electric lime — pure party frogs.
  */
-const discoLight: ZenPalette = {
+const mirrorballLight: ZenPalette = {
   bgDefault: "#FFF0F8",
   bgPaper: "#FFF8FC",
   ink: "#2A1030",
@@ -417,7 +444,7 @@ const discoLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const discoDark: ZenPalette = {
+const mirrorballDark: ZenPalette = {
   bgDefault: "#1A0A1E",
   bgPaper: "#2A1230",
   ink: "#FFF0FA",
@@ -437,9 +464,9 @@ const discoDark: ZenPalette = {
 };
 
 /**
- * Cotton Floss — sugar-rush pastels: bubblegum pink, sky blue, mint joy.
+ * Sugar Rush — bubblegum pink, sky blue, mint joy.
  */
-const flossLight: ZenPalette = {
+const sugarrushLight: ZenPalette = {
   bgDefault: "#FFF0F6",
   bgPaper: "#FFFAFC",
   ink: "#3A2040",
@@ -458,7 +485,7 @@ const flossLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const flossDark: ZenPalette = {
+const sugarrushDark: ZenPalette = {
   bgDefault: "#221028",
   bgPaper: "#321838",
   ink: "#FFF0F8",
@@ -478,9 +505,9 @@ const flossDark: ZenPalette = {
 };
 
 /**
- * Nebula — cosmic garden: deep space violet, starfruit pink, nova gold.
+ * Starfruit — cosmic garden: deep space violet, starfruit pink, nova gold.
  */
-const nebulaLight: ZenPalette = {
+const starfruitLight: ZenPalette = {
   bgDefault: "#F4EEFF",
   bgPaper: "#FBF0FF",
   ink: "#241848",
@@ -499,7 +526,7 @@ const nebulaLight: ZenPalette = {
   contrastText: "#FFFFFF",
 };
 
-const nebulaDark: ZenPalette = {
+const starfruitDark: ZenPalette = {
   bgDefault: "#100818",
   bgPaper: "#1A1028",
   ink: "#F5EDFF",
@@ -518,18 +545,228 @@ const nebulaDark: ZenPalette = {
   contrastText: "#100818",
 };
 
+/**
+ * Firefly — bioluminescent night garden: chartreuse glow, amber sparks, lagoon ink.
+ */
+const fireflyLight: ZenPalette = {
+  bgDefault: "#F2F8E8",
+  bgPaper: "#FAFDF2",
+  ink: "#1A3020",
+  inkSoft: "#5A7050",
+  mist: "#D8E8C8",
+  tooltipBg: "#1A3020",
+  moss: "#4A9A28",
+  mossLight: "#7CDE3A",
+  mossDark: "#347018",
+  clay: "#C89010",
+  clayLight: "#E8B030",
+  clayDark: "#9A6E08",
+  rust: "#D06030",
+  ochre: "#E0A820",
+  dusk: "#20A890",
+  contrastText: "#FFFFFF",
+};
+
+const fireflyDark: ZenPalette = {
+  bgDefault: "#0A1810",
+  bgPaper: "#122418",
+  ink: "#E8FFE0",
+  inkSoft: "#A0C890",
+  mist: "rgba(124, 222, 58, 0.14)",
+  tooltipBg: "#1A3020",
+  moss: "#7CDE3A",
+  mossLight: "#A8F060",
+  mossDark: "#4AAA20",
+  clay: "#F0C020",
+  clayLight: "#FFE060",
+  clayDark: "#C89810",
+  rust: "#FF8A40",
+  ochre: "#FFD040",
+  dusk: "#3EE0C0",
+  contrastText: "#0A1810",
+};
+
+/**
+ * Tropic Punch — mango stand joy: papaya orange, hibiscus pink, jungle green.
+ */
+const tropicLight: ZenPalette = {
+  bgDefault: "#FFF6E8",
+  bgPaper: "#FFFBF2",
+  ink: "#2A2810",
+  inkSoft: "#7A6840",
+  mist: "#F0E0C8",
+  tooltipBg: "#2A2810",
+  moss: "#2E9A4A",
+  mossLight: "#4EC86A",
+  mossDark: "#1E7A34",
+  clay: "#E07018",
+  clayLight: "#F08A20",
+  clayDark: "#B05810",
+  rust: "#E04050",
+  ochre: "#E8A818",
+  dusk: "#FF4D8D",
+  contrastText: "#FFFFFF",
+};
+
+const tropicDark: ZenPalette = {
+  bgDefault: "#1A1408",
+  bgPaper: "#2A1E10",
+  ink: "#FFF4E0",
+  inkSoft: "#D4B890",
+  mist: "rgba(240, 138, 32, 0.14)",
+  tooltipBg: "#3A2818",
+  moss: "#4ADE80",
+  mossLight: "#86EFAC",
+  mossDark: "#22C55E",
+  clay: "#F08A20",
+  clayLight: "#FFB050",
+  clayDark: "#C86810",
+  rust: "#FF6B6B",
+  ochre: "#FFD04A",
+  dusk: "#FF6BA8",
+  contrastText: "#1A1408",
+};
+
+/**
+ * Emberglow — volcanic pot: charcoal ground, lava orange, spark gold.
+ */
+const emberglowLight: ZenPalette = {
+  bgDefault: "#F8F0E8",
+  bgPaper: "#FFF8F2",
+  ink: "#2A1810",
+  inkSoft: "#7A5040",
+  mist: "#E8D4C8",
+  tooltipBg: "#2A1810",
+  moss: "#6B8F3A",
+  mossLight: "#8FB85A",
+  mossDark: "#4E6A28",
+  clay: "#C84818",
+  clayLight: "#E85A20",
+  clayDark: "#9A3410",
+  rust: "#B02820",
+  ochre: "#D48818",
+  dusk: "#E07040",
+  contrastText: "#FFFFFF",
+};
+
+const emberglowDark: ZenPalette = {
+  bgDefault: "#140C08",
+  bgPaper: "#221410",
+  ink: "#FFE8D8",
+  inkSoft: "#D4A090",
+  mist: "rgba(232, 90, 32, 0.16)",
+  tooltipBg: "#302018",
+  moss: "#8FB85A",
+  mossLight: "#B0D87A",
+  mossDark: "#6B8F3A",
+  clay: "#FF6A28",
+  clayLight: "#FF8A50",
+  clayDark: "#E04810",
+  rust: "#FF5040",
+  ochre: "#FFB020",
+  dusk: "#FF8A60",
+  contrastText: "#140C08",
+};
+
+/**
+ * Frostbloom — icy crystalline garden (cool variance from Tideglass teal).
+ */
+const frostbloomLight: ZenPalette = {
+  bgDefault: "#F0F6FC",
+  bgPaper: "#F8FBFE",
+  ink: "#1A3048",
+  inkSoft: "#5A7088",
+  mist: "#D4E4F0",
+  tooltipBg: "#1A3048",
+  moss: "#3A8A6A",
+  mossLight: "#5A9A7A",
+  mossDark: "#2A6A50",
+  clay: "#3A88C8",
+  clayLight: "#6AB0E8",
+  clayDark: "#2868A0",
+  rust: "#C07090",
+  ochre: "#C8A860",
+  dusk: "#9080D0",
+  contrastText: "#FFFFFF",
+};
+
+const frostbloomDark: ZenPalette = {
+  bgDefault: "#0C1824",
+  bgPaper: "#142430",
+  ink: "#E8F4FF",
+  inkSoft: "#A0B8D0",
+  mist: "rgba(106, 176, 232, 0.14)",
+  tooltipBg: "#1C3040",
+  moss: "#5ECF9A",
+  mossLight: "#8AE8BC",
+  mossDark: "#3AAA78",
+  clay: "#6AB0E8",
+  clayLight: "#9AD0FF",
+  clayDark: "#3A88C8",
+  rust: "#E090B0",
+  ochre: "#E8C880",
+  dusk: "#C8A0E8",
+  contrastText: "#0C1824",
+};
+
+/**
+ * Sakura Drift — cherry-blossom spring: soft pink paper, plum fruit, gentle moss.
+ */
+const sakuraLight: ZenPalette = {
+  bgDefault: "#FFF2F6",
+  bgPaper: "#FFFAFC",
+  ink: "#3A2030",
+  inkSoft: "#8A6070",
+  mist: "#F5DCE4",
+  tooltipBg: "#3A2030",
+  moss: "#4A9A60",
+  mossLight: "#6AAA70",
+  mossDark: "#347848",
+  clay: "#D06088",
+  clayLight: "#E878A0",
+  clayDark: "#A84868",
+  rust: "#C04060",
+  ochre: "#D4A050",
+  dusk: "#C06090",
+  contrastText: "#FFFFFF",
+};
+
+const sakuraDark: ZenPalette = {
+  bgDefault: "#1E1018",
+  bgPaper: "#2C1824",
+  ink: "#FFF0F6",
+  inkSoft: "#D4A0B8",
+  mist: "rgba(232, 120, 160, 0.14)",
+  tooltipBg: "#3C2030",
+  moss: "#6AAA70",
+  mossLight: "#8AC890",
+  mossDark: "#4A8A58",
+  clay: "#E878A0",
+  clayLight: "#FFA0C0",
+  clayDark: "#C06080",
+  rust: "#F07088",
+  ochre: "#E8C070",
+  dusk: "#D080B0",
+  contrastText: "#1E1018",
+};
+
 const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> =
   {
     natural: { light: naturalLight, dark: naturalDark },
-    vibrant: { light: vibrantLight, dark: vibrantDark },
-    dusk: { light: duskLight, dark: duskDark },
-    guestbook: { light: guestbookLight, dark: guestbookDark },
-    sunlily: { light: sunlilyLight, dark: sunlilyDark },
-    tidepool: { light: tidepoolLight, dark: tidepoolDark },
-    aurora: { light: auroraLight, dark: auroraDark },
-    disco: { light: discoLight, dark: discoDark },
-    floss: { light: flossLight, dark: flossDark },
-    nebula: { light: nebulaLight, dark: nebulaDark },
+    acid: { light: acidLight, dark: acidDark },
+    violethour: { light: violethourLight, dark: violethourDark },
+    webring: { light: webringLight, dark: webringDark },
+    goldhour: { light: goldhourLight, dark: goldhourDark },
+    tideglass: { light: tideglassLight, dark: tideglassDark },
+    borealis: { light: borealisLight, dark: borealisDark },
+    mirrorball: { light: mirrorballLight, dark: mirrorballDark },
+    sugarrush: { light: sugarrushLight, dark: sugarrushDark },
+    starfruit: { light: starfruitLight, dark: starfruitDark },
+    firefly: { light: fireflyLight, dark: fireflyDark },
+    tropic: { light: tropicLight, dark: tropicDark },
+    emberglow: { light: emberglowLight, dark: emberglowDark },
+    frostbloom: { light: frostbloomLight, dark: frostbloomDark },
+    sakura: { light: sakuraLight, dark: sakuraDark },
   };
 
 const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial, sans-serif`;
@@ -537,12 +774,15 @@ const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial
 /** Playful display headings for high-energy opt-in palettes. */
 function usesDisplayHeading(palette: PaletteId): boolean {
   return (
-    palette === "vibrant" ||
-    palette === "guestbook" ||
-    palette === "aurora" ||
-    palette === "disco" ||
-    palette === "floss" ||
-    palette === "nebula"
+    palette === "acid" ||
+    palette === "webring" ||
+    palette === "borealis" ||
+    palette === "mirrorball" ||
+    palette === "sugarrush" ||
+    palette === "starfruit" ||
+    palette === "firefly" ||
+    palette === "tropic" ||
+    palette === "emberglow"
   );
 }
 
@@ -555,33 +795,44 @@ function headingFontFamilyFor(palette: PaletteId): string {
 
 /**
  * Joyful gradient wordmark for opt-in palettes.
- * Natural + Dusk stay solid primary (calm brand baseline).
+ * Quiet Grove + Violet Hour stay solid primary (calm brand baseline).
  */
 export function gardenWordmarkGradient(
   palette: PaletteId,
   themePalette: Theme["palette"],
 ): string | null {
+  const id = normalizePaletteId(palette);
   const { primary, secondary, info, error, warning } = themePalette;
-  switch (palette) {
+  switch (id) {
     case "natural":
-    case "dusk":
+    case "violethour":
       return null;
-    case "guestbook":
+    case "webring":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 45%, ${secondary.main} 100%)`;
-    case "vibrant":
+    case "acid":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 50%, #B983FF 100%)`;
-    case "sunlily":
+    case "goldhour":
       return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 45%, ${secondary.main} 100%)`;
-    case "tidepool":
+    case "tideglass":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 50%, ${secondary.main} 100%)`;
-    case "aurora":
+    case "borealis":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 40%, ${secondary.main} 100%)`;
-    case "disco":
+    case "mirrorball":
       return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 35%, ${secondary.main} 70%, ${info.main} 100%)`;
-    case "floss":
+    case "sugarrush":
       return `linear-gradient(100deg, ${secondary.main} 0%, ${info.main} 50%, ${primary.main} 100%)`;
-    case "nebula":
+    case "starfruit":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 40%, ${error.main} 100%)`;
+    case "firefly":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 50%, ${info.main} 100%)`;
+    case "tropic":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 40%, ${info.main} 100%)`;
+    case "emberglow":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${warning.main} 40%, ${secondary.main} 100%)`;
+    case "frostbloom":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
+    case "sakura":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
     default:
       return null;
   }
@@ -607,10 +858,11 @@ export function createZenTheme(
   mode: ColorMode,
   palette: PaletteId = "natural",
 ): Theme {
-  const pair = tokensByPalette[normalizePaletteId(palette)];
+  const id = normalizePaletteId(palette);
+  const pair = tokensByPalette[id];
   const zen = mode === "dark" ? pair.dark : pair.light;
-  const headingFontFamily = headingFontFamilyFor(palette);
-  const displayHeading = usesDisplayHeading(palette);
+  const headingFontFamily = headingFontFamilyFor(id);
+  const displayHeading = usesDisplayHeading(id);
 
   return createTheme({
     palette: {
@@ -764,5 +1016,5 @@ export function createZenTheme(
   });
 }
 
-/** Default (Natural light) theme for any static consumers. */
+/** Default (Quiet Grove light) theme for any static consumers. */
 export const zenTheme = createZenTheme("light", "natural");

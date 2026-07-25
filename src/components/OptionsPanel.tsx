@@ -199,7 +199,7 @@ export default function OptionsPanel({
                     paper: {
                       sx: {
                         mt: 0.5,
-                        maxHeight: "min(360px, 50vh)",
+                        maxHeight: "min(420px, 55vh)",
                         borderRadius: 1.5,
                         border: "1px solid",
                         borderColor: "divider",

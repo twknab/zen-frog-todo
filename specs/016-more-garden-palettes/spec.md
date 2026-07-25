@@ -16,7 +16,8 @@ Creative and product choices were delegated to the implementer (“you choose”
 
 - Q: First three new palettes? → A: **Guestbook** (90s web), **Sunlily** (golden hour), **Tide Pool** (seafoam).
 - Q: How should Options show many palettes without crowding? → A: **Dropdown Select** with color swatch previews (supersedes earlier 2×3 grid once count grew past six).
-- Q: Four more wild themes? → A: **Aurora** (northern lights), **Disco** (mirror-ball party), **Cotton Floss** (sugar pastels), **Nebula** (cosmic violet).
+- Q: Four more wild themes? → A: **Borealis**, **Mirrorball**, **Sugar Rush**, **Starfruit** (plus later five: Firefly, Tropic Punch, Emberglow, Frostbloom, Sakura Drift).
+- Q: Cool rename pass? → A: All display names get a punchy garden identity (e.g. Natural → Quiet Grove, Vibrant → Acid Bloom, Guestbook → Web Ring). Canonical ids renamed where needed; legacy ids alias via `normalizePaletteId`.
 - Q: Frog/fruit split (015)? → A: Primary/`moss` stays green-family for ground frogs + leaves; clay/rust/ochre/dusk carry colorful canopy fruit.
 - Q: Does this invent a second theming stack? → A: No — extend `PaletteId`, token bags, atmosphere, Options picker, and normalize/persist paths from 014 only.
 
@@ -60,7 +61,7 @@ With ten palettes, Options uses a compact dropdown (not a crowded button grid). 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST offer exactly ten named visual palettes: Natural, Vibrant, Dusk, Guestbook, Sunlily, Tide Pool, Aurora, Disco, Cotton Floss, and Nebula.
+- **FR-001**: System MUST offer exactly fifteen named visual palettes per `PALETTE_OPTIONS` (Quiet Grove through Sakura Drift).
 - **FR-002**: Natural MUST remain the default palette; new palettes are opt-in only.
 - **FR-003**: Guestbook MUST express a playful 90s-web / GeoCities garden look (lime / magenta / cyan family) that remains usable for both appearances.
 - **FR-004**: Sunlily MUST express a warm golden-hour look; primary moss MUST remain warm olive/green so ground frogs stay green-family while coral/gold accents color fruit.
