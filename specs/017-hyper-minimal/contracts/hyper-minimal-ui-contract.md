@@ -32,6 +32,7 @@ Placement: near Appearance / Dev (after Appearance divider, before or after Dev 
 - Reflection field + new-day action (primary close-the-day workspace)
 - Grove show/hide control + day/sand interactive surfaces **when Grove has content**
 - Options popover internal labels
+- **Standup / day-summary body when present (FR-015)**: “What I did” / “What’s next” (or “What was done”) labels and their completed/open-task prose — card title may hide; body MUST remain. Omit the whole panel only when genuinely empty (FR-014).
 
 ## Empty panels omitted when ON (FR-014)
 

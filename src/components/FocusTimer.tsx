@@ -120,7 +120,15 @@ export default function FocusTimer() {
   }
 
   return (
-    <Stack spacing={2} sx={{ alignItems: "center" }}>
+    <Stack
+      spacing={2}
+      sx={{
+        alignItems: "center",
+        // Hyper Minimal hides the card "Focus" title row — a little top padding
+        // keeps the dial from sitting flush against the card edge.
+        pt: hyperMinimal ? 1.5 : 0,
+      }}
+    >
       <FocusDial
         fraction={fraction}
         interactive={phase === "idle"}

@@ -51,15 +51,16 @@ export default function StandupSummary({ tasks, completedLog }: StandupSummaryPr
     );
   }
 
+  // Hyper Minimal may hide the card title ("Standup Summary") and empty-state
+  // helper copy, but MUST keep this body readable: section labels + task prose
+  // for what was done / what's next when either list has content.
   return (
     <Stack spacing={2.5}>
       {doneItems.length > 0 && (
         <Stack spacing={0.5}>
-          <Chrome>
-            <Typography variant="subtitle2" component="h3" color="text.secondary">
-              What I did
-            </Typography>
-          </Chrome>
+          <Typography variant="subtitle2" component="h3" color="text.secondary">
+            What I did
+          </Typography>
           <List dense disablePadding aria-label="What I did">
             {doneItems.map((item) => (
               <ListItem key={item.id} disableGutters disablePadding sx={{ py: 0.5 }}>
@@ -72,11 +73,9 @@ export default function StandupSummary({ tasks, completedLog }: StandupSummaryPr
 
       {openItems.length > 0 && (
         <Stack spacing={0.5}>
-          <Chrome>
-            <Typography variant="subtitle2" component="h3" color="text.secondary">
-              What&apos;s next
-            </Typography>
-          </Chrome>
+          <Typography variant="subtitle2" component="h3" color="text.secondary">
+            What&apos;s next
+          </Typography>
           <List dense disablePadding aria-label="What's next">
             {openItems.map((item) => (
               <ListItem key={item.id} disableGutters disablePadding sx={{ py: 0.5 }}>

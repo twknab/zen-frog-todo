@@ -102,8 +102,9 @@ Hyper Minimal removes visual instructional chrome without breaking keyboard use 
 - **FR-004**: Changing Hyper Minimal MUST apply immediately to the visible dashboard without page navigation.
 - **FR-005**: Changing Hyper Minimal MUST NOT forcibly close the Options surface.
 - **FR-006**: While Hyper Minimal is on, the system MUST hide the app wordmark ("Frog Garden"), the header frog brand mark/logo, and the header tagline.
-- **FR-007**: While Hyper Minimal is on, the system MUST hide decorative and instructional headings, captions, subtitles, overlines, section/card titles, and similar chrome that are not required to operate the app (in both Flow and Focus).
+- **FR-007**: While Hyper Minimal is on, the system MUST hide decorative and instructional headings, captions, subtitles, overlines, section/card titles, and similar chrome that are not required to operate the app (in both Flow and Focus). Card-level titles (e.g. Standup Summary) MAY hide; empty-state instructional prose MAY hide.
 - **FR-008**: While Hyper Minimal is on, the system MUST keep interactive functionality: tasks, frog task controls, focus timer controls and time display, Flow/Focus mode switch, Options entry, Export, Notepad, sand canvas and essential sand actions, grove as a functional surface, and garden bonsai including frogs, critters, and frog-fruit.
+- **FR-015**: While Hyper Minimal is on and Standup Summary (or grove day summary) has content, the system MUST keep the readable body copy — especially **what was done** / **what’s next** section labels and their completed/open-task prose. Do not strip those content strings; hide the whole panel only when it is genuinely empty (FR-014).
 - **FR-009**: Hyper Minimal MUST use one shared preference for Flow and Focus (not per-mode).
 - **FR-010**: Options popover chrome (title, section labels, and the Hyper Minimal label itself) MUST remain visible and usable when Hyper Minimal is on so the user can disable it.
 - **FR-011**: Icon-only and essential controls MUST retain meaningful accessible names (`aria-label` or equivalent) when visual captions/labels are absent (constitution Principle IV).
