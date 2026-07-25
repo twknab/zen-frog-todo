@@ -144,8 +144,8 @@ export default function Home() {
 
   const gridTemplateAreas = isFocus
     ? showFrogCard
-      ? { xs: `"bonsai" "frog" "timer"`, md: `"frog bonsai timer"` }
-      : { xs: `"bonsai" "timer"`, md: `"bonsai timer"` }
+      ? { xs: `"frog" "timer" "bonsai"`, md: `"frog bonsai timer"` }
+      : { xs: `"timer" "bonsai"`, md: `"bonsai timer"` }
     : showFrogCard
       ? {
           xs: `"frog" "timer" "bonsai" "garden" "tasks" "reflection"`,
@@ -161,8 +161,25 @@ export default function Home() {
       component="main"
       sx={{
         minHeight: "100vh",
-        px: { xs: 2, md: 6 },
-        py: { xs: 4, md: 6 },
+        "@supports (min-height: 100dvh)": {
+          minHeight: "100dvh",
+        },
+        pl: {
+          xs: "max(16px, env(safe-area-inset-left))",
+          md: "max(48px, env(safe-area-inset-left))",
+        },
+        pr: {
+          xs: "max(16px, env(safe-area-inset-right))",
+          md: "max(48px, env(safe-area-inset-right))",
+        },
+        pt: {
+          xs: "max(32px, env(safe-area-inset-top))",
+          md: "max(48px, env(safe-area-inset-top))",
+        },
+        pb: {
+          xs: "max(32px, env(safe-area-inset-bottom))",
+          md: "max(48px, env(safe-area-inset-bottom))",
+        },
         maxWidth: 1200,
         mx: "auto",
       }}
@@ -198,7 +215,11 @@ export default function Home() {
             <Box
               component={FaFrog}
               aria-hidden
-              sx={{ color: "primary.main", fontSize: "5.5rem", lineHeight: 1 }}
+              sx={{
+                color: "primary.main",
+                fontSize: { xs: "3.25rem", sm: "5.5rem" },
+                lineHeight: 1,
+              }}
             />
             <Box>
               <Typography
@@ -246,10 +267,18 @@ export default function Home() {
             size="small"
           >
             <ToggleButton value="flow" aria-label="Flow mode">
-              Flow Mode
+              Flow
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {" "}
+                Mode
+              </Box>
             </ToggleButton>
             <ToggleButton value="frog" aria-label="Focus mode">
-              Focus Mode
+              Focus
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {" "}
+                Mode
+              </Box>
             </ToggleButton>
           </ToggleButtonGroup>
 

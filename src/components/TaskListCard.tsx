@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import type { ChangeEvent, DragEvent, KeyboardEvent } from "react";
+import type { ChangeEvent, KeyboardEvent, PointerEvent } from "react";
 import { FaFrog } from "react-icons/fa6";
 import { useCelebration } from "@/components/Celebration";
 import DeleteIncompleteTaskControl from "@/components/DeleteIncompleteTaskControl";
@@ -37,6 +37,7 @@ export default function TaskListCard({
 }: TaskListCardProps) {
   const [draft, setDraft] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const celebrate = useCelebration();
 
   function handleToggle(id: string, event: ChangeEvent<HTMLInputElement>) {
@@ -57,16 +58,30 @@ export default function TaskListCard({
     if (event.key === "Enter") submitDraft();
   }
 
-  function handleDragOver(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
+  function handleHandlePointerDown(taskId: string) {
+    return (event: PointerEvent<HTMLElement>) => {
+      if (locked) return;
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDraggedId(taskId);
+      setOverId(taskId);
+    };
   }
 
-  function handleDrop(targetId: string) {
-    return (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      if (draggedId) onReorder(draggedId, targetId);
-      setDraggedId(null);
-    };
+  function handleHandlePointerMove(event: PointerEvent<HTMLElement>) {
+    if (!draggedId || locked) return;
+    const el = document.elementFromPoint(event.clientX, event.clientY);
+    const row = el?.closest<HTMLElement>("[data-task-id]");
+    const nextOver = row?.dataset.taskId ?? null;
+    if (nextOver && nextOver !== overId) setOverId(nextOver);
+  }
+
+  function endPointerDrag() {
+    if (draggedId && overId && draggedId !== overId) {
+      onReorder(draggedId, overId);
+    }
+    setDraggedId(null);
+    setOverId(null);
   }
 
   return (
@@ -74,31 +89,56 @@ export default function TaskListCard({
       {tasks.map((task) => (
         <Stack
           key={task.id}
+          data-task-id={task.id}
           direction="row"
           spacing={0.5}
-          draggable={!locked}
-          onDragStart={() => setDraggedId(task.id)}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop(task.id)}
-          onDragEnd={() => setDraggedId(null)}
           sx={{
             alignItems: "center",
             px: 1,
             py: 0.5,
             borderRadius: "15px",
             border: "1px solid",
-            borderColor: "divider",
+            borderColor:
+              overId === task.id && draggedId && draggedId !== task.id
+                ? "primary.main"
+                : "divider",
             filter: locked ? "blur(3px)" : "none",
             opacity: locked ? 0.6 : draggedId === task.id ? 0.4 : 1,
             pointerEvents: locked ? "none" : "auto",
-            transition: "filter 300ms ease, opacity 200ms ease",
-            "&:hover .frog-toggle": { opacity: 1 },
+            transition: "filter 300ms ease, opacity 200ms ease, border-color 150ms ease",
+            touchAction: draggedId ? "none" : "auto",
           }}
         >
-          <DragIndicatorIcon
-            fontSize="small"
-            sx={{ color: "text.disabled", cursor: "grab" }}
-          />
+          <Box
+            component="span"
+            role="button"
+            tabIndex={locked ? -1 : 0}
+            aria-label={`Reorder "${task.title}"`}
+            aria-disabled={locked || undefined}
+            onPointerDown={handleHandlePointerDown(task.id)}
+            onPointerMove={handleHandlePointerMove}
+            onPointerUp={endPointerDrag}
+            onPointerCancel={endPointerDrag}
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 44,
+              minHeight: 44,
+              color: "text.disabled",
+              cursor: locked ? "default" : draggedId === task.id ? "grabbing" : "grab",
+              touchAction: "none",
+              borderRadius: 1,
+              flexShrink: 0,
+              "&:focus-visible": {
+                outline: "2px solid",
+                outlineColor: "primary.main",
+                outlineOffset: 2,
+              },
+            }}
+          >
+            <DragIndicatorIcon fontSize="small" aria-hidden />
+          </Box>
           <Checkbox
             checked={task.completed}
             onChange={(event) => handleToggle(task.id, event)}
@@ -125,7 +165,6 @@ export default function TaskListCard({
                 size="small"
                 onClick={() => onSetFrog(task.id)}
                 aria-label={`Make "${task.title}" today's frog`}
-                sx={{ opacity: 0, transition: "opacity 150ms ease" }}
               >
                 <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1rem" }} />
               </IconButton>
