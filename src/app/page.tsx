@@ -149,11 +149,13 @@ export default function Home() {
               variant="h4"
               component="h1"
               sx={
-                palette === "vibrant"
+                palette === "vibrant" || palette === "guestbook"
                   ? {
-                      // Vibrant-only gradient wordmark: spring green → cyan → violet.
+                      // Playful gradient wordmark for Vibrant + Guestbook only.
                       backgroundImage: (theme) =>
-                        `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 50%, #B983FF 100%)`,
+                        palette === "guestbook"
+                          ? `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 45%, ${theme.palette.secondary.main} 100%)`
+                          : `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 50%, #B983FF 100%)`,
                       backgroundClip: "text",
                       WebkitBackgroundClip: "text",
                       color: "transparent",

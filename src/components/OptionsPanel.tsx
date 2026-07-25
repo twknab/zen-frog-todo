@@ -22,6 +22,15 @@ type OptionsPanelProps = {
   onDevModeChange: (next: boolean) => void;
 };
 
+const PALETTE_OPTIONS: readonly { id: PaletteId; label: string }[] = [
+  { id: "natural", label: "Natural" },
+  { id: "vibrant", label: "Vibrant" },
+  { id: "dusk", label: "Dusk" },
+  { id: "guestbook", label: "Guestbook" },
+  { id: "sunlily", label: "Sunlily" },
+  { id: "tidepool", label: "Tide Pool" },
+] as const;
+
 /**
  * Shared ToggleButtonGroup look for Options — selected state uses primary
  * fill + contrast text so the active choice reads clearly at WCAG AA.
@@ -50,6 +59,25 @@ const optionsToggleSx = {
     "&:hover": {
       bgcolor: "action.hover",
     },
+  },
+} as const;
+
+/** Six palettes wrap into a calm ~2×3 grid instead of one crowded row. */
+const paletteToggleSx = {
+  ...optionsToggleSx,
+  display: "flex",
+  flexWrap: "wrap",
+  width: "100%",
+  gap: 0.75,
+  "& .MuiToggleButtonGroup-grouped": {
+    ...optionsToggleSx["& .MuiToggleButtonGroup-grouped"],
+    flex: "1 1 calc(50% - 6px)",
+    maxWidth: "calc(50% - 6px)",
+    px: 1,
+    py: 0.65,
+    fontSize: "0.8125rem",
+    lineHeight: 1.25,
+    justifyContent: "center",
   },
 } as const;
 
@@ -137,8 +165,9 @@ export default function OptionsPanel({
             sx: {
               mt: 1,
               p: 2.25,
-              minWidth: 288,
-              // Theme radius (16) — calm for a settings popover; cards stay 24.
+              // Room for a 2×3 palette grid without crowding or horizontal scroll.
+              minWidth: 312,
+              maxWidth: "min(360px, calc(100vw - 24px))",
               borderRadius: 1,
               border: "1px solid",
               borderColor: "divider",
@@ -160,22 +189,17 @@ export default function OptionsPanel({
               value={palette}
               exclusive
               size="small"
-              fullWidth
               aria-label="Palette"
-              sx={optionsToggleSx}
+              sx={paletteToggleSx}
               onChange={(_, next: PaletteId | null) => {
                 if (next) setPalette(next);
               }}
             >
-              <ToggleButton value="natural" aria-label="Natural">
-                Natural
-              </ToggleButton>
-              <ToggleButton value="vibrant" aria-label="Vibrant">
-                Vibrant
-              </ToggleButton>
-              <ToggleButton value="dusk" aria-label="Dusk">
-                Dusk
-              </ToggleButton>
+              {PALETTE_OPTIONS.map(({ id, label }) => (
+                <ToggleButton key={id} value={id} aria-label={label}>
+                  {label}
+                </ToggleButton>
+              ))}
             </ToggleButtonGroup>
           </OptionsSection>
 

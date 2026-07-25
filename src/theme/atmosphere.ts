@@ -87,6 +87,81 @@ export function getGardenAtmosphere(
     };
   }
 
+  if (palette === "guestbook") {
+    // Retro web energy — lime / magenta / cyan washes at calm opacities.
+    return {
+      wash: dark
+        ? [
+            "radial-gradient(ellipse 80% 60% at 10% 8%, rgba(93, 222, 106, 0.22), transparent 55%)",
+            "radial-gradient(ellipse 70% 55% at 92% 20%, rgba(255, 107, 181, 0.2), transparent 55%)",
+            "radial-gradient(ellipse 65% 50% at 70% 90%, rgba(62, 232, 255, 0.18), transparent 58%)",
+            "linear-gradient(165deg, #1a1e34 0%, #14182A 50%, #1c1838 100%)",
+          ].join(", ")
+        : [
+            "radial-gradient(ellipse 85% 65% at 8% 5%, rgba(21, 122, 44, 0.12), transparent 55%)",
+            "radial-gradient(ellipse 70% 55% at 95% 15%, rgba(196, 30, 106, 0.12), transparent 52%)",
+            "radial-gradient(ellipse 75% 55% at 80% 92%, rgba(14, 155, 184, 0.14), transparent 58%)",
+            "linear-gradient(160deg, #FAF7EC 0%, #F7F4E8 45%, #F2EEF8 100%)",
+          ].join(", "),
+      mist: dark
+        ? [
+            "radial-gradient(circle at 30% 45%, rgba(255, 208, 74, 0.08), transparent 35%)",
+            "radial-gradient(circle at 75% 60%, rgba(62, 232, 255, 0.1), transparent 40%)",
+          ].join(", ")
+        : [
+            "radial-gradient(circle at 25% 40%, rgba(60, 184, 74, 0.1), transparent 38%)",
+            "radial-gradient(circle at 78% 58%, rgba(224, 74, 138, 0.1), transparent 42%)",
+          ].join(", "),
+      grainOpacity: dark ? 0.065 : 0.05,
+    };
+  }
+
+  if (palette === "sunlily") {
+    // Warm golden-hour sun / horizon glow.
+    return {
+      wash: dark
+        ? [
+            "radial-gradient(ellipse 90% 70% at 50% 0%, rgba(232, 137, 90, 0.28), transparent 55%)",
+            "radial-gradient(ellipse 70% 55% at 10% 80%, rgba(232, 192, 106, 0.14), transparent 55%)",
+            "radial-gradient(ellipse 55% 45% at 90% 70%, rgba(194, 78, 50, 0.16), transparent 55%)",
+            "linear-gradient(170deg, #2c1c12 0%, #241810 50%, #2a1a14 100%)",
+          ].join(", ")
+        : [
+            "radial-gradient(ellipse 95% 70% at 50% -5%, rgba(232, 168, 90, 0.28), transparent 55%)",
+            "radial-gradient(ellipse 70% 55% at 8% 85%, rgba(224, 112, 85, 0.12), transparent 55%)",
+            "radial-gradient(ellipse 60% 45% at 92% 75%, rgba(212, 154, 58, 0.14), transparent 55%)",
+            "linear-gradient(165deg, #FFF8F0 0%, #FFF4E8 45%, #FFEDE0 100%)",
+          ].join(", "),
+      mist: dark
+        ? "radial-gradient(ellipse 50% 35% at 40% 55%, rgba(240, 192, 96, 0.08), transparent 65%)"
+        : "radial-gradient(ellipse 55% 40% at 35% 50%, rgba(255, 220, 180, 0.55), transparent 70%)",
+      grainOpacity: dark ? 0.05 : 0.035,
+    };
+  }
+
+  if (palette === "tidepool") {
+    // Cool aquatic seafoam / turquoise wash.
+    return {
+      wash: dark
+        ? [
+            "radial-gradient(ellipse 85% 65% at 15% 10%, rgba(62, 207, 190, 0.22), transparent 58%)",
+            "radial-gradient(ellipse 70% 55% at 90% 80%, rgba(90, 184, 212, 0.18), transparent 55%)",
+            "radial-gradient(ellipse 50% 40% at 55% 35%, rgba(122, 232, 255, 0.08), transparent 50%)",
+            "linear-gradient(175deg, #122c30 0%, #0E2428 50%, #143438 100%)",
+          ].join(", ")
+        : [
+            "radial-gradient(ellipse 90% 70% at 12% 8%, rgba(62, 207, 190, 0.2), transparent 55%)",
+            "radial-gradient(ellipse 65% 50% at 88% 85%, rgba(46, 143, 168, 0.14), transparent 55%)",
+            "radial-gradient(ellipse 45% 35% at 55% 30%, rgba(200, 232, 226, 0.6), transparent 55%)",
+            "linear-gradient(170deg, #F0FBF8 0%, #E8F8F4 50%, #E0F4F0 100%)",
+          ].join(", "),
+      mist: dark
+        ? "radial-gradient(ellipse 45% 35% at 35% 60%, rgba(110, 224, 212, 0.08), transparent 65%)"
+        : "radial-gradient(ellipse 50% 40% at 30% 60%, rgba(200, 232, 226, 0.65), transparent 70%)",
+      grainOpacity: dark ? 0.05 : 0.035,
+    };
+  }
+
   // Natural — soft moss / clay / parchment atmosphere
   return {
     wash: dark

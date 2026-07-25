@@ -8,19 +8,39 @@ import {
 export type ColorMode = "light" | "dark";
 
 /** Visual garden palette — orthogonal to light/dark appearance. */
-export type PaletteId = "natural" | "vibrant" | "dusk";
+export type PaletteId =
+  | "natural"
+  | "vibrant"
+  | "dusk"
+  | "guestbook"
+  | "sunlily"
+  | "tidepool";
 
-export const PALETTE_IDS: readonly PaletteId[] = ["natural", "vibrant", "dusk"] as const;
+export const PALETTE_IDS: readonly PaletteId[] = [
+  "natural",
+  "vibrant",
+  "dusk",
+  "guestbook",
+  "sunlily",
+  "tidepool",
+] as const;
 
 export function normalizePaletteId(value: unknown): PaletteId {
-  if (value === "natural" || value === "vibrant" || value === "dusk") {
+  if (
+    value === "natural" ||
+    value === "vibrant" ||
+    value === "dusk" ||
+    value === "guestbook" ||
+    value === "sunlily" ||
+    value === "tidepool"
+  ) {
     return value;
   }
   return "natural";
 }
 
 /**
- * Zen palettes — token bags shared across Natural / Vibrant / Dusk.
+ * Zen palettes — token bags shared across all garden palettes.
  * No pure black/white; Natural stays muted (constitution Principle V default).
  */
 type ZenPalette = {
@@ -167,17 +187,152 @@ const duskDark: ZenPalette = {
   contrastText: "#16122A",
 };
 
+/**
+ * Guestbook — playful 90s-web / GeoCities garden (lime, magenta, cyan).
+ * Opt-in joy; readable, not illegible neon chaos.
+ */
+const guestbookLight: ZenPalette = {
+  bgDefault: "#F7F4E8",
+  bgPaper: "#FFFCF0",
+  ink: "#2A1838",
+  inkSoft: "#6A4E7A",
+  mist: "#E8E0F0",
+  tooltipBg: "#2A1838",
+  moss: "#157A2C",
+  mossLight: "#3CB84A",
+  mossDark: "#0F5C20",
+  clay: "#C41E6A",
+  clayLight: "#E04A8A",
+  clayDark: "#9A1552",
+  rust: "#D43A2F",
+  ochre: "#E0A020",
+  dusk: "#0E9BB8",
+  contrastText: "#FFFFFF",
+};
+
+const guestbookDark: ZenPalette = {
+  bgDefault: "#14182A",
+  bgPaper: "#1C2238",
+  ink: "#F5F0FF",
+  inkSoft: "#B8A8D4",
+  mist: "rgba(90, 220, 255, 0.12)",
+  tooltipBg: "#2A3050",
+  moss: "#5DDE6A",
+  mossLight: "#8AF09A",
+  mossDark: "#2FAF40",
+  clay: "#FF6BB5",
+  clayLight: "#FF9AD0",
+  clayDark: "#E04090",
+  rust: "#FF7A6E",
+  ochre: "#FFD04A",
+  dusk: "#3EE8FF",
+  contrastText: "#14182A",
+};
+
+/**
+ * Sunlily — golden-hour / sunset lily: apricot, coral, soft gold.
+ */
+const sunlilyLight: ZenPalette = {
+  bgDefault: "#FFF4E8",
+  bgPaper: "#FFF9F2",
+  ink: "#3A2418",
+  inkSoft: "#8A6550",
+  mist: "#F0DDD0",
+  tooltipBg: "#3A2418",
+  moss: "#C24E32",
+  mossLight: "#E07055",
+  mossDark: "#9A3A22",
+  // Gold secondary kept deep enough for white contrastText (WCAG AA).
+  clay: "#9A6E20",
+  clayLight: "#C4923A",
+  clayDark: "#7A5618",
+  rust: "#B84040",
+  ochre: "#C4923A",
+  dusk: "#E8895A",
+  contrastText: "#FFFFFF",
+};
+
+const sunlilyDark: ZenPalette = {
+  bgDefault: "#241810",
+  bgPaper: "#322218",
+  ink: "#FFF0E0",
+  inkSoft: "#D4B098",
+  mist: "rgba(232, 160, 90, 0.14)",
+  tooltipBg: "#403028",
+  moss: "#E8895A",
+  mossLight: "#F0A878",
+  mossDark: "#C86840",
+  clay: "#E8C06A",
+  clayLight: "#F0D498",
+  clayDark: "#C09840",
+  rust: "#F08070",
+  ochre: "#F0C060",
+  dusk: "#F0A060",
+  contrastText: "#241810",
+};
+
+/**
+ * Tide Pool — seafoam + turquoise candy pond; fresh and cheerful.
+ */
+const tidepoolLight: ZenPalette = {
+  bgDefault: "#E8F8F4",
+  bgPaper: "#F4FCFA",
+  ink: "#14353A",
+  inkSoft: "#4A7075",
+  mist: "#C8E8E2",
+  tooltipBg: "#14353A",
+  moss: "#1A7A70",
+  mossLight: "#3AAFA0",
+  mossDark: "#125A54",
+  // Cool teal secondary — AA against white contrastText.
+  clay: "#247A90",
+  clayLight: "#4A9EB0",
+  clayDark: "#1A5A6A",
+  rust: "#C45A5A",
+  ochre: "#D4A84A",
+  dusk: "#3ECFBE",
+  contrastText: "#FFFFFF",
+};
+
+const tidepoolDark: ZenPalette = {
+  bgDefault: "#0E2428",
+  bgPaper: "#163238",
+  ink: "#E6FAF6",
+  inkSoft: "#A0C8C4",
+  mist: "rgba(62, 207, 190, 0.14)",
+  tooltipBg: "#1E4048",
+  moss: "#3ECFBE",
+  mossLight: "#6EE0D4",
+  mossDark: "#28A898",
+  clay: "#5AB8D4",
+  clayLight: "#8AD0E4",
+  clayDark: "#3A98B0",
+  rust: "#E08080",
+  ochre: "#E8C06A",
+  dusk: "#7AE8FF",
+  contrastText: "#0E2428",
+};
+
 const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> = {
   natural: { light: naturalLight, dark: naturalDark },
   vibrant: { light: vibrantLight, dark: vibrantDark },
   dusk: { light: duskLight, dark: duskDark },
+  guestbook: { light: guestbookLight, dark: guestbookDark },
+  sunlily: { light: sunlilyLight, dark: sunlilyDark },
+  tidepool: { light: tidepoolLight, dark: tidepoolDark },
 };
 
 const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial, sans-serif`;
 
+/** Playful display headings for Vibrant + Guestbook; calm Zen face otherwise. */
+function usesDisplayHeading(palette: PaletteId): boolean {
+  return palette === "vibrant" || palette === "guestbook";
+}
+
 function headingFontFamilyFor(palette: PaletteId): string {
-  const heading =
-    palette === "vibrant" ? zenHeadingFontVibrant : zenHeadingFontNatural;
+  const heading = usesDisplayHeading(palette)
+    ? zenHeadingFontVibrant
+    : zenHeadingFontNatural;
   return `${heading.style.fontFamily}, ${bodyFontFamily}`;
 }
 
@@ -204,7 +359,7 @@ export function createZenTheme(
   const pair = tokensByPalette[normalizePaletteId(palette)];
   const zen = mode === "dark" ? pair.dark : pair.light;
   const headingFontFamily = headingFontFamilyFor(palette);
-  const vibrantHeading = palette === "vibrant";
+  const displayHeading = usesDisplayHeading(palette);
 
   return createTheme({
     palette: {
@@ -243,19 +398,19 @@ export function createZenTheme(
       fontFamily: bodyFontFamily,
       h1: {
         fontFamily: headingFontFamily,
-        fontWeight: vibrantHeading ? 800 : 700,
-        letterSpacing: vibrantHeading ? -0.2 : 0,
+        fontWeight: displayHeading ? 800 : 700,
+        letterSpacing: displayHeading ? -0.2 : 0,
       },
       h2: {
         fontFamily: headingFontFamily,
-        fontWeight: vibrantHeading ? 800 : 700,
-        letterSpacing: vibrantHeading ? -0.15 : 0,
+        fontWeight: displayHeading ? 800 : 700,
+        letterSpacing: displayHeading ? -0.15 : 0,
       },
       h3: { fontFamily: headingFontFamily, fontWeight: 700 },
       h4: {
         fontFamily: headingFontFamily,
         fontWeight: 700,
-        letterSpacing: vibrantHeading ? -0.1 : 0,
+        letterSpacing: displayHeading ? -0.1 : 0,
       },
       h5: { fontFamily: headingFontFamily, fontWeight: 700 },
       h6: { fontFamily: headingFontFamily, fontWeight: 700 },
