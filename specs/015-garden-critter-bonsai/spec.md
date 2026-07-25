@@ -20,6 +20,14 @@
 - Q: Grove archived bonsai contract? → A: **Keep current contract** unless a small additive improvement is free; do not break Grove.
 - Q: Wilt behavior for frogs/fruit? → A: Leaves/tree still wilt; **ground frogs and frog-fruit stay unwilted / cheerful** (008 spirit).
 
+### Session 2026-07-25 (agent preferences — no live human; dials documented)
+
+- Q: What is the new frog cap? → A: **28** (from 20) — modest raise; dial-back knob if density feels high.
+- Q: Frog-fruit color strategy? → A: **Theme-token rotation** — cycle primary / secondary / error / success (or available theme accents) at soft decorative strength; not neon custom hex rainbow.
+- Q: Frog-fruit silhouette vs ground frogs? → A: **Same frog mark, smaller canopy scale** — one brand mark; fruit are tiny hanging frogs, not a second mascot style.
+- Q: Tree presence boost intensity? → A: **Moderate** — raise mature `treeScale` ceiling ~15–25% and optionally nudge canopy/composition; must stay card-contained.
+- Q: Leaf enrichment approach? → A: **Richer SVG ellipses/paths** (soft multi-tone + slight leaf shape), not photo textures or particle systems.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A roomier, funnier frog crowd (Priority: P1)
