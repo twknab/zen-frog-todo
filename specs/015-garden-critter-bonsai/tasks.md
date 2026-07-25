@@ -64,9 +64,10 @@
 
 - [ ] T008 [US2] Increase `treeScale` base/delta in `src/components/BonsaiTree.tsx` (~15–25% mature presence)
 - [ ] T009 [US2] Optional small canopy center / composition nudge if scale alone feels cramped; keep `viewBox` unless clearly better
-- [ ] T010 [US2] Confirm shrub stage still proportionate; Grove card sizes still look fine
+- [ ] T010 [US2] Enrich leaves in `src/components/BonsaiTree.tsx`: oval/leaf-ish ellipses with slight rotation + existing three-tone fills (FR-006; was underscoped under US4)
+- [ ] T010b [US2] Confirm shrub stage still proportionate; Grove card sizes still look fine
 
-**Checkpoint**: Tree presence improved
+**Checkpoint**: Tree presence + richer leaves improved
 
 ---
 
@@ -96,8 +97,7 @@
 ### Implementation
 
 - [ ] T015 [US4] Polish critter transforms/halo/scale consistency in `src/components/BonsaiTree.tsx` (+ comments in `src/lib/frogIcon.ts` if helpful)
-- [ ] T016 [US4] Enrich leaves: oval/leaf-ish ellipses with slight rotation + existing three-tone fills in `src/components/BonsaiTree.tsx`
-- [ ] T017 [US4] Confirm no new dependency added to `package.json`
+- [ ] T016 [US4] Confirm no new dependency added to `package.json` (leaf enrichment lives in T010 / US2)
 
 **Checkpoint**: Art cohesion + richer leaves
 
