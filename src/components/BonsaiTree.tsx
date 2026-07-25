@@ -1,8 +1,9 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { useTheme, type Theme } from "@mui/material/styles";
+import { darken, lighten, useTheme, type Theme } from "@mui/material/styles";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useId } from "react";
 import {
   BASELINE_FROGS,
   bonsaiStageLabel,
@@ -25,35 +26,51 @@ type BonsaiTreeProps = {
 
 // Dial-back knobs (specs/015-garden-critter-bonsai):
 // - MAX_FROGS — src/lib/bonsai.ts
-// - FROG_BAND / FROG_SCALE_* — ground crowd comedy vs sludge
+// - FROG_BAND / FROG_ROW_DEPTH / FROG_SCALE_* — ground crowd comedy vs sludge
 // - TREE_SCALE_BASE / TREE_SCALE_DELTA — bonsai presence
+// - CANOPY_SPREAD_* — canopy width/height at terminal state
 // - FROG_FRUIT_SCALE — canopy fruit size
 // - fruitFills() token list — multi-color fun vs quiet
-const FROG_BAND = { yMin: 184, ySpan: 15 };
-const FROG_SCALE_MIN = 1.55;
-const FROG_SCALE_SPAN = 1.05; // → max 2.6 (dial down if sludge)
+const FROG_BAND = { yMin: 188, ySpan: 18 };
+const FROG_ROW_DEPTH = 12; // back rows sit higher so the pile reads tall, not flat
+const FROG_SCALE_MIN = 1.7;
+const FROG_SCALE_SPAN = 1.25; // → max ~2.95 (bigger, grander pile)
 const TREE_SCALE_BASE = 0.98;
-const TREE_SCALE_DELTA = 0.55;
-const FROG_FRUIT_SCALE = 0.72;
-const CANOPY = { cx: 80, cy: 88 }; // slight upward nudge for more bonsai presence
+const TREE_SCALE_DELTA = 0.62; // fuller mature presence
+const CANOPY_SPREAD_X = 1.24; // horizontal stretch → wider terminal canopy
+const CANOPY_SPREAD_Y = 0.8; // gentle vertical flatten (bonsai silhouette)
+const CANOPY_RADIUS = 8.4; // spiral step — larger = wider, leafier fan
+const FROG_FRUIT_SCALE = 0.74;
+const CANOPY = { cx: 80, cy: 84 }; // slight upward nudge for more bonsai presence
 
 // Phyllotaxis (golden-angle) layout so leaves fill the canopy outward in a
 // natural spiral — computed once at module load (no render-time randomness).
 const GOLDEN_ANGLE = 2.399963229728653; // ~137.5° in radians
 const LEAF_POSITIONS = Array.from({ length: MAX_LEAVES }, (_, i) => {
-  const r = 7.4 * Math.sqrt(i);
+  const r = CANOPY_RADIUS * Math.sqrt(i);
   const angle = i * GOLDEN_ANGLE;
   return {
-    x: CANOPY.cx + r * Math.cos(angle),
-    y: CANOPY.cy + r * Math.sin(angle) * 0.82,
+    x: CANOPY.cx + r * Math.cos(angle) * CANOPY_SPREAD_X,
+    y: CANOPY.cy + r * Math.sin(angle) * CANOPY_SPREAD_Y,
     // Leaf tip rotation (degrees) — soft fan, not mechanical grid.
     rot: (angle * 180) / Math.PI + 35,
     tone: ["main", "light", "dark"][i % 3] as "main" | "light" | "dark",
   };
 });
 
-// Frog-fruit sit on a handful of inner canopy positions (former blossom slots).
-const BLOSSOM_SLOTS = [2, 5, 8, 11, 14, 17];
+// A soft backdrop of larger, low-opacity leaf blobs behind the crisp leaves so
+// a full canopy reads dense and lush rather than as separable dots. Positions
+// track the spiral (pulled slightly inward) and unlock in step with the crisp
+// leaves via the same slice count.
+const CANOPY_BACKDROP = LEAF_POSITIONS.map((leaf) => ({
+  x: CANOPY.cx + (leaf.x - CANOPY.cx) * 0.86,
+  y: CANOPY.cy + (leaf.y - CANOPY.cy) * 0.86,
+  rot: leaf.rot,
+}));
+
+// Frog-fruit sit on canopy positions (former blossom slots), spread across the
+// crown so a mature tree hangs a generous, colorful cluster of frog-fruit.
+const BLOSSOM_SLOTS = [2, 4, 6, 9, 12, 15, 18, 21];
 
 // Grass sprigs flanking the pot base (ground y≈196); more appear as the tree grows.
 const GRASS = [
@@ -77,17 +94,22 @@ function seeded(i: number, salt: number): number {
 // Slot 0 is the baseline. Specs/015: wider flanks + comedy scale — bias away
 // from the pot center so the pot stays readable at the raised cap (dial-back above).
 const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
-  if (i === 0) return { x: 26, y: 187, scale: 2.35 };
+  if (i === 0) return { x: 22, y: 192, scale: 2.7 };
   // Split left/right of the pot (center ~80) so the crowd fans out, not piles mid-pot.
   const side = seeded(i, 1);
   const x =
     side < 0.5
-      ? 2 + seeded(i, 4) * 52 // left flank ~2..54
-      : 108 + seeded(i, 4) * 50; // right flank ~108..158
+      ? -8 + seeded(i, 4) * 66 // left flank ~-8..58
+      : 102 + seeded(i, 4) * 66; // right flank ~102..168
+  // Depth rows: front frogs sit low + big; back rows climb the pot base a touch
+  // higher and slightly smaller, so the crowd reads as a tall, grand pile.
+  const row = Math.floor(seeded(i, 5) * 3); // 0 (front) .. 2 (back)
+  const yFront = FROG_BAND.yMin + seeded(i, 2) * FROG_BAND.ySpan;
   return {
     x,
-    y: FROG_BAND.yMin + seeded(i, 2) * FROG_BAND.ySpan,
-    scale: FROG_SCALE_MIN + seeded(i, 3) * FROG_SCALE_SPAN,
+    // Back rows sit higher; render sorts by this y so back frogs paint first.
+    y: yFront - row * FROG_ROW_DEPTH,
+    scale: FROG_SCALE_MIN + seeded(i, 3) * FROG_SCALE_SPAN - row * 0.3,
   };
 });
 
@@ -127,6 +149,9 @@ export default function BonsaiTree({
 }: BonsaiTreeProps) {
   const theme = useTheme();
   const reduce = useReducedMotion();
+  // Unique per instance so multiple trees (e.g. The Grove) never share gradient
+  // ids. Colons from useId are stripped to keep url(#…) references clean.
+  const gradientPrefix = `fruit${useId().replace(/:/g, "")}`;
 
   const leafTone = {
     main: theme.palette.primary.main,
@@ -159,6 +184,7 @@ export default function BonsaiTree({
 
   const isShrub = stage === "shrub" || leaves <= 0;
   const shownLeaves = LEAF_POSITIONS.slice(0, Math.min(leaves, MAX_LEAVES));
+  const shownBackdrop = CANOPY_BACKDROP.slice(0, Math.min(leaves, MAX_LEAVES));
   const shownFruit = BLOSSOM_SLOTS.slice(0, blossoms);
   const shownGrass = GRASS.slice(0, Math.min(GRASS.length, Math.ceil(leaves / 4)));
 
@@ -166,9 +192,13 @@ export default function BonsaiTree({
   const treeScale =
     TREE_SCALE_BASE + (Math.min(leaves, MAX_LEAVES) / MAX_LEAVES) * TREE_SCALE_DELTA;
 
-  // Frogs are bounded and always show at least the baseline lone frog.
+  // Frogs are bounded and always show at least the baseline lone frog. Keep the
+  // slot index as identity (stable AnimatePresence keys) but paint back-to-front
+  // (higher up the pile first) so the crowd overlaps like a real stacked pile.
   const frogCount = Math.max(BASELINE_FROGS, Math.min(frogs, MAX_FROGS));
-  const shownFrogs = FROG_POSITIONS.slice(0, frogCount);
+  const shownFrogs = FROG_POSITIONS.slice(0, frogCount)
+    .map((p, slot) => ({ ...p, slot }))
+    .sort((a, b) => a.y - b.y);
   const showSquirrel = squirrelVisible(frogCount);
 
   // Wilt dims only the living tree/pot layer — frog friends, squirrel, and
@@ -185,7 +215,19 @@ export default function BonsaiTree({
       aria-label={bonsaiStageLabel(stage)}
       sx={{ width: size, height: size, maxWidth: "100%" }}
     >
-      <svg width="100%" height="100%" viewBox="0 0 160 200" aria-hidden="true">
+      <svg width="100%" height="100%" viewBox="-6 -24 172 256" aria-hidden="true">
+        {/* Per-color vertical gradients give each canopy frog-fruit a soft,
+            theme-matched sheen (light crown → base → shaded belly). */}
+        <defs>
+          {frogFruitColors.map((base, i) => (
+            <linearGradient key={i} id={`${gradientPrefix}-${i}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={lighten(base, 0.28)} />
+              <stop offset="50%" stopColor={base} />
+              <stop offset="100%" stopColor={darken(base, 0.26)} />
+            </linearGradient>
+          ))}
+        </defs>
+
         {/* Living layer — pot, soil, grass, tree — dims when wilting. */}
         <g style={wiltStyle}>
           {/* Pot + soil — always present */}
@@ -236,8 +278,25 @@ export default function BonsaiTree({
               </g>
             ) : (
               <g>
-                {/* Trunk — slightly taller for bonsai presence */}
-                <path d="M76 162 Q72 122 80 104 Q88 122 84 162 Z" fill={woodFill} />
+                {/* Trunk — wider, gently flared base for a grounded bonsai */}
+                <path d="M72 162 Q68 120 80 100 Q92 120 88 162 Z" fill={woodFill} />
+                {/* Backdrop canopy — larger, low-opacity leaf blobs behind the
+                    crisp leaves so a full crown reads dense and lush. */}
+                <AnimatePresence>
+                  {shownBackdrop.map((leaf, i) => (
+                    <motion.ellipse
+                      key={`bg-${i}`}
+                      cx={leaf.x}
+                      cy={leaf.y}
+                      rx={15}
+                      ry={9.5}
+                      fill={leafTone.dark}
+                      opacity={0.5}
+                      transform={`rotate(${leaf.rot} ${leaf.x} ${leaf.y})`}
+                      {...appear}
+                    />
+                  ))}
+                </AnimatePresence>
                 {/* Leaves — soft leaf-ish ovals (richer than plain circles) */}
                 <AnimatePresence>
                   {shownLeaves.map((leaf, i) => (
@@ -245,8 +304,8 @@ export default function BonsaiTree({
                       key={i}
                       cx={leaf.x}
                       cy={leaf.y}
-                      rx={10}
-                      ry={6.2}
+                      rx={11.5}
+                      ry={7.2}
                       fill={leafTone[leaf.tone]}
                       transform={`rotate(${leaf.rot} ${leaf.x} ${leaf.y})`}
                       {...appear}
@@ -267,7 +326,7 @@ export default function BonsaiTree({
               <AnimatePresence>
                 {shownFruit.map((slot, fruitIndex) => {
                   const pos = LEAF_POSITIONS[slot];
-                  const fill = frogFruitColors[fruitIndex % frogFruitColors.length];
+                  const colorIndex = fruitIndex % frogFruitColors.length;
                   return (
                     <motion.g
                       key={`fruit-${slot}`}
@@ -276,7 +335,7 @@ export default function BonsaiTree({
                     >
                       <path
                         d={FROG_ICON_PATH}
-                        fill={fill}
+                        fill={`url(#${gradientPrefix}-${colorIndex})`}
                         stroke={critterHalo}
                         strokeWidth={2}
                         strokeLinejoin="round"
@@ -292,8 +351,8 @@ export default function BonsaiTree({
           )}
 
           <AnimatePresence>
-            {shownFrogs.map((p, i) => (
-              <motion.g key={i} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
+            {shownFrogs.map((p) => (
+              <motion.g key={p.slot} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
                 {/* Same frog mark as favicon/header — see src/lib/frogIcon.ts.
                     Sticker halo separates overlapping comedy-scale frogs. */}
                 <path
