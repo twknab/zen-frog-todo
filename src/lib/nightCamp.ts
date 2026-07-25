@@ -101,10 +101,13 @@ export function deriveNightCamp(
     progress,
     stage,
     stageLabel,
-    fireflies: stage === 0 ? 0 : 3 + stage * 4,
+    // More fireflies as the night deepens — they collect toward the fire in the scene.
+    fireflies: stage === 0 ? 2 : 6 + stage * 7,
     campfireLevel: stage,
-    starDensity: Math.min(1, stage * 0.22),
-    moonFill: Math.min(1, 0.15 + t * 0.85),
+    // Stars populate more frequently over stages.
+    starDensity: Math.min(1, 0.12 + stage * 0.22 + progress * 0.02),
+    // Moon grows with iterations/stage.
+    moonFill: Math.min(1, 0.2 + t * 0.8),
     nightFrogs: nightFrogCount(dayFrogs, progress),
   };
 }
