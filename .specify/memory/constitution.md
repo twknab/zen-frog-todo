@@ -1,33 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.0.0 → 2.1.0 (MINOR — new Product Model section + Principle II/V
-  guidance for Day Garden & Night Camp; no removal or redefinition that breaks
-  prior MUST constraints). Later amended in-place for Dev Mode realm-testing
-  expectations under Product Model (still 2.1.0; additive clarification).
+Version change: 2.1.0 → 2.2.0 (MINOR — Principle I/IV motion guidance expanded for
+  joyful garden atmosphere; prefers-reduced-motion no longer strips Day Garden /
+  Night Camp ambient joy; UI chrome still respects reduced-motion)
 Modified principles:
-  - Principle II "Subtle Gamification, Not Scoreboards" — EXPANDED. Organic visual
-    progress now explicitly includes two sibling worlds (Day Garden bonsai/frogs
-    and Night Camp trinkets). Night is bonus reward energy, never a scoreboard,
-    never shame for late work. Wilt remains day-window-only.
-  - Principle V "Design System Discipline" — EXPANDED. Clock-driven night
-    atmosphere MUST be overlay/dim only; MUST NOT force light↔dark Appearance.
-Added sections:
-  - "Product Model: Day Garden & Night Camp" — binding product decisions for
-    work window, dual ledgers, night scene stages, summaries, and cycle bounds.
+  - Principle I "Calm Technology" — EXPANDED. Joyful, living garden motion is
+    explicitly encouraged for Day Garden / Night Camp (organic delight, not urgency).
+  - Principle IV "Accessibility" — REFINED. Keyboard, SR, and WCAG AA remain MUST.
+    `prefers-reduced-motion` MUST still calm UI chrome; decorative garden-world
+    atmosphere MAY keep continuous joyful ambient motion (users visit to check on
+    and enjoy the scene). Startling/jarring motion remains prohibited.
+Added sections: none (Product Model Night Camp visual bar clarified in-place).
 Removed sections: none.
 Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ reviewed — Constitution Check remains
-    generic; product-model gates are read from this file at plan time.
-  - .specify/templates/spec-template.md ✅ reviewed — no mandatory section change.
-  - .specify/templates/tasks-template.md ✅ reviewed — no change required.
+  - .specify/templates/plan-template.md ✅ reviewed — no hardcoded motion ban list.
 Runtime docs:
-  - README.md ✅ updated — Product model + highlights point at Day/Night vision.
-  - docs/product-model.md ✅ added — canonical narrative of locked decisions.
-  - AGENTS.md ✅ updated — agents must honor Day/Night product model.
+  - docs/product-model.md ✅ updated — joyful night/day atmosphere motion.
+  - AGENTS.md ✅ updated — garden motion guidance for agents.
 Follow-up TODOs:
-  - Spec Kit `/speckit-specify` for Night Camp + configurable work window
-    (implementation not started; constitution/docs only in this amendment).
+  - Cloud agent: Night Camp atmosphere visual upgrade (018 / issue).
 -->
 
 # Frog Garden Constitution
@@ -36,7 +28,7 @@ Follow-up TODOs:
 ## Core Principles
 
 ### I. Calm Technology (Zen & Tao Influence)
-The app follows *wu wei* (effortless action) and *ma* (negative space) as design values, not decoration. Screens favor generous whitespace over density; motion is slow, organic, and easing-based rather than snappy or attention-grabbing. Wabi-sabi applies to the product's emotional stance: an incomplete task, a broken streak, or a missed day is never surfaced as failure. There is no shame UI — no red badges, no "you're behind" language, no guilt-based copy. Notifications, if any, are opt-in and worded as gentle invitations, never urgency cues. Working late MUST never be framed as failure or urgency; Night Camp (see Product Model) exists to vibe the user *up*, not to police their clock.
+The app follows *wu wei* (effortless action) and *ma* (negative space) as design values, not decoration. Screens favor generous whitespace over density. Motion is organic and easing-based — never snappy urgency, alarm, or attention-hijacking chrome. **Joyful living motion is welcome and encouraged** in the Day Garden and Night Camp: fireflies, flame, leaves, frogs, and sky may feel alive, warm, and fun when the person opens those scenes to check on their garden. Wabi-sabi applies to the product's emotional stance: an incomplete task, a broken streak, or a missed day is never surfaced as failure. There is no shame UI — no red badges, no "you're behind" language, no guilt-based copy. Notifications, if any, are opt-in and worded as gentle invitations, never urgency cues. Working late MUST never be framed as failure or urgency; Night Camp (see Product Model) exists to vibe the user *up*, not to police their clock.
 
 ### II. Subtle Gamification, Not Scoreboards
 Progress is rewarded primarily through organic, visual feedback rather than points, ranks, or leaderboards. The product's visual progress language is **two sibling worlds**:
@@ -54,7 +46,9 @@ Still prohibited outright: leaderboards or social comparison, shaming language o
 All user data (tasks, reflections, garden state, night ledger, settings) is stored on-device (localStorage/IndexedDB) for v1. No account creation, no server-side persistence, and no analytics/telemetry beyond what a user explicitly opts into. Data export/import (JSON) MUST be available so the user is never locked in. Any future move to cloud sync requires an explicit, separately-designed opt-in — it is not a default assumption for this codebase.
 
 ### IV. Accessibility Is Not Optional
-Every interactive element MUST be keyboard-operable and screen-reader labelled. All animation MUST respect `prefers-reduced-motion` by falling back to instant or minimal-motion states — the zen aesthetic must degrade gracefully, not break, for users who disable motion. Color palettes, however muted, MUST meet WCAG AA contrast for text and interactive elements. Night dim/overlay MUST preserve AA contrast for interactive chrome and text; atmosphere never sacrifices readability.
+Every interactive element MUST be keyboard-operable and screen-reader labelled. Color palettes, however muted, MUST meet WCAG AA contrast for text and interactive elements. Night dim/overlay MUST preserve AA contrast for interactive chrome and text; atmosphere never sacrifices readability.
+
+**Motion & `prefers-reduced-motion`:** UI chrome (tooltips, panels, page-layout transitions, Options, buttons) MUST respect `prefers-reduced-motion` with instant or minimal-motion fallbacks. **Day Garden and Night Camp world scenes are different:** people open them on purpose to check on and enjoy the garden. Continuous, joyful ambient atmosphere motion (fireflies, flame flicker, soft sky, gentle leaf/frog life) MAY run in those scenes even when reduced-motion is set — stripping the camp or bonsai of life would defeat why they visited. Still prohibited everywhere: startling flashes, seizure-risk strobing, urgent pulsing, or motion that hijacks attention away from tasks. When in doubt for chrome vs world: chrome quiets down; the garden may stay warmly alive.
 
 ### V. Design System Discipline
 Material UI (MUI) is the component base, but the constitution requires it be re-themed, not used out of the box: a muted, nature-inspired palette; flattened or soft shadows instead of heavy Material elevation; generous spacing; rounded, organic corners; restrained motion authored through Framer Motion rather than MUI's default ripple/transition patterns. Any new component must be checked against this theme before it's considered "done" — a component that looks like default Material Design is a defect, not a stopping point.
@@ -97,15 +91,15 @@ This section is binding product shape — not a speculative wishlist. Features t
 
 ### Night Camp scene (v1 depth)
 
-Night Camp advances through roughly **4–5 discrete stages** as the night ledger grows (exact thresholds belong in the feature spec). Visual vocabulary for v1:
+Night Camp advances through roughly **4–5 discrete stages** as the night ledger grows (exact thresholds belong in the feature spec). Visual vocabulary:
 
-- Fireflies appear and multiply
-- A little campfire grows (embers → small fire → cozy blaze)
-- Stars populate
-- Moon grows / fills
+- Fireflies appear and multiply — living, joyful ambient motion is encouraged
+- A campfire that feels warm and real (embers → blaze), not a flat triangle
+- Stars populate a deep night sky
+- Moon grows / fills with presence
 - Frogs participate in the night scene (presence scaled by day frogs + night activity)
 
-Atmosphere: dim / overlay wash consistent with Principle V — never force Appearance mode.
+Atmosphere: dim / overlay wash consistent with Principle V — never force Appearance mode. Scene quality bar: the camp MUST feel like a place to linger (Principles I & IV joyful-garden motion), not a placeholder SVG sticker sheet.
 
 ### Summaries & differentiation
 
@@ -119,10 +113,10 @@ Dev tools MUST be able to **Force night**, **Force day**, or **Follow clock** so
 
 - **Framework**: Next.js (App Router, TypeScript).
 - **UI components**: Material UI (MUI), themed per Principle V.
-- **Animation**: Framer Motion, used sparingly and only where it reinforces the calm/organic feel (task completion ripple, garden growth, night ornaments, breathing idle states).
+- **Animation**: Framer Motion for UI and organic garden life; additional light animation/particle libraries MAY be added when justified for Day Garden / Night Camp atmosphere (Principle I joyful motion, Principle VI — prefer lightest path that hits the quality bar). UI chrome still respects `prefers-reduced-motion` (Principle IV); garden world scenes may keep ambient joy.
 - **Audio**: Web Audio API only, synthesized in-browser (no audio files); one shared `AudioContext` (Principle VII).
 - **Persistence**: Browser-local only (localStorage/IndexedDB) for v1; JSON export/import for portability. No server, no database, no authentication in v1.
-- **Verification**: The gate for "done" is a clean `tsc --noEmit` and a clean `eslint` run, plus manual verification in the browser preview against the feature's acceptance scenarios (including `prefers-reduced-motion` fallbacks). Automated component/unit tests for core logic (task CRUD, Frog Mode eligibility, garden/streak/night-ledger state transitions) are encouraged and welcome, but are not currently the release gate — do not claim tests exist where they do not.
+- **Verification**: The gate for "done" is a clean `tsc --noEmit` and a clean `eslint` run, plus manual verification in the browser preview against the feature's acceptance scenarios (UI chrome reduced-motion + garden atmosphere joy per Principle IV). Automated component/unit tests for core logic (task CRUD, Frog Mode eligibility, garden/streak/night-ledger state transitions) are encouraged and welcome, but are not currently the release gate — do not claim tests exist where they do not.
 
 ## Development Workflow
 
@@ -137,4 +131,4 @@ Dev tools MUST be able to **Force night**, **Force day**, or **Follow clock** so
 
 This constitution supersedes ad-hoc preferences during implementation. Amendments require an explicit note in the PR/commit describing what changed and why, and a version bump below. Complexity that violates Principle VI (e.g., introducing a backend, an account system, or a scoring leaderboard) must be justified against a real, stated requirement — not speculative future need.
 
-**Version**: 2.1.0 | **Ratified**: 2026-07-01 | **Last Amended**: 2026-07-25
+**Version**: 2.2.0 | **Ratified**: 2026-07-01 | **Last Amended**: 2026-07-25

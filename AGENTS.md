@@ -16,6 +16,8 @@ before proposing or writing any feature code, and treat its principles as hard
 constraints, not suggestions. In particular:
 
 - **Calm, non-judgmental UX** — no shame UI, no anxiety loops, no scoreboards.
+  Joyful garden-world motion (Day Garden / Night Camp) is encouraged; UI chrome
+  still respects `prefers-reduced-motion` (constitution v2.2.0 Principle IV).
 - **Day Garden & Night Camp** — dual worlds on one day-cycle (see constitution
   *Product Model* and `docs/product-model.md`). Day is work-primary (bonsai + frogs +
   wilt in the work window). Night is bonus (separate ledger; fireflies / campfire /
@@ -24,9 +26,11 @@ constraints, not suggestions. In particular:
   defaults to 8 AM–5 PM local, user-configurable in Options (AM/PM UI).
 - **Local-first & private** — on-device storage only for v1; no backend, auth, or
   telemetry unless a spec explicitly opts in.
-- **Accessibility is not optional** — keyboard + screen-reader support, `prefers-reduced-motion`
-  fallbacks, WCAG AA contrast (including under night dim/overlay).
-- **MUI must be re-themed**, never used stock; motion via Framer Motion, used sparingly.
+- **Accessibility is not optional** — keyboard + screen-reader support, WCAG AA
+  contrast (including under night dim/overlay). Garden ambient joy may continue
+  under reduced-motion; chrome must quiet down.
+- **MUI must be re-themed**, never used stock; motion via Framer Motion (and
+  justified light animation libs for garden atmosphere), used for organic delight.
 - **YAGNI / simplicity** — don't build for hypothetical future scale.
 
 If a request conflicts with the constitution, flag it before implementing.

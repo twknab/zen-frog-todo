@@ -33,6 +33,8 @@ Two worlds. One day-cycle. Never shame, never lockout.
 - **Tone:** vibe-up and reward for lingering / personal / late focus — never
   “you should be asleep,” never a blocked UI.
 - **Atmosphere:** dim / overlay wash only. **Never** force light↔dark Appearance.
+  Joyful ambient motion (fireflies, flame, sky) is encouraged — people open
+  Night Camp to enjoy it (constitution v2.2.0).
 
 ## One cycle
 
