@@ -20,7 +20,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
@@ -98,12 +98,14 @@ function PaletteSwatches({ id }: { id: PaletteId }) {
 function OptionsSection({
   label,
   children,
+  sx,
 }: {
   label: string;
   children: ReactNode;
+  sx?: SxProps<Theme>;
 }) {
   return (
-    <Box>
+    <Box sx={sx}>
       <Typography
         component="h3"
         variant="overline"
@@ -168,7 +170,7 @@ export default function OptionsPanel({
         </Typography>
       )}
 
-      <OptionsSection label="Palette">
+      <OptionsSection label="Palette" sx={{ mt: { xs: 1.5, md: 1.5 } }}>
         <FormControl fullWidth size="small" disabled={highContrast}>
           <Select
             value={palette}
