@@ -48,6 +48,7 @@ import { playChime } from "@/lib/sound";
 import { usePersistentState } from "@/lib/storage";
 import { useTasks } from "@/lib/tasks";
 import { useGardenPalette } from "@/theme/ThemeRegistry";
+import { gardenWordmarkGradient } from "@/theme/theme";
 type CardAccent = "primary" | "secondary" | "info" | "warning" | "success" | "error";
 
 type DashboardMode = "frog" | "flow";
@@ -59,7 +60,8 @@ const EPOCH = new Date(0);
 
 export default function Home() {
   const { palette } = useGardenPalette();
-  const [mode, setMode] = useState<DashboardMode>("flow");  const {
+  const [mode, setMode] = useState<DashboardMode>("flow");
+  const {
     tasks,
     frogTask,
     otherTasks,
@@ -148,22 +150,19 @@ export default function Home() {
             <Typography
               variant="h4"
               component="h1"
-              sx={
-                palette === "vibrant"
-                  ? {
-                      // Vibrant-only gradient wordmark: spring green → cyan → violet.
-                      backgroundImage: (theme) =>
-                        `linear-gradient(100deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 50%, #B983FF 100%)`,
-                      backgroundClip: "text",
-                      WebkitBackgroundClip: "text",
-                      color: "transparent",
-                      width: "fit-content",
-                    }
-                  : {
-                      color: "primary.main",
-                      width: "fit-content",
-                    }
-              }
+              sx={(theme) => {
+                const gradient = gardenWordmarkGradient(palette, theme.palette);
+                if (!gradient) {
+                  return { color: "primary.main", width: "fit-content" };
+                }
+                return {
+                  backgroundImage: gradient,
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                  width: "fit-content",
+                };
+              }}
             >
               Frog Garden
             </Typography>

@@ -3,9 +3,12 @@
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
 import Popover from "@mui/material/Popover";
+import Select, { type SelectChangeEvent } from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -15,7 +18,13 @@ import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
 import { useColorMode, useGardenPalette } from "@/theme/ThemeRegistry";
-import type { ColorMode, PaletteId } from "@/theme/theme";
+import {
+  normalizePaletteId,
+  PALETTE_OPTIONS,
+  PALETTE_PREVIEWS,
+  type ColorMode,
+  type PaletteId,
+} from "@/theme/theme";
 
 type OptionsPanelProps = {
   devMode: boolean;
@@ -37,7 +46,8 @@ const optionsToggleSx = {
     py: 0.75,
     typography: "body2",
     color: "text.secondary",
-    transition: "background-color 180ms ease, color 180ms ease, border-color 180ms ease",
+    transition:
+      "background-color 180ms ease, color 180ms ease, border-color 180ms ease",
     "&.Mui-selected": {
       bgcolor: "primary.main",
       color: "primary.contrastText",
@@ -52,6 +62,26 @@ const optionsToggleSx = {
     },
   },
 } as const;
+
+function PaletteSwatches({ id }: { id: PaletteId }) {
+  const colors = PALETTE_PREVIEWS[id];
+  return (
+    <Stack direction="row" spacing={0.5} aria-hidden sx={{ flexShrink: 0 }}>
+      {colors.map((color) => (
+        <Box
+          key={color}
+          sx={{
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            bgcolor: color,
+            boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+          }}
+        />
+      ))}
+    </Stack>
+  );
+}
 
 function OptionsSection({
   label,
@@ -82,11 +112,7 @@ function OptionsSection({
 
 /**
  * Calm Options Popover — single home for Palette, Appearance, and Dev.
- * Keeps the main header free of settings chrome.
- *
- * Radius: uses theme.shape.borderRadius (16) — one step softer than cards
- * (24px), not the previous `borderRadius: 3` (= 48px) which felt bubbly
- * for a compact settings surface.
+ * Palette is a dropdown so ten joyful themes stay scannable, not crowded.
  */
 export default function OptionsPanel({
   devMode,
@@ -96,6 +122,7 @@ export default function OptionsPanel({
   const { palette, setPalette } = useGardenPalette();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const titleId = useId();
+  const paletteLabelId = useId();
   const open = Boolean(anchorEl);
   const reduceMotion = useReducedMotion();
 
@@ -105,6 +132,10 @@ export default function OptionsPanel({
 
   function handleClose() {
     setAnchorEl(null);
+  }
+
+  function handlePaletteChange(event: SelectChangeEvent<PaletteId>) {
+    setPalette(normalizePaletteId(event.target.value));
   }
 
   return (
@@ -137,8 +168,8 @@ export default function OptionsPanel({
             sx: {
               mt: 1,
               p: 2.25,
-              minWidth: 288,
-              // Theme radius (16) — calm for a settings popover; cards stay 24.
+              minWidth: 280,
+              maxWidth: "min(320px, calc(100vw - 24px))",
               borderRadius: 1,
               border: "1px solid",
               borderColor: "divider",
@@ -156,27 +187,65 @@ export default function OptionsPanel({
           </Typography>
 
           <OptionsSection label="Palette">
-            <ToggleButtonGroup
-              value={palette}
-              exclusive
-              size="small"
-              fullWidth
-              aria-label="Palette"
-              sx={optionsToggleSx}
-              onChange={(_, next: PaletteId | null) => {
-                if (next) setPalette(next);
-              }}
-            >
-              <ToggleButton value="natural" aria-label="Natural">
-                Natural
-              </ToggleButton>
-              <ToggleButton value="vibrant" aria-label="Vibrant">
-                Vibrant
-              </ToggleButton>
-              <ToggleButton value="dusk" aria-label="Dusk">
-                Dusk
-              </ToggleButton>
-            </ToggleButtonGroup>
+            <FormControl fullWidth size="small">
+              <Select
+                value={palette}
+                onChange={handlePaletteChange}
+                labelId={paletteLabelId}
+                aria-label="Palette"
+                MenuProps={{
+                  transitionDuration: reduceMotion ? 0 : undefined,
+                  slotProps: {
+                    paper: {
+                      sx: {
+                        mt: 0.5,
+                        maxHeight: "min(420px, 55vh)",
+                        borderRadius: 1.5,
+                        border: "1px solid",
+                        borderColor: "divider",
+                      },
+                    },
+                  },
+                }}
+                sx={{
+                  bgcolor: "background.paper",
+                  "& .MuiSelect-select": {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.25,
+                    py: 1.1,
+                  },
+                }}
+                renderValue={(value) => {
+                  const option = PALETTE_OPTIONS.find((item) => item.id === value);
+                  return (
+                    <Stack
+                      direction="row"
+                      spacing={1.25}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <PaletteSwatches id={value} />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {option?.label ?? value}
+                      </Typography>
+                    </Stack>
+                  );
+                }}
+              >
+                {PALETTE_OPTIONS.map(({ id, label }) => (
+                  <MenuItem key={id} value={id} aria-label={label}>
+                    <Stack
+                      direction="row"
+                      spacing={1.25}
+                      sx={{ alignItems: "center", width: "100%" }}
+                    >
+                      <PaletteSwatches id={id} />
+                      <Typography variant="body2">{label}</Typography>
+                    </Stack>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </OptionsSection>
 
           <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
