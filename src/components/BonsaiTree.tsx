@@ -1,8 +1,9 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { useTheme } from "@mui/material/styles";
+import { darken, lighten, useTheme, type Theme } from "@mui/material/styles";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useId } from "react";
 import {
   BASELINE_FROGS,
   bonsaiStageLabel,
@@ -16,28 +17,61 @@ import { FROG_ICON_PATH, SQUIRREL_ICON_PATH } from "@/lib/frogIcon";
 type BonsaiTreeProps = {
   stage: BonsaiStage;
   leaves: number;
+  /** Canopy frog-fruit count (same unlock pacing as former pink blossoms). */
   blossoms: number;
   isWilting?: boolean;
   size?: number;
   frogs?: number;
 };
 
-const CANOPY = { cx: 80, cy: 92 };
+// Dial-back knobs (specs/015-garden-critter-bonsai):
+// - MAX_FROGS — src/lib/bonsai.ts
+// - FROG_BAND / FROG_X / FROG_ROW_DEPTH / FROG_SCALE_* — ground crowd comedy vs sludge
+// - TREE_SCALE_BASE / TREE_SCALE_DELTA — bonsai presence
+// - CANOPY_SPREAD_* — canopy width/height at terminal state
+// - FROG_FRUIT_SCALE — canopy fruit size
+// - fruitFills() / groundFrogFills() — canopy pop vs quiet green pile
+const FROG_BAND = { yMin: 186, ySpan: 20 };
+const FROG_ROW_DEPTH = 11; // back rows sit higher so the pile reads tall, not flat
+const FROG_SCALE_MIN = 1.75;
+const FROG_SCALE_SPAN = 1.2; // → max ~2.95 (bigger, grander pile)
+const FROG_X = { min: -22, span: 204 }; // continuous wide band (~-22..182) — no center gap
+const TREE_SCALE_BASE = 0.98;
+const TREE_SCALE_DELTA = 0.62; // fuller mature presence
+const CANOPY_SPREAD_X = 1.24; // horizontal stretch → wider terminal canopy
+const CANOPY_SPREAD_Y = 0.8; // gentle vertical flatten (bonsai silhouette)
+const CANOPY_RADIUS = 8.4; // spiral step — larger = wider, leafier fan
+const FROG_FRUIT_SCALE = 1.55; // large fruit presence in the canopy
+const CANOPY = { cx: 80, cy: 88 }; // slightly lower so mature crown clears the card edge
 
 // Phyllotaxis (golden-angle) layout so leaves fill the canopy outward in a
 // natural spiral — computed once at module load (no render-time randomness).
 const GOLDEN_ANGLE = 2.399963229728653; // ~137.5° in radians
 const LEAF_POSITIONS = Array.from({ length: MAX_LEAVES }, (_, i) => {
-  const r = 7 * Math.sqrt(i);
+  const r = CANOPY_RADIUS * Math.sqrt(i);
+  const angle = i * GOLDEN_ANGLE;
   return {
-    x: CANOPY.cx + r * Math.cos(i * GOLDEN_ANGLE),
-    y: CANOPY.cy + r * Math.sin(i * GOLDEN_ANGLE) * 0.82,
+    x: CANOPY.cx + r * Math.cos(angle) * CANOPY_SPREAD_X,
+    y: CANOPY.cy + r * Math.sin(angle) * CANOPY_SPREAD_Y,
+    // Leaf tip rotation (degrees) — soft fan, not mechanical grid.
+    rot: (angle * 180) / Math.PI + 35,
     tone: ["main", "light", "dark"][i % 3] as "main" | "light" | "dark",
   };
 });
 
-// Blossoms sit on a handful of inner canopy positions, revealed as the tree flowers.
-const BLOSSOM_SLOTS = [2, 5, 8, 11, 14, 17];
+// A soft backdrop of larger, low-opacity leaf blobs behind the crisp leaves so
+// a full canopy reads dense and lush rather than as separable dots. Positions
+// track the spiral (pulled slightly inward) and unlock in step with the crisp
+// leaves via the same slice count.
+const CANOPY_BACKDROP = LEAF_POSITIONS.map((leaf) => ({
+  x: CANOPY.cx + (leaf.x - CANOPY.cx) * 0.86,
+  y: CANOPY.cy + (leaf.y - CANOPY.cy) * 0.86,
+  rot: leaf.rot,
+}));
+
+// Frog-fruit sit on canopy positions (former blossom slots), spread across the
+// crown so a mature tree hangs a generous, colorful cluster of frog-fruit.
+const BLOSSOM_SLOTS = [2, 4, 6, 9, 12, 15, 18, 21];
 
 // Grass sprigs flanking the pot base (ground y≈196); more appear as the tree grows.
 const GRASS = [
@@ -56,24 +90,30 @@ function seeded(i: number, salt: number): number {
   return v - Math.floor(v);
 }
 
-// Frog friends gather on the ground around the pot base. Computed once; frog `i`
-// always sits in slot `i`, so the crowd grows additively without reshuffling.
-// Slot 0 is the original lone frog's spot (the baseline).
-// Scale is 2x the original hand-drawn-critter sizing (0.68..1.18 -> 1.36..2.36)
-// now that the critters render as a bolder icon silhouette instead of tiny
-// ellipses — the smallest frog is still exactly 2x its old smallest size.
+// Frog friends gather in one continuous pile across the pot base. Computed once;
+// frog `i` always sits in slot `i`, so the crowd grows additively without
+// reshuffling. Slot 0 is the baseline. Specs/015: wide continuous band (no
+// left/right split) + comedy scale — pot peeks through overlaps, not a gap.
 const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
-  if (i === 0) return { x: 30, y: 187, scale: 2 };
+  if (i === 0) return { x: 38, y: 192, scale: 2.75 };
+  // Continuous x across a wide band so the pile reads as one dense mound,
+  // including under the pot — not two flank clumps with a center gap.
+  const x = FROG_X.min + seeded(i, 4) * FROG_X.span;
+  // Depth rows: front frogs sit low + big; back rows climb the pot base a touch
+  // higher and slightly smaller, so the crowd reads as a tall, grand pile.
+  const row = Math.floor(seeded(i, 5) * 3); // 0 (front) .. 2 (back)
+  const yFront = FROG_BAND.yMin + seeded(i, 2) * FROG_BAND.ySpan;
   return {
-    x: 12 + seeded(i, 1) * 136, // 12..148 across the ground band
-    y: 186 + seeded(i, 2) * 13, // 186..199, clustered at the base
-    scale: 1.36 + seeded(i, 3) * 1.0, // 1.36..2.36 depth variation
+    x,
+    // Back rows sit higher; render sorts by this y so back frogs paint first.
+    y: yFront - row * FROG_ROW_DEPTH,
+    scale: FROG_SCALE_MIN + seeded(i, 3) * FROG_SCALE_SPAN - row * 0.28,
   };
 });
 
 // The squirrel's own fixed spot (distinct from the frog slots, not counted in
 // the frog cap). It only visits occasionally — see squirrelVisible.
-const SQUIRREL_SLOT = { x: 132, y: 184, scale: 2 };
+const SQUIRREL_SLOT = { x: 134, y: 183, scale: 2.35 };
 
 // Occasional + deterministic: present only once the crowd is established and
 // when a seeded hash of the count lands, so it pops in and out as frogs change
@@ -82,6 +122,31 @@ function squirrelVisible(frogCount: number): boolean {
   if (frogCount < SQUIRREL_MIN) return false;
   const v = Math.sin(frogCount * 91.7) * 43758.5453;
   return v - Math.floor(v) < 0.3;
+}
+
+/**
+ * Ground frogs: soft greens that match the canopy (primary moss tones).
+ * Varied enough to read as a living pile, quiet enough not to compete with fruit.
+ */
+function groundFrogFills(theme: Theme): string[] {
+  const p = theme.palette.primary;
+  return [p.light, p.main, p.dark, lighten(p.main, 0.12), darken(p.main, 0.18)];
+}
+
+/**
+ * Canopy frog-fruit: colorful theme accents — never green — so they pop against
+ * the moss canopy. Clay / rust / ochre / dusk (+ soft light variants).
+ */
+function fruitFills(theme: Theme): string[] {
+  const p = theme.palette;
+  return [
+    p.secondary.main,
+    p.error.main,
+    p.warning.main,
+    p.info.main,
+    p.secondary.light,
+    lighten(p.error.main, 0.18),
+  ];
 }
 
 export default function BonsaiTree({
@@ -94,6 +159,9 @@ export default function BonsaiTree({
 }: BonsaiTreeProps) {
   const theme = useTheme();
   const reduce = useReducedMotion();
+  // Unique per instance so multiple trees (e.g. The Grove) never share gradient
+  // ids. Colons from useId are stripped to keep url(#…) references clean.
+  const gradientPrefix = `fruit${useId().replace(/:/g, "")}`;
 
   const leafTone = {
     main: theme.palette.primary.main,
@@ -104,7 +172,8 @@ export default function BonsaiTree({
   const potRim = theme.palette.secondary.dark;
   const soilFill = theme.palette.secondary.dark;
   const woodFill = theme.palette.secondary.dark;
-  const blossomFill = theme.palette.error.light;
+  const frogFruitColors = fruitFills(theme);
+  const groundFrogColors = groundFrogFills(theme);
 
   // Fade-in only (no scale): a leaf/frog is never stranded invisible if the
   // animation is interrupted (e.g. a backgrounded tab pausing rAF).
@@ -117,29 +186,34 @@ export default function BonsaiTree({
         transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
       };
 
-  // Critters are drawn as bold, solid icon silhouettes at the pot base. A
-  // "sticker halo" — a stroke in the card's own background colour, painted
-  // behind the fill — keeps each critter visually distinct even when the
-  // crowd piles up and overlaps (otherwise they merge into one green blob).
-  const frogFill = theme.palette.primary.main;
+  // Critters are drawn as bold, solid icon silhouettes. A "sticker halo" —
+  // a stroke in the card's own background colour, painted behind the fill —
+  // keeps each critter distinct when the crowd overlaps. Ground frogs stay
+  // in moss greens; canopy fruit keeps the colorful non-green accents.
   const squirrelBody = theme.palette.secondary.main;
   const critterHalo = theme.palette.background.paper;
 
   const isShrub = stage === "shrub" || leaves <= 0;
   const shownLeaves = LEAF_POSITIONS.slice(0, Math.min(leaves, MAX_LEAVES));
-  const shownBlossoms = BLOSSOM_SLOTS.slice(0, blossoms);
+  const shownBackdrop = CANOPY_BACKDROP.slice(0, Math.min(leaves, MAX_LEAVES));
+  const shownFruit = BLOSSOM_SLOTS.slice(0, blossoms);
   const shownGrass = GRASS.slice(0, Math.min(GRASS.length, Math.ceil(leaves / 4)));
 
-  // The tree scales up as it fills in, so the mature stage is notably big.
-  const treeScale = 0.9 + (Math.min(leaves, MAX_LEAVES) / MAX_LEAVES) * 0.45;
+  // Mature presence bump (~15–25% vs prior 0.9+0.45) — dial TREE_SCALE_* above.
+  const treeScale =
+    TREE_SCALE_BASE + (Math.min(leaves, MAX_LEAVES) / MAX_LEAVES) * TREE_SCALE_DELTA;
 
-  // Frogs are bounded and always show at least the baseline lone frog.
+  // Frogs are bounded and always show at least the baseline lone frog. Keep the
+  // slot index as identity (stable AnimatePresence keys) but paint back-to-front
+  // (higher up the pile first) so the crowd overlaps like a real stacked pile.
   const frogCount = Math.max(BASELINE_FROGS, Math.min(frogs, MAX_FROGS));
-  const shownFrogs = FROG_POSITIONS.slice(0, frogCount);
+  const shownFrogs = FROG_POSITIONS.slice(0, frogCount)
+    .map((p, slot) => ({ ...p, slot }))
+    .sort((a, b) => a.y - b.y);
   const showSquirrel = squirrelVisible(frogCount);
 
-  // Wilt dims only the living tree/pot layer — the frog friends and squirrel
-  // stay full-color, since they mark work already done and never wilt.
+  // Wilt dims only the living tree/pot layer — frog friends, squirrel, and
+  // canopy frog-fruit stay full-color (work already done / cheerful rewards).
   const wiltStyle = {
     opacity: isWilting ? 0.75 : 1,
     filter: isWilting ? "saturate(0.6)" : "none",
@@ -152,7 +226,21 @@ export default function BonsaiTree({
       aria-label={bonsaiStageLabel(stage)}
       sx={{ width: size, height: size, maxWidth: "100%" }}
     >
-      <svg width="100%" height="100%" viewBox="0 0 160 200" aria-hidden="true">
+      {/* Extra top/side pad so a mature scaled canopy + large frog-fruit never
+          clip the card edge; wide enough for the continuous frog pile. */}
+      <svg width="100%" height="100%" viewBox="-28 -56 216 288" aria-hidden="true">
+        {/* Per-color vertical gradients give each canopy frog-fruit a soft,
+            theme-matched sheen (light crown → base → shaded belly). */}
+        <defs>
+          {frogFruitColors.map((base, i) => (
+            <linearGradient key={i} id={`${gradientPrefix}-${i}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={lighten(base, 0.28)} />
+              <stop offset="50%" stopColor={base} />
+              <stop offset="100%" stopColor={darken(base, 0.26)} />
+            </linearGradient>
+          ))}
+        </defs>
+
         {/* Living layer — pot, soil, grass, tree — dims when wilting. */}
         <g style={wiltStyle}>
           {/* Pot + soil — always present */}
@@ -203,23 +291,36 @@ export default function BonsaiTree({
               </g>
             ) : (
               <g>
-                {/* Trunk */}
-                <path d="M76 162 Q73 126 80 112 Q87 126 84 162 Z" fill={woodFill} />
-                {/* Leaves — one per completion, filling the canopy outward */}
+                {/* Trunk — wider, gently flared base for a grounded bonsai */}
+                <path d="M72 162 Q68 120 80 100 Q92 120 88 162 Z" fill={woodFill} />
+                {/* Backdrop canopy — larger, low-opacity leaf blobs behind the
+                    crisp leaves so a full crown reads dense and lush. */}
                 <AnimatePresence>
-                  {shownLeaves.map((leaf, i) => (
-                    <motion.circle key={i} cx={leaf.x} cy={leaf.y} r={9} fill={leafTone[leaf.tone]} {...appear} />
+                  {shownBackdrop.map((leaf, i) => (
+                    <motion.ellipse
+                      key={`bg-${i}`}
+                      cx={leaf.x}
+                      cy={leaf.y}
+                      rx={15}
+                      ry={9.5}
+                      fill={leafTone.dark}
+                      opacity={0.5}
+                      transform={`rotate(${leaf.rot} ${leaf.x} ${leaf.y})`}
+                      {...appear}
+                    />
                   ))}
                 </AnimatePresence>
-                {/* Blossoms once flowering */}
+                {/* Leaves — soft leaf-ish ovals (richer than plain circles) */}
                 <AnimatePresence>
-                  {shownBlossoms.map((slot) => (
-                    <motion.circle
-                      key={`b${slot}`}
-                      cx={LEAF_POSITIONS[slot].x}
-                      cy={LEAF_POSITIONS[slot].y}
-                      r={4}
-                      fill={blossomFill}
+                  {shownLeaves.map((leaf, i) => (
+                    <motion.ellipse
+                      key={i}
+                      cx={leaf.x}
+                      cy={leaf.y}
+                      rx={11.5}
+                      ry={7.2}
+                      fill={leafTone[leaf.tone]}
+                      transform={`rotate(${leaf.rot} ${leaf.x} ${leaf.y})`}
                       {...appear}
                     />
                   ))}
@@ -229,31 +330,60 @@ export default function BonsaiTree({
           </g>
         </g>
 
-        {/* Critter layer — frog friends + the occasional squirrel. Outside the
-            wilt styling, so they stay full-color even when the tree wilts. */}
+        {/* Critter + frog-fruit layer — outside wilt styling so rewards stay cheerful. */}
         <g>
+          {/* Canopy frog-fruit — same unlock slots as former pink blossoms; scaled
+              with the tree so they hang in the canopy as it grows. */}
+          {!isShrub && (
+            <g transform={`translate(80 162) scale(${treeScale}) translate(-80 -162)`}>
+              <AnimatePresence>
+                {shownFruit.map((slot, fruitIndex) => {
+                  const pos = LEAF_POSITIONS[slot];
+                  const colorIndex = fruitIndex % frogFruitColors.length;
+                  return (
+                    <motion.g
+                      key={`fruit-${slot}`}
+                      transform={`translate(${pos.x} ${pos.y}) scale(${FROG_FRUIT_SCALE})`}
+                      {...appear}
+                    >
+                      <path
+                        d={FROG_ICON_PATH}
+                        fill={`url(#${gradientPrefix}-${colorIndex})`}
+                        stroke={critterHalo}
+                        strokeWidth={2}
+                        strokeLinejoin="round"
+                        paintOrder="stroke"
+                        vectorEffect="non-scaling-stroke"
+                        transform="translate(-8.064 -7.168) scale(0.028)"
+                      />
+                    </motion.g>
+                  );
+                })}
+              </AnimatePresence>
+            </g>
+          )}
+
           <AnimatePresence>
-            {shownFrogs.map((p, i) => (
-              <motion.g key={i} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
-                {/* Same frog mark used everywhere else in the app (favicon,
-                    header, task buttons) — see src/lib/frogIcon.ts. Path is
-                    576x512; this local transform centers and shrinks it to
-                    the same footprint the hand-drawn critter used to have.
-                    The bg-coloured, non-scaling stroke (painted behind the
-                    fill via paint-order) is the sticker halo that separates
-                    overlapping frogs — see critterHalo above. */}
-                <path
-                  d={FROG_ICON_PATH}
-                  fill={frogFill}
-                  stroke={critterHalo}
-                  strokeWidth={2.5}
-                  strokeLinejoin="round"
-                  paintOrder="stroke"
-                  vectorEffect="non-scaling-stroke"
-                  transform="translate(-8.064 -7.168) scale(0.028)"
-                />
-              </motion.g>
-            ))}
+            {shownFrogs.map((p) => {
+              const colorIndex = p.slot % groundFrogColors.length;
+              return (
+                <motion.g key={p.slot} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
+                  {/* Same frog mark as favicon/header — see src/lib/frogIcon.ts.
+                      Sticker halo separates overlapping comedy-scale frogs.
+                      Moss greens only — colorful accents reserved for canopy fruit. */}
+                  <path
+                    d={FROG_ICON_PATH}
+                    fill={groundFrogColors[colorIndex]}
+                    stroke={critterHalo}
+                    strokeWidth={2.75}
+                    strokeLinejoin="round"
+                    paintOrder="stroke"
+                    vectorEffect="non-scaling-stroke"
+                    transform="translate(-8.064 -7.168) scale(0.028)"
+                  />
+                </motion.g>
+              );
+            })}
           </AnimatePresence>
 
           <AnimatePresence>
@@ -263,15 +393,11 @@ export default function BonsaiTree({
                 transform={`translate(${SQUIRREL_SLOT.x} ${SQUIRREL_SLOT.y}) scale(${SQUIRREL_SLOT.scale})`}
                 {...appear}
               >
-                {/* Same bold, solid-fill artistic variety as the frog mark,
-                    with the same sticker halo — see src/lib/frogIcon.ts. Path
-                    is 512x512; this local transform centers and sizes it so it
-                    reads clearly at the pot base among the frogs. */}
                 <path
                   d={SQUIRREL_ICON_PATH}
                   fill={squirrelBody}
                   stroke={critterHalo}
-                  strokeWidth={2.5}
+                  strokeWidth={2.75}
                   strokeLinejoin="round"
                   paintOrder="stroke"
                   vectorEffect="non-scaling-stroke"

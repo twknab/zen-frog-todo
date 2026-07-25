@@ -42,7 +42,9 @@ export const ACTIVE_END = 17; // wilt-active window end (local hour)
 export const TASK_FROGS = 1; // frogs per completed regular task
 export const SESSION_FROGS = 2; // frogs per focus session
 export const FROG_FROGS = 3; // frogs per completing the day's frog
-export const MAX_FROGS = 20; // full crowd, including the baseline (bounded)
+// Raised in specs/015-garden-critter-bonsai for a grander terminal celebration
+// (dial-back knob: drop toward 28 if the pile ever feels crowded).
+export const MAX_FROGS = 40; // full crowd, including the baseline (bounded)
 export const BASELINE_FROGS = 1; // the lone frog always present (index 0)
 export const SQUIRREL_MIN = 6; // min crowd before a squirrel may appear
 // -------------------------------------------------------------------------
@@ -75,7 +77,7 @@ export function bonsaiStageLabel(stage: BonsaiStage): string {
  * Grove (specs/010-grove-history) so both flower identically for the same leaves.
  */
 export function blossomCountForLeaves(leaves: number): number {
-  return leaves >= 15 ? Math.min(6, leaves - 14) : 0;
+  return leaves >= 15 ? Math.min(8, leaves - 14) : 0;
 }
 
 /**
