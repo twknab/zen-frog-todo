@@ -109,83 +109,162 @@ export function playRake() {
   }
 }
 
+type RibbitOpts = {
+  /** Peak amplitude for the voiced croak (keep gentle). */
+  peakGain?: number;
+  /** Pitch at the start of the “ri-”. */
+  startHz?: number;
+  /** Peak pitch before the fall into “-bbit”. */
+  peakHz?: number;
+  /** Pitch at the end of the croak. */
+  endHz?: number;
+  /** Total ribbit length in seconds. */
+  duration?: number;
+};
+
 /**
- * One soft frog "ribbit" — a gentle down-gliding tone with a touch of
- * texture. Used for regular (non-frog) task completion.
+ * One froggy ribbit: two-syllable croak (ri / bbit), throaty formant,
+ * vibrato buzz, and a whisper of noise — more amphibian than a plain beep.
  */
 function scheduleRibbit(
   ctx: AudioContext,
   startAt: number,
   {
-    peakGain = 0.14,
-    startHz = 420,
-    endHz = 180,
-    duration = 0.16,
-  }: {
-    peakGain?: number;
-    startHz?: number;
-    endHz?: number;
-    duration?: number;
-  } = {},
+    peakGain = 0.16,
+    startHz = 260,
+    peakHz = 420,
+    endHz = 110,
+    duration = 0.22,
+  }: RibbitOpts = {},
 ) {
-  const osc = ctx.createOscillator();
-  const body = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
+  const safeStart = Math.max(startHz, 60);
+  const safePeak = Math.max(peakHz, safeStart);
+  const safeEnd = Math.max(endHz, 40);
+  const stopAt = startAt + duration + 0.04;
 
-  osc.type = "triangle";
-  osc.frequency.setValueAtTime(startHz, startAt);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(endHz, 40), startAt + duration);
+  const master = ctx.createGain();
+  master.gain.value = 1;
+  master.connect(ctx.destination);
 
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(900, startAt);
-  filter.frequency.exponentialRampToValueAtTime(320, startAt + duration);
-  filter.Q.value = 1.2;
+  // Throaty formant — bandpass keeps it croaky, not whistle-y.
+  const formant = ctx.createBiquadFilter();
+  formant.type = "bandpass";
+  formant.frequency.setValueAtTime(safePeak * 1.15, startAt);
+  formant.frequency.exponentialRampToValueAtTime(
+    Math.max(safeEnd * 2.2, 180),
+    startAt + duration,
+  );
+  formant.Q.value = 3.2;
 
-  body.gain.setValueAtTime(0, startAt);
-  body.gain.linearRampToValueAtTime(peakGain, startAt + 0.018);
-  body.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  // Voiced croak body (slightly buzzy saw → amphibian, not a clean triangle).
+  const voice = ctx.createOscillator();
+  voice.type = "sawtooth";
+  voice.frequency.setValueAtTime(safeStart, startAt);
+  // “ri-” rise…
+  voice.frequency.linearRampToValueAtTime(safePeak, startAt + duration * 0.28);
+  // …then the classic fall into “-bbit”.
+  voice.frequency.exponentialRampToValueAtTime(safeEnd, startAt + duration);
 
-  osc.connect(filter);
-  filter.connect(body);
-  body.connect(ctx.destination);
-  osc.start(startAt);
-  osc.stop(startAt + duration + 0.02);
+  // Fast vibrato = croak buzz / rattle in the throat.
+  const vibrato = ctx.createOscillator();
+  vibrato.type = "sine";
+  vibrato.frequency.value = 28;
+  const vibratoDepth = ctx.createGain();
+  vibratoDepth.gain.value = safePeak * 0.045;
+  vibrato.connect(vibratoDepth);
+  vibratoDepth.connect(voice.frequency);
+
+  const voiceGain = ctx.createGain();
+  // Two amplitude humps → audible “ri-bbit” syllables.
+  const dip = startAt + duration * 0.38;
+  voiceGain.gain.setValueAtTime(0, startAt);
+  voiceGain.gain.linearRampToValueAtTime(peakGain, startAt + 0.012);
+  voiceGain.gain.linearRampToValueAtTime(peakGain * 0.35, dip);
+  voiceGain.gain.linearRampToValueAtTime(peakGain * 0.95, dip + 0.02);
+  voiceGain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  const voiceTone = ctx.createBiquadFilter();
+  voiceTone.type = "lowpass";
+  voiceTone.frequency.setValueAtTime(1400, startAt);
+  voiceTone.frequency.exponentialRampToValueAtTime(480, startAt + duration);
+  voiceTone.Q.value = 0.8;
+
+  voice.connect(voiceTone);
+  voiceTone.connect(formant);
+  formant.connect(voiceGain);
+  voiceGain.connect(master);
+
+  // Soft noise tick for the croak’s attack / wet mouth texture.
+  const noiseDur = Math.min(0.07, duration * 0.35);
+  const noiseBuf = ctx.createBuffer(
+    1,
+    Math.max(1, Math.floor(ctx.sampleRate * noiseDur)),
+    ctx.sampleRate,
+  );
+  const noiseData = noiseBuf.getChannelData(0);
+  for (let i = 0; i < noiseData.length; i += 1) {
+    noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuf;
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 700;
+  noiseFilter.Q.value = 1.4;
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0, startAt);
+  noiseGain.gain.linearRampToValueAtTime(peakGain * 0.22, startAt + 0.008);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, startAt + noiseDur);
+
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(master);
+
+  voice.start(startAt);
+  vibrato.start(startAt);
+  noise.start(startAt);
+  voice.stop(stopAt);
+  vibrato.stop(stopAt);
+  noise.stop(startAt + noiseDur + 0.02);
 }
 
-/** Single light ribbit — non-frog task completed. */
+/** Single joyful frog ribbit — non-frog task completed. */
 export function playRibbit() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-    scheduleRibbit(ctx, ctx.currentTime, { peakGain: 0.12, startHz: 400, endHz: 170 });
+    scheduleRibbit(ctx, ctx.currentTime, {
+      peakGain: 0.15,
+      startHz: 240,
+      peakHz: 400,
+      endHz: 105,
+      duration: 0.2,
+    });
   } catch {
     // silent
   }
 }
 
 /**
- * Short cheerful ribbit chorus for completing today's frog — a cascade of a
- * few soft ribbits, delightful and brief (not spammy).
+ * Cheerful ribbit chorus for completing today’s frog — a little pond of
+ * overlapping croaks, brief and delightful (not a long spam cascade).
  */
 export function playFrogChorus() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const notes = [
-      { at: 0, startHz: 380, endHz: 160, peakGain: 0.11 },
-      { at: 0.11, startHz: 440, endHz: 190, peakGain: 0.13 },
-      { at: 0.22, startHz: 360, endHz: 150, peakGain: 0.1 },
-      { at: 0.34, startHz: 480, endHz: 200, peakGain: 0.12 },
-      { at: 0.48, startHz: 400, endHz: 165, peakGain: 0.09 },
+    const croaks: Array<RibbitOpts & { at: number }> = [
+      { at: 0, startHz: 230, peakHz: 380, endHz: 100, peakGain: 0.14, duration: 0.2 },
+      { at: 0.1, startHz: 280, peakHz: 460, endHz: 120, peakGain: 0.16, duration: 0.22 },
+      { at: 0.2, startHz: 210, peakHz: 350, endHz: 95, peakGain: 0.13, duration: 0.19 },
+      { at: 0.32, startHz: 300, peakHz: 500, endHz: 130, peakGain: 0.15, duration: 0.23 },
+      { at: 0.44, startHz: 250, peakHz: 410, endHz: 108, peakGain: 0.12, duration: 0.2 },
+      { at: 0.56, startHz: 270, peakHz: 440, endHz: 115, peakGain: 0.11, duration: 0.18 },
     ];
-    for (const note of notes) {
-      scheduleRibbit(ctx, now + note.at, {
-        startHz: note.startHz,
-        endHz: note.endHz,
-        peakGain: note.peakGain,
-        duration: 0.14,
-      });
+    for (const croak of croaks) {
+      const { at, ...opts } = croak;
+      scheduleRibbit(ctx, now + at, opts);
     }
   } catch {
     // silent
