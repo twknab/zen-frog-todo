@@ -404,7 +404,8 @@ export default function Home() {
                 role="img"
                 aria-label={`Night Camp — ${nightCamp.stageLabel}. ${nightCamp.nightFrogs} frogs by the fire.`}
               >
-                <NightCampScene view={nightCamp} size={isFocus ? 340 : 300} />
+                {/* Match Day bonsai scale — Night must not outshine Day. */}
+                <NightCampScene view={nightCamp} size={isFocus ? 260 : 240} />
               </Box>
             ) : (
               <BonsaiTree
