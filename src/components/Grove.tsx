@@ -13,11 +13,13 @@ import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import BonsaiTree from "@/components/BonsaiTree";
+import Chrome from "@/components/Chrome";
 import GroveDayDialog from "@/components/GroveDayDialog";
 import SandSnapshotLightbox, { type SandLightboxItem } from "@/components/SandSnapshotLightbox";
 import { blossomCountForLeaves, bonsaiStageLabel, type BonsaiStage } from "@/lib/bonsai";
 import { archiveEntryLabel, useArchive, type ArchivedDay } from "@/lib/dayArchive";
 import { useGroveVisibility } from "@/lib/grove";
+import { useHyperMinimal } from "@/lib/hyperMinimal";
 import {
   drawingsFromArchivedDay,
   sandSvgDataUrl,
@@ -36,6 +38,7 @@ const STACK_PEEK = 3;
 export default function Grove() {
   const archive = useArchive();
   const [visible, setVisible] = useGroveVisibility();
+  const [hyperMinimal] = useHyperMinimal();
   const reduce = useReducedMotion();
   const [selected, setSelected] = useState<ArchivedDay | null>(null);
   const todayDrawings = useTodaySandDrawings();
@@ -65,39 +68,49 @@ export default function Grove() {
   );
 
   return (
-    <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }}>
+    <Card sx={{ mt: 3, p: { xs: 2.5, md: 3 } }} aria-label="The Grove">
       <CardContent sx={{ p: 0 }}>
         <Stack
           direction="row"
           spacing={1.5}
           sx={{ alignItems: "center", justifyContent: "space-between" }}
         >
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-            <ForestOutlinedIcon color="success" />
-            <Typography variant="h6" component="h2">
-              The Grove
-            </Typography>
-          </Stack>
+          <Chrome>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+              <ForestOutlinedIcon color="success" />
+              <Typography variant="h6" component="h2">
+                The Grove
+              </Typography>
+            </Stack>
+          </Chrome>
           <Button
             onClick={() => setVisible((v) => !v)}
             aria-expanded={visible}
             aria-controls="grove-ribbon"
+            aria-label={visible ? "Hide the Grove" : "Show the Grove"}
             color="inherit"
             size="small"
             endIcon={visible ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />}
-            sx={{ color: "text.secondary", textTransform: "none", flexShrink: 0 }}
+            sx={{
+              color: "text.secondary",
+              textTransform: "none",
+              flexShrink: 0,
+              ml: hyperMinimal ? "auto" : undefined,
+            }}
           >
-            {visible ? "Hide the Grove" : "Show the Grove"}
+            {hyperMinimal ? (visible ? "Hide" : "Show") : visible ? "Hide the Grove" : "Show the Grove"}
           </Button>
         </Stack>
 
         <Collapse in={visible} timeout={reduce ? 0 : undefined} unmountOnExit>
           <Box sx={{ mt: 2 }}>
             {showEmptyCopy ? (
-              <Typography variant="body2" color="text.secondary">
-                Your grove is still a clearing. Close a day and its first little tree will
-                take root here.
-              </Typography>
+              <Chrome>
+                <Typography variant="body2" color="text.secondary">
+                  Your grove is still a clearing. Close a day and its first little tree will
+                  take root here.
+                </Typography>
+              </Chrome>
             ) : (
               <Box
                 id="grove-ribbon"

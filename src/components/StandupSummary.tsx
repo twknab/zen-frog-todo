@@ -5,6 +5,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Chrome from "@/components/Chrome";
 import type { CompletedLogEntry, Task } from "@/lib/tasks";
 
 type StandupSummaryProps = {
@@ -42,9 +43,11 @@ export default function StandupSummary({ tasks, completedLog }: StandupSummaryPr
 
   if (doneItems.length === 0 && openItems.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        Nothing in the current batch yet — finish a task or two and your recap will collect here.
-      </Typography>
+      <Chrome>
+        <Typography variant="body2" color="text.secondary">
+          Nothing in the current batch yet — finish a task or two and your recap will collect here.
+        </Typography>
+      </Chrome>
     );
   }
 
@@ -52,10 +55,12 @@ export default function StandupSummary({ tasks, completedLog }: StandupSummaryPr
     <Stack spacing={2.5}>
       {doneItems.length > 0 && (
         <Stack spacing={0.5}>
-          <Typography variant="subtitle2" component="h3" color="text.secondary">
-            What I did
-          </Typography>
-          <List dense disablePadding>
+          <Chrome>
+            <Typography variant="subtitle2" component="h3" color="text.secondary">
+              What I did
+            </Typography>
+          </Chrome>
+          <List dense disablePadding aria-label="What I did">
             {doneItems.map((item) => (
               <ListItem key={item.id} disableGutters disablePadding sx={{ py: 0.5 }}>
                 <ListItemText primary={item.title} secondary={item.note ?? undefined} />
@@ -67,10 +72,12 @@ export default function StandupSummary({ tasks, completedLog }: StandupSummaryPr
 
       {openItems.length > 0 && (
         <Stack spacing={0.5}>
-          <Typography variant="subtitle2" component="h3" color="text.secondary">
-            What&apos;s next
-          </Typography>
-          <List dense disablePadding>
+          <Chrome>
+            <Typography variant="subtitle2" component="h3" color="text.secondary">
+              What&apos;s next
+            </Typography>
+          </Chrome>
+          <List dense disablePadding aria-label="What's next">
             {openItems.map((item) => (
               <ListItem key={item.id} disableGutters disablePadding sx={{ py: 0.5 }}>
                 <ListItemText primary={item.title} />
