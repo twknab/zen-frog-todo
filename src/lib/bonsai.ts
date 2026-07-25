@@ -1,6 +1,11 @@
 "use client";
 
 import { useCallback } from "react";
+import {
+  DEFAULT_WORK_WINDOW,
+  normalizeHour,
+  type WorkWindow,
+} from "./gardenRealm";
 import { usePersistentState } from "./storage";
 
 /**
@@ -82,29 +87,58 @@ export function blossomCountForLeaves(leaves: number): number {
 
 /**
  * Sum of clock-hours between `from` and `to` that fall inside the daily
- * [ACTIVE_START, ACTIVE_END] local window. Pure; never negative; robust to
- * multi-day gaps and clock skew (a nonsensical range yields 0). Overnight and
- * off-hours never count, so the tree never wilts while you're away for the day.
+ * work window (default [ACTIVE_START, ACTIVE_END]). Pure; never negative;
+ * robust to multi-day gaps and clock skew. Overnight / off-hours never count
+ * unless the configured window spans midnight.
  */
-export function activeIdleHours(from: string | null, to: Date): number {
+export function activeIdleHours(
+  from: string | null,
+  to: Date,
+  workWindow: WorkWindow = DEFAULT_WORK_WINDOW,
+): number {
   if (!from) return 0;
   const start = new Date(from);
   if (Number.isNaN(start.getTime())) return 0;
   if (to.getTime() <= start.getTime()) return 0;
+
+  const winStart = normalizeHour(workWindow.startHour);
+  const winEnd = normalizeHour(workWindow.endHour);
 
   let total = 0;
   const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   for (let guard = 0; guard < 750; guard += 1) {
     if (cursor.getTime() > to.getTime()) break;
 
-    const windowOpen = new Date(cursor);
-    windowOpen.setHours(ACTIVE_START, 0, 0, 0);
-    const windowClose = new Date(cursor);
-    windowClose.setHours(ACTIVE_END, 0, 0, 0);
+    const dayStart = cursor.getTime();
+    const nextDay = new Date(cursor);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const dayEnd = nextDay.getTime();
 
-    const lo = Math.max(start.getTime(), windowOpen.getTime());
-    const hi = Math.min(to.getTime(), windowClose.getTime());
-    if (hi > lo) total += (hi - lo) / 3_600_000;
+    const segments: Array<[number, number]> = [];
+    if (winStart === winEnd) {
+      // Degenerate always-day: whole calendar day counts.
+      segments.push([dayStart, dayEnd]);
+    } else if (winStart < winEnd) {
+      const open = new Date(cursor);
+      open.setHours(winStart, 0, 0, 0);
+      const close = new Date(cursor);
+      close.setHours(winEnd, 0, 0, 0);
+      segments.push([open.getTime(), close.getTime()]);
+    } else {
+      // Spans midnight: [start, 24:00) ∪ [00:00, end)
+      const open = new Date(cursor);
+      open.setHours(winStart, 0, 0, 0);
+      segments.push([open.getTime(), dayEnd]);
+      const close = new Date(cursor);
+      close.setHours(winEnd, 0, 0, 0);
+      segments.push([dayStart, close.getTime()]);
+    }
+
+    for (const [segLo, segHi] of segments) {
+      const lo = Math.max(start.getTime(), segLo);
+      const hi = Math.min(to.getTime(), segHi);
+      if (hi > lo) total += (hi - lo) / 3_600_000;
+    }
 
     cursor.setDate(cursor.getDate() + 1);
   }
@@ -123,6 +157,13 @@ export type BonsaiInput = {
    * idle" tool edits this real value; it is 0 in normal use.
    */
   idleOffsetHours?: number;
+  /** Configured work window for wilt (defaults 8–17). */
+  workWindow?: WorkWindow;
+  /**
+   * When false (Night Camp / Force night), wilt is fully suppressed — bonsai
+   * sleeps (017). Default true.
+   */
+  applyWilt?: boolean;
 };
 
 export type BonsaiResult = {
@@ -141,14 +182,22 @@ export type BonsaiResult = {
  * its growth across calendar midnights until a manual close. Wilt sheds
  * WILT_LEAVES_PER_HOUR per active-idle hour and clears when work resumes.
  */
-export function deriveBonsai({ events, now, idleOffsetHours = 0 }: BonsaiInput): BonsaiResult {
+export function deriveBonsai({
+  events,
+  now,
+  idleOffsetHours = 0,
+  workWindow = DEFAULT_WORK_WINDOW,
+  applyWilt = true,
+}: BonsaiInput): BonsaiResult {
   const grown = Math.min(
     events.reduce((sum, e) => sum + e.leaves, 0),
     MAX_LEAVES,
   );
 
   const lastAt = events.length > 0 ? events[events.length - 1].at : null;
-  const idleHours = activeIdleHours(lastAt, now) + Math.max(0, idleOffsetHours);
+  const idleHours = applyWilt
+    ? activeIdleHours(lastAt, now, workWindow) + Math.max(0, idleOffsetHours)
+    : 0;
   const wilt = Math.floor(idleHours) * WILT_LEAVES_PER_HOUR;
 
   const leaves = Math.max(0, grown - wilt);

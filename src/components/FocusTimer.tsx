@@ -9,7 +9,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import FocusDial from "./FocusDial";
-import { SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
+import { SESSION_FROGS, SESSION_LEAVES } from "@/lib/bonsai";
+import { useCreditWork } from "@/lib/gardenCredit";
 import { useFocusStats } from "@/lib/focusStats";
 import { playChime, startAmbientLoop } from "@/lib/sound";
 
@@ -35,7 +36,7 @@ export default function FocusTimer() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const endTimeRef = useRef<number | null>(null);
   const { completedSessions, recordSessionComplete } = useFocusStats();
-  const { recordGrowth } = useBonsai();
+  const creditWork = useCreditWork();
 
   // Ambient wind follows the toggle alone — once on, it keeps playing across
   // phase changes (work → break → done) and only stops when toggled off.
@@ -78,13 +79,13 @@ export default function FocusTimer() {
     playChime(phase === "working" ? "focus-complete" : "break-complete");
     if (phase === "working") {
       recordSessionComplete();
-      recordGrowth(SESSION_LEAVES, SESSION_FROGS); // a finished session grows the bonsai + brings frogs
+      creditWork(SESSION_LEAVES, SESSION_FROGS); // day garden or night camp by realm
     }
     // Reacting to secondsLeft crossing zero to advance a state machine —
     // intentional, and guarded above so it fires exactly once per crossing.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhase(phase === "working" ? "work-done" : "break-done");
-  }, [phase, secondsLeft, recordSessionComplete, recordGrowth]);
+  }, [phase, secondsLeft, recordSessionComplete, creditWork]);
 
   const totalSeconds =
     phase === "break" ? BREAK_MINUTES * SECONDS_PER_MINUTE : workMinutes * SECONDS_PER_MINUTE;

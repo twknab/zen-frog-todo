@@ -19,7 +19,7 @@ Progress is rewarded organically — a growing tree, a gathering of frogs, the o
 - **Swallow the frog first** — pick the day's largest task; it gets its own calm, front-and-center card.
 - **Flow Mode & Focus Mode** — a full Bento dashboard, or a stripped-down view of just the frog, the timer, and the bonsai.
 - **A growing bonsai** — finishing tasks and focus sessions grows the tree during your work window; it gently wilts during idle work hours and recovers the moment you get back to it. Purely visual — no numbers. Outside work hours the bonsai sleeps.
-- **Night Camp (product model)** — after hours, completions feed a separate night ledger: fireflies, a growing campfire, stars, and moon. Day frogs carry into the night scene. Warm bonus energy — never a lockout. ([product model](docs/product-model.md))
+- **Night Camp** — after hours (or Dev Force night), the bonsai sleeps and a separate camp grows: fireflies, campfire, stars, moon, frogs. Configurable work hours in Options (default 8 AM–5 PM). Never blocks the UI or forces dark mode.
 - **Frog friends** — each day completion brings more frogs to the base of the pot (the frog task most of all), up to a calm little colony, with a squirrel that stops by now and then; those companions also show up at Night Camp.
 - **Focus timer** — a quiet Pomodoro-style dial with an optional synthesized nature-sound loop.
 - **Sand Mode** — a raked-sand canvas to fidget with; smooth it anytime, and it clears with each new day.

@@ -20,6 +20,8 @@ type BonsaiTreeProps = {
   /** Canopy frog-fruit count (same unlock pacing as former pink blossoms). */
   blossoms: number;
   isWilting?: boolean;
+  /** Soft rest look when Night Camp is active (017) — no growth pulses. */
+  asleep?: boolean;
   size?: number;
   frogs?: number;
 };
@@ -154,6 +156,7 @@ export default function BonsaiTree({
   leaves,
   blossoms,
   isWilting = false,
+  asleep = false,
   size = 180,
   frogs = BASELINE_FROGS,
 }: BonsaiTreeProps) {
@@ -214,16 +217,21 @@ export default function BonsaiTree({
 
   // Wilt dims only the living tree/pot layer — frog friends, squirrel, and
   // canopy frog-fruit stay full-color (work already done / cheerful rewards).
+  // Asleep (night) softens the whole tree slightly without wilt filters.
   const wiltStyle = {
-    opacity: isWilting ? 0.75 : 1,
-    filter: isWilting ? "saturate(0.6)" : "none",
+    opacity: asleep ? 0.82 : isWilting ? 0.75 : 1,
+    filter: asleep ? "saturate(0.85) brightness(0.92)" : isWilting ? "saturate(0.6)" : "none",
     transition: "opacity 600ms ease, filter 600ms ease",
   } as const;
 
   return (
     <Box
       role="img"
-      aria-label={bonsaiStageLabel(stage)}
+      aria-label={
+        asleep
+          ? `${bonsaiStageLabel(stage)} — resting for the night`
+          : bonsaiStageLabel(stage)
+      }
       sx={{ width: size, height: size, maxWidth: "100%" }}
     >
       {/* Extra top/side pad so a mature scaled canopy + large frog-fruit never

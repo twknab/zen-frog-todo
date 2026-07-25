@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useRef } from "react";
 import { deriveBonsai, useBonsai, type GrowthEvent } from "./bonsai";
 import { useFocusStats } from "./focusStats";
+import {
+  NIGHT_CAMP_KEY,
+  nightCampSnapshot,
+  useNightCamp,
+  type NightCampSnapshot,
+  type NightCampState,
+} from "./nightCamp";
 import { NOTEPAD_KEY } from "./notepad";
 import {
   clearTodaySandDrawings,
@@ -78,6 +85,8 @@ export type ArchivedDay = {
   reflection: string;
   focusSessions: number;
   bonsai: { leaves: number; stage: string };
+  /** Night Camp summary for this cycle (017). Optional for back-compat. */
+  nightCamp?: NightCampSnapshot;
   /**
    * Vector sand drawings captured that day (011). Optional for back-compat.
    * Prefer this over legacy `sandSnapshot`.
@@ -283,6 +292,7 @@ export function useNewDay() {
   const [archive, setArchive] = usePersistentState<ArchivedDay[]>(ARCHIVE_KEY, []);
   const { completedLog, startNewDay: resetTasks } = useTasks();
   const { events: bonsaiEvents, idleOffsetHours, resetBonsai } = useBonsai();
+  const { events: nightEvents, resetNightCamp } = useNightCamp();
   const { completedSessions, resetSessions } = useFocusStats();
   const [reflection, setReflection] = usePersistentState(REFLECTION_KEY, "");
 
@@ -290,6 +300,7 @@ export function useNewDay() {
     // `now` computed outside any state updater (keeps updaters pure).
     const now = new Date();
     const derived = deriveBonsai({ events: bonsaiEvents, now, idleOffsetHours });
+    const night = nightCampSnapshot(nightEvents);
     const completedTasks: ArchivedTask[] = completedLog.map((e) => ({
       title: e.taskTitle,
       note: e.note,
@@ -306,6 +317,7 @@ export function useNewDay() {
       reflection.trim().length > 0 ||
       completedSessions > 0 ||
       derived.leaves > 0 ||
+      night.progress > 0 ||
       sandDrawings.length > 0;
 
     if (hasContent) {
@@ -317,6 +329,7 @@ export function useNewDay() {
         reflection,
         focusSessions: completedSessions,
         bonsai: { leaves: derived.leaves, stage: derived.stage },
+        ...(night.progress > 0 ? { nightCamp: night } : {}),
         ...(sandDrawings.length > 0 ? { sandDrawings } : {}),
       };
       // Append-first (fail-safe): the snapshot is stored before any reset runs.
@@ -324,10 +337,11 @@ export function useNewDay() {
     }
 
     // Reset the live board to a fresh day: tasks → completed-log → reflection
-    // → bonsai → focus (see contracts/archive-repository.md).
+    // → bonsai → night camp → focus (see contracts/archive-repository.md).
     resetTasks(); // drops completed, keeps unfinished, clears frog + completed-log
     setReflection("");
     resetBonsai();
+    resetNightCamp();
     resetSessions();
     // Wipe sand without re-saving into the today key (already attached above).
     clearTodaySandDrawings();
@@ -335,6 +349,7 @@ export function useNewDay() {
   }, [
     bonsaiEvents,
     idleOffsetHours,
+    nightEvents,
     completedLog,
     reflection,
     completedSessions,
@@ -342,6 +357,7 @@ export function useNewDay() {
     resetTasks,
     setReflection,
     resetBonsai,
+    resetNightCamp,
     resetSessions,
   ]);
 
@@ -358,6 +374,7 @@ export type RolloverInput = {
   reflection: string;
   focus: FocusSnapshot;
   bonsai: BonsaiSnapshot;
+  nightCamp?: NightCampState | null;
   /** Today's sand drawings from storage (in-memory strokes are already gone after process death). */
   sandDrawings?: SandDrawing[] | null;
 };
@@ -383,6 +400,7 @@ export function buildRolloverPlan({
   reflection,
   focus,
   bonsai,
+  nightCamp,
   sandDrawings,
 }: RolloverInput): RolloverPlan {
   const derived = deriveBonsai({
@@ -390,6 +408,7 @@ export function buildRolloverPlan({
     now,
     idleOffsetHours: bonsai.idleOffsetHours ?? 0,
   });
+  const night = nightCampSnapshot(nightCamp?.events ?? []);
   const completedTasks: ArchivedTask[] = (completedLog ?? []).map((e) => ({
     title: e.taskTitle,
     note: e.note,
@@ -404,6 +423,7 @@ export function buildRolloverPlan({
     (reflection ?? "").trim().length > 0 ||
     (focus?.completedSessions ?? 0) > 0 ||
     derived.leaves > 0 ||
+    night.progress > 0 ||
     Boolean(sand);
 
   const snapshot: ArchivedDay | null = hasContent
@@ -415,6 +435,7 @@ export function buildRolloverPlan({
         reflection: reflection ?? "",
         focusSessions: focus?.completedSessions ?? 0,
         bonsai: { leaves: derived.leaves, stage: derived.stage },
+        ...(night.progress > 0 ? { nightCamp: night } : {}),
         ...(sand ? { sandDrawings: sand } : {}),
       }
     : null;
@@ -456,6 +477,9 @@ export function useDailyRollover(): void {
     events: [],
     idleOffsetHours: 0,
   });
+  const [, setNightCamp] = usePersistentState<NightCampState>(NIGHT_CAMP_KEY, {
+    events: [],
+  });
   const [, setLastActiveDay] = usePersistentState<string | null>(LAST_ACTIVE_DAY_KEY, null);
   const ranRef = useRef(false);
 
@@ -486,6 +510,7 @@ export function useDailyRollover(): void {
       reflection: readJson<string>(REFLECTION_KEY, ""),
       focus: readJson<FocusSnapshot>(FOCUS_STATS_KEY, { completedSessions: 0 }),
       bonsai: readJson<BonsaiSnapshot>(BONSAI_KEY, { events: [], idleOffsetHours: 0 }),
+      nightCamp: readJson<NightCampState>(NIGHT_CAMP_KEY, { events: [] }),
       sandDrawings: readTodaySandDrawings(),
     });
 
@@ -497,12 +522,13 @@ export function useDailyRollover(): void {
 
     // Reset the live board (explicit values — no stale-state functional updates):
     // keep unfinished tasks, clear the frog, drop the completed-log/reflection,
-    // and reset the bonsai + focus count for the fresh day.
+    // and reset the bonsai + night camp + focus count for the fresh day.
     setTasks({ tasks: keptTasks, frogTaskId: null });
     setCompletedLog([]);
     setReflection("");
     setFocus({ completedSessions: 0 });
     setBonsai({ events: [], idleOffsetHours: 0 });
+    setNightCamp({ events: [] });
     clearTodaySandDrawings();
     wipeSandCanvas();
     setLastActiveDay(today);
@@ -513,6 +539,7 @@ export function useDailyRollover(): void {
     setReflection,
     setFocus,
     setBonsai,
+    setNightCamp,
     setLastActiveDay,
   ]);
 }

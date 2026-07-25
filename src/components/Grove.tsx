@@ -162,7 +162,11 @@ export default function Grove() {
                       <Stack spacing={0.5} sx={{ alignItems: "center" }}>
                         <Button
                           onClick={() => setSelected(day)}
-                          aria-label={`${label} — ${bonsaiStageLabel(stage)}`}
+                          aria-label={`${label} — ${bonsaiStageLabel(stage)}${
+                            day.nightCamp?.progress
+                              ? ` · Night Camp ${day.nightCamp.stageLabel}`
+                              : ""
+                          }`}
                           color="inherit"
                           sx={{
                             p: 1,
@@ -185,6 +189,15 @@ export default function Grove() {
                             <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
                               {label}
                             </Typography>
+                            {day.nightCamp && day.nightCamp.progress > 0 ? (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ mt: 0.25, opacity: 0.85 }}
+                              >
+                                Night: {day.nightCamp.stageLabel}
+                              </Typography>
+                            ) : null}
                           </Box>
                         </Button>
                         {sand.length > 0 && (

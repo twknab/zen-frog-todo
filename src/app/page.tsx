@@ -32,6 +32,7 @@ import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
 import NewDayAction from "@/components/NewDayAction";
+import NightCampScene from "@/components/NightCampScene";
 import NotepadButton from "@/components/NotepadButton";
 import NotepadShell from "@/components/NotepadShell";
 import OptionsPanel from "@/components/OptionsPanel";
@@ -42,11 +43,16 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { deriveBonsai, SESSION_FROGS, SESSION_LEAVES, useBonsai } from "@/lib/bonsai";
 import { useDailyRollover } from "@/lib/dayArchive";
 import { useFocusStats } from "@/lib/focusStats";
+import { useCreditWork } from "@/lib/gardenCredit";
 import {
+  DEV_MODE_KEY,
+  REALM_OVERRIDE_KEY,
   normalizeRealmOverride,
   resolveRealm,
+  useWorkWindow,
   type RealmOverride,
 } from "@/lib/gardenRealm";
+import { useNightCamp } from "@/lib/nightCamp";
 import { useNotepad } from "@/lib/notepad";
 import { useSandReset } from "@/lib/sand";
 import { playChime } from "@/lib/sound";
@@ -64,7 +70,8 @@ const EPOCH = new Date(0);
 
 export default function Home() {
   const { palette } = useGardenPalette();
-  const [mode, setMode] = useState<DashboardMode>("flow");  const {
+  const [mode, setMode] = useState<DashboardMode>("flow");
+  const {
     tasks,
     frogTask,
     otherTasks,
@@ -82,20 +89,24 @@ export default function Home() {
   const [notepadOpen, setNotepadOpen] = useState(false);
   const celebrate = useCelebration();
   const { recordSessionComplete } = useFocusStats();
-  const { events: bonsaiEvents, idleOffsetHours, recordGrowth, addIdleHours, resetBonsai } =
-    useBonsai();
+  const { events: bonsaiEvents, idleOffsetHours, addIdleHours, resetBonsai } = useBonsai();
+  const { resetNightCamp, deriveWithDayFrogs } = useNightCamp();
+  const creditWork = useCreditWork();
+  const { workWindow } = useWorkWindow();
   const [now, setNow] = useState<Date>(EPOCH);
-  const [devMode, setDevMode] = usePersistentState("frog-garden:dev-mode-v1", false);
+  const [devMode, setDevMode] = usePersistentState(DEV_MODE_KEY, false);
   const [realmOverride, setRealmOverride] = usePersistentState<RealmOverride>(
-    "frog-garden:realm-override-v1",
+    REALM_OVERRIDE_KEY,
     null,
   );
   const safeRealmOverride = normalizeRealmOverride(realmOverride);
   const gardenRealm = resolveRealm({
     now,
+    window: workWindow,
     override: safeRealmOverride,
     devToolsEnabled: devMode,
   });
+  const isNight = gardenRealm === "night";
   const { resetSand } = useSandReset();
   const [sandSpin, setSandSpin] = useState(0);
   const reduceMotion = useReducedMotion();
@@ -109,8 +120,13 @@ export default function Home() {
   // whether Dev is on or off, and dev changes stick after toggling out.
   function devCompleteFocusSession() {
     recordSessionComplete();
-    recordGrowth(SESSION_LEAVES, SESSION_FROGS);
+    creditWork(SESSION_LEAVES, SESSION_FROGS);
     playChime("focus-complete");
+  }
+
+  function devResetGardens() {
+    resetBonsai();
+    resetNightCamp();
   }
 
   // Focus Mode strips the dashboard down to just the frog and the timer; the
@@ -126,16 +142,21 @@ export default function Home() {
     // a legitimate external-sync, not a cascading render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
-  }, [bonsaiEvents, idleOffsetHours, devMode, safeRealmOverride]);
+  }, [bonsaiEvents, idleOffsetHours, devMode, safeRealmOverride, workWindow]);
 
-  // The bonsai is derived from today's growth events minus active-window idle
-  // wilt, plus any persisted simulated-idle offset (applied always — see
-  // src/lib/bonsai.ts). No dev-only overlay: the tree is the real state.
+  // Day garden: wilt only while effective realm is day (017 — bonsai sleeps at night).
   const bonsai = deriveBonsai({
     events: bonsaiEvents,
     now,
     idleOffsetHours,
+    workWindow,
+    applyWilt: !isNight,
   });
+  const nightCamp = deriveWithDayFrogs(bonsai.frogs);
+
+  const gardenTooltip = isNight
+    ? `Night Camp: ${nightCamp.stageLabel}. The bonsai is resting — late work feeds the campfire, not the tree.`
+    : `Day Garden: ${bonsai.stage}. Grows as you finish tasks and focus sessions. Night Camp awaits after work hours.`;
 
   return (
     <Box
@@ -357,20 +378,20 @@ export default function Home() {
           <FocusTimer />
         </BentoCard>
 
-        {/* Bonsai lives in BOTH modes — front-and-center in Focus Mode. */}
+        {/* Bonsai / Night Camp — dual worlds (017). */}
         <BentoCard area="bonsai" accent="success" fill>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
             <SpaOutlinedIcon color="success" />
             <Typography variant="h6" component="h2">
-              Bonsai
+              {isNight ? "Night Camp" : "Bonsai"}
             </Typography>
             <Tooltip
-              title="Grows as you finish tasks and focus sessions."
+              title={gardenTooltip}
               slotProps={{ transition: { timeout: reduceMotion ? 0 : undefined } }}
             >
               <IconButton
                 size="small"
-                aria-label="About the bonsai"
+                aria-label={isNight ? "About Night Camp" : "About the bonsai"}
                 sx={{ color: "text.secondary" }}
               >
                 <InfoOutlinedIcon fontSize="small" />
@@ -378,14 +399,29 @@ export default function Home() {
             </Tooltip>
           </Stack>
           <Stack sx={{ alignItems: "center", justifyContent: "center", flexGrow: 1 }}>
-            <BonsaiTree
-              stage={bonsai.stage}
-              leaves={bonsai.leaves}
-              blossoms={bonsai.blossoms}
-              isWilting={bonsai.isWilting}
-              frogs={bonsai.frogs}
-              size={isFocus ? 260 : 240}
-            />
+            {isNight ? (
+              <Box
+                role="img"
+                aria-label={`Night Camp — ${nightCamp.stageLabel}. ${nightCamp.nightFrogs} frogs by the fire.`}
+              >
+                <NightCampScene view={nightCamp} size={isFocus ? 260 : 240} />
+              </Box>
+            ) : (
+              <BonsaiTree
+                stage={bonsai.stage}
+                leaves={bonsai.leaves}
+                blossoms={bonsai.blossoms}
+                isWilting={bonsai.isWilting}
+                asleep={false}
+                frogs={bonsai.frogs}
+                size={isFocus ? 260 : 240}
+              />
+            )}
+            {!isNight && nightCamp.progress > 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, textAlign: "center" }}>
+                Tonight earlier: {nightCamp.stageLabel}
+              </Typography>
+            )}
             {devMode && (
               <Stack
                 spacing={1}
@@ -416,7 +452,7 @@ export default function Home() {
                     size="small"
                     variant="text"
                     color="inherit"
-                    onClick={resetBonsai}
+                    onClick={devResetGardens}
                   >
                     Reset
                   </Button>
@@ -457,10 +493,8 @@ export default function Home() {
                   sx={{ textAlign: "center" }}
                 >
                   {safeRealmOverride
-                    ? `Dev: ${gardenRealm === "night" ? "Night Camp" : "Day Garden"} (forced)`
-                    : `Realm: ${gardenRealm === "night" ? "Night Camp" : "Day Garden"} (clock)`}
-                  {" · "}
-                  Night scenes wire up with 017 — override is ready for testing.
+                    ? `Dev: ${isNight ? "Night Camp" : "Day Garden"} (forced)`
+                    : `Realm: ${isNight ? "Night Camp" : "Day Garden"} (clock)`}
                 </Typography>
               </Stack>
             )}

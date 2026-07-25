@@ -1,6 +1,7 @@
 "use client";
 
-import { FROG_FROGS, FROG_LEAVES, TASK_FROGS, TASK_LEAVES, useBonsai } from "./bonsai";
+import { FROG_FROGS, FROG_LEAVES, TASK_FROGS, TASK_LEAVES } from "./bonsai";
+import { useCreditWork } from "./gardenCredit";
 import { usePersistentState } from "./storage";
 
 export type Task = {
@@ -51,7 +52,7 @@ export function useTasks() {
     "frog-garden:completed-log-v1",
     [],
   );
-  const { recordGrowth } = useBonsai();
+  const creditWork = useCreditWork();
 
   function addTask(title: string) {
     const trimmed = title.trim();
@@ -103,7 +104,7 @@ export function useTasks() {
       // and spawn frog friends. Swallowing the frog is the whole point, so it
       // grows the tree most (5 leaves) and brings the most frogs (3).
       const isFrog = id === state.frogTaskId;
-      recordGrowth(
+      creditWork(
         isFrog ? FROG_LEAVES : TASK_LEAVES,
         isFrog ? FROG_FROGS : TASK_FROGS,
       );

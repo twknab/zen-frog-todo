@@ -3,9 +3,13 @@
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
 import Popover from "@mui/material/Popover";
+import Select, { type SelectChangeEvent } from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -14,6 +18,13 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  amPmToHour,
+  hourToAmPm,
+  isDegenerateWorkWindow,
+  useWorkWindow,
+  type AmPmTime,
+} from "@/lib/gardenRealm";
 import { useColorMode, useGardenPalette } from "@/theme/ThemeRegistry";
 import type { ColorMode, PaletteId } from "@/theme/theme";
 
@@ -94,10 +105,32 @@ export default function OptionsPanel({
 }: OptionsPanelProps) {
   const { mode, setColorMode } = useColorMode();
   const { palette, setPalette } = useGardenPalette();
+  const { workWindow, setWorkWindow } = useWorkWindow();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const titleId = useId();
+  const startLabelId = useId();
+  const endLabelId = useId();
   const open = Boolean(anchorEl);
   const reduceMotion = useReducedMotion();
+
+  const startAmPm = hourToAmPm(workWindow.startHour);
+  const endAmPm = hourToAmPm(workWindow.endHour);
+
+  function setStart(next: Partial<AmPmTime>) {
+    const merged = { ...startAmPm, ...next };
+    const startHour = amPmToHour(merged.hour12, merged.period);
+    const candidate = { startHour, endHour: workWindow.endHour };
+    if (isDegenerateWorkWindow(candidate)) return;
+    setWorkWindow(candidate);
+  }
+
+  function setEnd(next: Partial<AmPmTime>) {
+    const merged = { ...endAmPm, ...next };
+    const endHour = amPmToHour(merged.hour12, merged.period);
+    const candidate = { startHour: workWindow.startHour, endHour };
+    if (isDegenerateWorkWindow(candidate)) return;
+    setWorkWindow(candidate);
+  }
 
   function handleOpen(event: MouseEvent<HTMLElement>) {
     setAnchorEl(event.currentTarget);
@@ -200,6 +233,96 @@ export default function OptionsPanel({
                 Dark
               </ToggleButton>
             </ToggleButtonGroup>
+          </OptionsSection>
+
+          <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+          <OptionsSection label="Work hours">
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.25 }}>
+              Hours the garden gently minds idle time (local clock). Outside this
+              window the bonsai sleeps and Night Camp can grow.
+            </Typography>
+            <Stack spacing={1.25}>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <FormControl size="small" sx={{ minWidth: 72 }}>
+                  <InputLabel id={startLabelId}>Start</InputLabel>
+                  <Select
+                    labelId={startLabelId}
+                    label="Start"
+                    value={startAmPm.hour12}
+                    aria-label="Work window start hour"
+                    onChange={(e: SelectChangeEvent<number>) =>
+                      setStart({ hour12: Number(e.target.value) })
+                    }
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                      <MenuItem key={h} value={h}>
+                        {h}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={startAmPm.period}
+                  aria-label="Work window start AM or PM"
+                  onChange={(_, period: "AM" | "PM" | null) => {
+                    if (period) setStart({ period });
+                  }}
+                  sx={optionsToggleSx}
+                >
+                  <ToggleButton value="AM" aria-label="Start AM">
+                    AM
+                  </ToggleButton>
+                  <ToggleButton value="PM" aria-label="Start PM">
+                    PM
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <FormControl size="small" sx={{ minWidth: 72 }}>
+                  <InputLabel id={endLabelId}>End</InputLabel>
+                  <Select
+                    labelId={endLabelId}
+                    label="End"
+                    value={endAmPm.hour12}
+                    aria-label="Work window end hour"
+                    onChange={(e: SelectChangeEvent<number>) =>
+                      setEnd({ hour12: Number(e.target.value) })
+                    }
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                      <MenuItem key={h} value={h}>
+                        {h}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={endAmPm.period}
+                  aria-label="Work window end AM or PM"
+                  onChange={(_, period: "AM" | "PM" | null) => {
+                    if (period) setEnd({ period });
+                  }}
+                  sx={optionsToggleSx}
+                >
+                  <ToggleButton value="AM" aria-label="End AM">
+                    AM
+                  </ToggleButton>
+                  <ToggleButton value="PM" aria-label="End PM">
+                    PM
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+              {workWindow.startHour > workWindow.endHour && (
+                <Typography variant="caption" color="text.secondary">
+                  Overnight window — day realm spans midnight.
+                </Typography>
+              )}
+            </Stack>
           </OptionsSection>
 
           <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
