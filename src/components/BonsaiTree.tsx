@@ -26,22 +26,23 @@ type BonsaiTreeProps = {
 
 // Dial-back knobs (specs/015-garden-critter-bonsai):
 // - MAX_FROGS — src/lib/bonsai.ts
-// - FROG_BAND / FROG_ROW_DEPTH / FROG_SCALE_* — ground crowd comedy vs sludge
+// - FROG_BAND / FROG_X / FROG_ROW_DEPTH / FROG_SCALE_* — ground crowd comedy vs sludge
 // - TREE_SCALE_BASE / TREE_SCALE_DELTA — bonsai presence
 // - CANOPY_SPREAD_* — canopy width/height at terminal state
 // - FROG_FRUIT_SCALE — canopy fruit size
 // - fruitFills() token list — multi-color fun vs quiet
-const FROG_BAND = { yMin: 188, ySpan: 18 };
-const FROG_ROW_DEPTH = 12; // back rows sit higher so the pile reads tall, not flat
-const FROG_SCALE_MIN = 1.7;
-const FROG_SCALE_SPAN = 1.25; // → max ~2.95 (bigger, grander pile)
+const FROG_BAND = { yMin: 186, ySpan: 20 };
+const FROG_ROW_DEPTH = 11; // back rows sit higher so the pile reads tall, not flat
+const FROG_SCALE_MIN = 1.75;
+const FROG_SCALE_SPAN = 1.2; // → max ~2.95 (bigger, grander pile)
+const FROG_X = { min: -22, span: 204 }; // continuous wide band (~-22..182) — no center gap
 const TREE_SCALE_BASE = 0.98;
 const TREE_SCALE_DELTA = 0.62; // fuller mature presence
 const CANOPY_SPREAD_X = 1.24; // horizontal stretch → wider terminal canopy
 const CANOPY_SPREAD_Y = 0.8; // gentle vertical flatten (bonsai silhouette)
 const CANOPY_RADIUS = 8.4; // spiral step — larger = wider, leafier fan
-const FROG_FRUIT_SCALE = 0.74;
-const CANOPY = { cx: 80, cy: 84 }; // slight upward nudge for more bonsai presence
+const FROG_FRUIT_SCALE = 1.55; // large fruit presence in the canopy
+const CANOPY = { cx: 80, cy: 88 }; // slightly lower so mature crown clears the card edge
 
 // Phyllotaxis (golden-angle) layout so leaves fill the canopy outward in a
 // natural spiral — computed once at module load (no render-time randomness).
@@ -89,18 +90,15 @@ function seeded(i: number, salt: number): number {
   return v - Math.floor(v);
 }
 
-// Frog friends gather on the ground around the pot base. Computed once; frog `i`
-// always sits in slot `i`, so the crowd grows additively without reshuffling.
-// Slot 0 is the baseline. Specs/015: wider flanks + comedy scale — bias away
-// from the pot center so the pot stays readable at the raised cap (dial-back above).
+// Frog friends gather in one continuous pile across the pot base. Computed once;
+// frog `i` always sits in slot `i`, so the crowd grows additively without
+// reshuffling. Slot 0 is the baseline. Specs/015: wide continuous band (no
+// left/right split) + comedy scale — pot peeks through overlaps, not a gap.
 const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
-  if (i === 0) return { x: 22, y: 192, scale: 2.7 };
-  // Split left/right of the pot (center ~80) so the crowd fans out, not piles mid-pot.
-  const side = seeded(i, 1);
-  const x =
-    side < 0.5
-      ? -8 + seeded(i, 4) * 66 // left flank ~-8..58
-      : 102 + seeded(i, 4) * 66; // right flank ~102..168
+  if (i === 0) return { x: 38, y: 192, scale: 2.75 };
+  // Continuous x across a wide band so the pile reads as one dense mound,
+  // including under the pot — not two flank clumps with a center gap.
+  const x = FROG_X.min + seeded(i, 4) * FROG_X.span;
   // Depth rows: front frogs sit low + big; back rows climb the pot base a touch
   // higher and slightly smaller, so the crowd reads as a tall, grand pile.
   const row = Math.floor(seeded(i, 5) * 3); // 0 (front) .. 2 (back)
@@ -109,7 +107,7 @@ const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
     x,
     // Back rows sit higher; render sorts by this y so back frogs paint first.
     y: yFront - row * FROG_ROW_DEPTH,
-    scale: FROG_SCALE_MIN + seeded(i, 3) * FROG_SCALE_SPAN - row * 0.3,
+    scale: FROG_SCALE_MIN + seeded(i, 3) * FROG_SCALE_SPAN - row * 0.28,
   };
 });
 
@@ -177,8 +175,8 @@ export default function BonsaiTree({
 
   // Critters are drawn as bold, solid icon silhouettes. A "sticker halo" —
   // a stroke in the card's own background colour, painted behind the fill —
-  // keeps each critter distinct when the crowd overlaps.
-  const frogFill = theme.palette.primary.main;
+  // keeps each critter distinct when the crowd overlaps. Ground frogs cycle
+  // the same theme-token palette as canopy frog-fruit.
   const squirrelBody = theme.palette.secondary.main;
   const critterHalo = theme.palette.background.paper;
 
@@ -215,7 +213,9 @@ export default function BonsaiTree({
       aria-label={bonsaiStageLabel(stage)}
       sx={{ width: size, height: size, maxWidth: "100%" }}
     >
-      <svg width="100%" height="100%" viewBox="-6 -24 172 256" aria-hidden="true">
+      {/* Extra top/side pad so a mature scaled canopy + large frog-fruit never
+          clip the card edge; wide enough for the continuous frog pile. */}
+      <svg width="100%" height="100%" viewBox="-28 -56 216 288" aria-hidden="true">
         {/* Per-color vertical gradients give each canopy frog-fruit a soft,
             theme-matched sheen (light crown → base → shaded belly). */}
         <defs>
@@ -351,22 +351,26 @@ export default function BonsaiTree({
           )}
 
           <AnimatePresence>
-            {shownFrogs.map((p) => (
-              <motion.g key={p.slot} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
-                {/* Same frog mark as favicon/header — see src/lib/frogIcon.ts.
-                    Sticker halo separates overlapping comedy-scale frogs. */}
-                <path
-                  d={FROG_ICON_PATH}
-                  fill={frogFill}
-                  stroke={critterHalo}
-                  strokeWidth={2.75}
-                  strokeLinejoin="round"
-                  paintOrder="stroke"
-                  vectorEffect="non-scaling-stroke"
-                  transform="translate(-8.064 -7.168) scale(0.028)"
-                />
-              </motion.g>
-            ))}
+            {shownFrogs.map((p) => {
+              const colorIndex = p.slot % frogFruitColors.length;
+              return (
+                <motion.g key={p.slot} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
+                  {/* Same frog mark as favicon/header — see src/lib/frogIcon.ts.
+                      Sticker halo separates overlapping comedy-scale frogs.
+                      Fills cycle theme tokens so the pile is colorful, not mono. */}
+                  <path
+                    d={FROG_ICON_PATH}
+                    fill={frogFruitColors[colorIndex]}
+                    stroke={critterHalo}
+                    strokeWidth={2.75}
+                    strokeLinejoin="round"
+                    paintOrder="stroke"
+                    vectorEffect="non-scaling-stroke"
+                    transform="translate(-8.064 -7.168) scale(0.028)"
+                  />
+                </motion.g>
+              );
+            })}
           </AnimatePresence>
 
           <AnimatePresence>
