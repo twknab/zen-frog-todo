@@ -30,7 +30,7 @@ type BonsaiTreeProps = {
 // - TREE_SCALE_BASE / TREE_SCALE_DELTA — bonsai presence
 // - CANOPY_SPREAD_* — canopy width/height at terminal state
 // - FROG_FRUIT_SCALE — canopy fruit size
-// - fruitFills() token list — multi-color fun vs quiet
+// - fruitFills() / groundFrogFills() — canopy pop vs quiet green pile
 const FROG_BAND = { yMin: 186, ySpan: 20 };
 const FROG_ROW_DEPTH = 11; // back rows sit higher so the pile reads tall, not flat
 const FROG_SCALE_MIN = 1.75;
@@ -124,16 +124,28 @@ function squirrelVisible(frogCount: number): boolean {
   return v - Math.floor(v) < 0.3;
 }
 
-/** Soft theme-token fills for canopy frog-fruit (fun, not neon). */
+/**
+ * Ground frogs: soft greens that match the canopy (primary moss tones).
+ * Varied enough to read as a living pile, quiet enough not to compete with fruit.
+ */
+function groundFrogFills(theme: Theme): string[] {
+  const p = theme.palette.primary;
+  return [p.light, p.main, p.dark, lighten(p.main, 0.12), darken(p.main, 0.18)];
+}
+
+/**
+ * Canopy frog-fruit: colorful theme accents — never green — so they pop against
+ * the moss canopy. Clay / rust / ochre / dusk (+ soft light variants).
+ */
 function fruitFills(theme: Theme): string[] {
   const p = theme.palette;
   return [
-    p.primary.main,
     p.secondary.main,
-    p.error.light,
-    p.success.main,
-    p.warning.light,
+    p.error.main,
+    p.warning.main,
     p.info.main,
+    p.secondary.light,
+    lighten(p.error.main, 0.18),
   ];
 }
 
@@ -161,6 +173,7 @@ export default function BonsaiTree({
   const soilFill = theme.palette.secondary.dark;
   const woodFill = theme.palette.secondary.dark;
   const frogFruitColors = fruitFills(theme);
+  const groundFrogColors = groundFrogFills(theme);
 
   // Fade-in only (no scale): a leaf/frog is never stranded invisible if the
   // animation is interrupted (e.g. a backgrounded tab pausing rAF).
@@ -175,8 +188,8 @@ export default function BonsaiTree({
 
   // Critters are drawn as bold, solid icon silhouettes. A "sticker halo" —
   // a stroke in the card's own background colour, painted behind the fill —
-  // keeps each critter distinct when the crowd overlaps. Ground frogs cycle
-  // the same theme-token palette as canopy frog-fruit.
+  // keeps each critter distinct when the crowd overlaps. Ground frogs stay
+  // in moss greens; canopy fruit keeps the colorful non-green accents.
   const squirrelBody = theme.palette.secondary.main;
   const critterHalo = theme.palette.background.paper;
 
@@ -352,15 +365,15 @@ export default function BonsaiTree({
 
           <AnimatePresence>
             {shownFrogs.map((p) => {
-              const colorIndex = p.slot % frogFruitColors.length;
+              const colorIndex = p.slot % groundFrogColors.length;
               return (
                 <motion.g key={p.slot} transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} {...appear}>
                   {/* Same frog mark as favicon/header — see src/lib/frogIcon.ts.
                       Sticker halo separates overlapping comedy-scale frogs.
-                      Fills cycle theme tokens so the pile is colorful, not mono. */}
+                      Moss greens only — colorful accents reserved for canopy fruit. */}
                   <path
                     d={FROG_ICON_PATH}
-                    fill={frogFruitColors[colorIndex]}
+                    fill={groundFrogColors[colorIndex]}
                     stroke={critterHalo}
                     strokeWidth={2.75}
                     strokeLinejoin="round"
