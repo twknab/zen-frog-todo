@@ -29,9 +29,9 @@ type GroveDayDialogProps = {
 /**
  * A calm, read-only recap of one archived day (specs/010-grove-history, US3;
  * reflection preview via specs/011-markdown-notepad): its date, the reflection
- * as sanitized markdown when written, tasks completed that day, and sand
- * drawings (011) as a bottom gallery. MUI Dialog manages focus; motion collapses
- * under prefers-reduced-motion.
+ * as sanitized markdown when written, tasks completed that day, what was still
+ * open at close ("what's next"), and sand drawings (011) as a bottom gallery.
+ * MUI Dialog manages focus; motion collapses under prefers-reduced-motion.
  */
 export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDayDialogProps) {
   const reduce = useReducedMotion();
@@ -53,6 +53,8 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
   const hasSand = sandItems.length > 0;
   const hasReflection = Boolean(day && day.reflection.trim() !== "");
   const hasTasks = Boolean(day && day.completedTasks.length > 0);
+  const openTasks = day?.openTasks ?? [];
+  const hasOpenTasks = openTasks.length > 0;
 
   return (
     <>
@@ -109,6 +111,24 @@ export default function GroveDayDialog({ day, sameDateCount, onClose }: GroveDay
                     </Typography>
                   )}
                 </Stack>
+
+                {hasOpenTasks && (
+                  <>
+                    <Divider flexItem />
+                    <Stack spacing={0.5}>
+                      <Typography variant="subtitle2" component="h3" color="text.secondary">
+                        What&apos;s next
+                      </Typography>
+                      <List dense disablePadding>
+                        {openTasks.map((task, i) => (
+                          <ListItem key={`open-${i}`} disableGutters disablePadding sx={{ py: 0.5 }}>
+                            <ListItemText primary={task.title} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Stack>
+                  </>
+                )}
 
                 {hasSand && (
                   <>

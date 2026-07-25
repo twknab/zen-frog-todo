@@ -74,6 +74,12 @@ export type ArchivedDay = {
   closedAt: string; // ISO-8601 — exact moment of close (drives same-date labelling)
   date: string; // YYYY-MM-DD, local calendar date of the close
   completedTasks: ArchivedTask[];
+  /**
+   * Titles of tasks still open when the day closed — the "what's next" the day
+   * left behind. Optional for back-compat with days archived before this field
+   * existed. These are also carried over into the fresh day's live board.
+   */
+  openTasks?: { title: string }[];
   /** Markdown source for the day's note (product: "note"; field kept for export compat). */
   reflection: string;
   focusSessions: number;
@@ -281,7 +287,7 @@ export function downloadJson(filename: string, data: unknown): void {
  */
 export function useNewDay() {
   const [archive, setArchive] = usePersistentState<ArchivedDay[]>(ARCHIVE_KEY, []);
-  const { completedLog, startNewDay: resetTasks } = useTasks();
+  const { tasks, completedLog, startNewDay: resetTasks } = useTasks();
   const { events: bonsaiEvents, idleOffsetHours, resetBonsai } = useBonsai();
   const { completedSessions, resetSessions } = useFocusStats();
   const [reflection, setReflection] = usePersistentState(REFLECTION_KEY, "");
@@ -295,6 +301,8 @@ export function useNewDay() {
       note: e.note,
       completedAt: e.completedAt,
     }));
+    // Tasks still open at close — recorded as the day's "what's next".
+    const openTasks = tasks.filter((t) => !t.completed).map((t) => ({ title: t.title }));
 
     // All mid-day drawings + a fresh capture if strokes remain on the canvas.
     const sandDrawings = takeSandDrawingsForArchive();
@@ -314,6 +322,7 @@ export function useNewDay() {
         closedAt: now.toISOString(),
         date: localDateString(now),
         completedTasks,
+        ...(openTasks.length > 0 ? { openTasks } : {}),
         reflection,
         focusSessions: completedSessions,
         bonsai: { leaves: derived.leaves, stage: derived.stage },
@@ -333,6 +342,7 @@ export function useNewDay() {
     clearTodaySandDrawings();
     wipeSandCanvas();
   }, [
+    tasks,
     bonsaiEvents,
     idleOffsetHours,
     completedLog,
@@ -399,6 +409,9 @@ export function buildRolloverPlan({
   const sand =
     Array.isArray(sandDrawings) && sandDrawings.length > 0 ? sandDrawings : undefined;
 
+  const keptTasks = (tasksState.tasks ?? []).filter((t) => !t.completed);
+  const openTasks = keptTasks.map((t) => ({ title: t.title }));
+
   const hasContent =
     completedTasks.length > 0 ||
     (reflection ?? "").trim().length > 0 ||
@@ -412,6 +425,7 @@ export function buildRolloverPlan({
         closedAt: now.toISOString(),
         date: localDateString(now),
         completedTasks,
+        ...(openTasks.length > 0 ? { openTasks } : {}),
         reflection: reflection ?? "",
         focusSessions: focus?.completedSessions ?? 0,
         bonsai: { leaves: derived.leaves, stage: derived.stage },
@@ -419,7 +433,7 @@ export function buildRolloverPlan({
       }
     : null;
 
-  return { snapshot, keptTasks: (tasksState.tasks ?? []).filter((t) => !t.completed) };
+  return { snapshot, keptTasks };
 }
 
 /**
