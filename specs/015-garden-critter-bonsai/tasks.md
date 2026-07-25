@@ -107,10 +107,10 @@
 
 **Purpose**: Gates, Grove, docs
 
-- [ ] T018 [P] Run `npx tsc --noEmit` and eslint; fix issues in touched files
-- [ ] T019 [P] Manual pass per `specs/015-garden-critter-bonsai/quickstart.md` (frogs, tree, fruit, wilt, reduced-motion, Grove)
-- [ ] T020 Update any stale comments that still say “pink blossoms” / `MAX_FROGS = 20` in `src/` or 015 contract notes if needed
-- [ ] T021 Mark tasks complete; prepare PR summary with dial-back knobs + questions for Tyler
+- [x] T018 [P] Run `npx tsc --noEmit` and eslint; fix issues in touched files
+- [x] T019 [P] Manual pass per `specs/015-garden-critter-bonsai/quickstart.md` (frogs, tree, fruit, wilt, reduced-motion, Grove)
+- [x] T020 Update any stale comments that still say “pink blossoms” / `MAX_FROGS = 20` in `src/` or 015 contract notes if needed
+- [x] T021 Mark tasks complete; prepare PR summary with dial-back knobs + questions for Tyler
 
 ---
 

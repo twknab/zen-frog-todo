@@ -6,20 +6,20 @@
 
 ## Visual calm
 
-- [ ] Ground frogs larger/wider but pot remains readable at MAX_FROGS
-- [ ] Tree more present but not a mural; card layout intact
-- [ ] Frog-fruit multi-color, theme-aware, not neon/garish
-- [ ] No pink blossom dots remain as blossom reward
-- [ ] Wilt: tree/leaves wilt; frogs + fruit stay cheerful
+- [x] Ground frogs larger/wider but pot remains readable at MAX_FROGS
+- [x] Tree more present but not a mural; card layout intact
+- [x] Frog-fruit multi-color, theme-aware, not neon/garish
+- [x] No pink blossom dots remain as blossom reward
+- [x] Wilt: tree/leaves wilt; frogs + fruit stay cheerful
 
 ## Accessibility
 
-- [ ] Bonsai still single `role="img"` with stage label
-- [ ] Critters/fruit decorative (no extra interactive tabs)
-- [ ] `prefers-reduced-motion`: instant/minimal appear; nothing invisible
-- [ ] Theme light/dark: fruit and leaves remain calm and legible enough as decoration
+- [x] Bonsai still single `role="img"` with stage label
+- [x] Critters/fruit decorative (no extra interactive tabs)
+- [x] `prefers-reduced-motion`: instant/minimal appear; nothing invisible
+- [x] Theme light/dark: fruit and leaves remain calm and legible enough as decoration
 
 ## Verification gate
 
-- [ ] `tsc --noEmit` clean
-- [ ] eslint clean on touched files
+- [x] `tsc --noEmit` clean
+- [x] eslint clean on touched files

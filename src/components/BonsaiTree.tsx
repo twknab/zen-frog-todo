@@ -29,9 +29,9 @@ type BonsaiTreeProps = {
 // - TREE_SCALE_BASE / TREE_SCALE_DELTA — bonsai presence
 // - FROG_FRUIT_SCALE — canopy fruit size
 // - fruitFills() token list — multi-color fun vs quiet
-const FROG_BAND = { xMin: 4, xSpan: 152, yMin: 183, ySpan: 16 };
-const FROG_SCALE_MIN = 1.7;
-const FROG_SCALE_SPAN = 1.2; // → max 2.9
+const FROG_BAND = { yMin: 184, ySpan: 15 };
+const FROG_SCALE_MIN = 1.55;
+const FROG_SCALE_SPAN = 1.05; // → max 2.6 (dial down if sludge)
 const TREE_SCALE_BASE = 0.98;
 const TREE_SCALE_DELTA = 0.55;
 const FROG_FRUIT_SCALE = 0.72;
@@ -74,11 +74,18 @@ function seeded(i: number, salt: number): number {
 
 // Frog friends gather on the ground around the pot base. Computed once; frog `i`
 // always sits in slot `i`, so the crowd grows additively without reshuffling.
-// Slot 0 is the baseline. Specs/015: wider band + comedy scale (dial-back above).
+// Slot 0 is the baseline. Specs/015: wider flanks + comedy scale — bias away
+// from the pot center so the pot stays readable at the raised cap (dial-back above).
 const FROG_POSITIONS = Array.from({ length: MAX_FROGS }, (_, i) => {
-  if (i === 0) return { x: 28, y: 186, scale: 2.45 };
+  if (i === 0) return { x: 26, y: 187, scale: 2.35 };
+  // Split left/right of the pot (center ~80) so the crowd fans out, not piles mid-pot.
+  const side = seeded(i, 1);
+  const x =
+    side < 0.5
+      ? 2 + seeded(i, 4) * 52 // left flank ~2..54
+      : 108 + seeded(i, 4) * 50; // right flank ~108..158
   return {
-    x: FROG_BAND.xMin + seeded(i, 1) * FROG_BAND.xSpan,
+    x,
     y: FROG_BAND.yMin + seeded(i, 2) * FROG_BAND.ySpan,
     scale: FROG_SCALE_MIN + seeded(i, 3) * FROG_SCALE_SPAN,
   };
