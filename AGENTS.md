@@ -16,10 +16,16 @@ before proposing or writing any feature code, and treat its principles as hard
 constraints, not suggestions. In particular:
 
 - **Calm, non-judgmental UX** — no shame UI, no anxiety loops, no scoreboards.
+- **Day Garden & Night Camp** — dual worlds on one day-cycle (see constitution
+  *Product Model* and `docs/product-model.md`). Day is work-primary (bonsai + frogs +
+  wilt in the work window). Night is bonus (separate ledger; fireflies / campfire /
+  stars / moon; frogs participate). Bonsai sleeps outside work hours; UI stays
+  usable; atmosphere may dim but MUST NOT force light↔dark Appearance. Work window
+  defaults to 8 AM–5 PM local, user-configurable in Options (AM/PM UI).
 - **Local-first & private** — on-device storage only for v1; no backend, auth, or
   telemetry unless a spec explicitly opts in.
 - **Accessibility is not optional** — keyboard + screen-reader support, `prefers-reduced-motion`
-  fallbacks, WCAG AA contrast.
+  fallbacks, WCAG AA contrast (including under night dim/overlay).
 - **MUI must be re-themed**, never used stock; motion via Framer Motion, used sparingly.
 - **YAGNI / simplicity** — don't build for hypothetical future scale.
 
@@ -43,6 +49,8 @@ Related skills: `/speckit-analyze`, `/speckit-checklist`, `/speckit-converge`,
 - Don't jump straight to code for a new feature — start from the spec.
 - Any change touching visual design (color, spacing, motion) must be checked against
   the constitution's calm-UX and design-system principles before being marked done.
+- Any change touching day/night realms, wilt windows, work hours, or garden summaries
+  must honor the Day Garden & Night Camp product model in the constitution.
 
 ## Managing the Spec Kit integration
 
