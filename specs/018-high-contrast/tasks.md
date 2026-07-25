@@ -18,7 +18,7 @@
 
 **Purpose**: Confirm feature artifacts before coding
 
-- [ ] T001 Confirm `.specify/feature.json` points to `specs/018-high-contrast`; skim `node_modules/next/dist/docs/` only if Next-specific API edits are needed (none expected)
+- [x] T001 Confirm `.specify/feature.json` points to `specs/018-high-contrast`; skim `node_modules/next/dist/docs/` only if Next-specific API edits are needed (none expected)
 
 ---
 
@@ -28,10 +28,10 @@
 
 **⚠️ CRITICAL**: Options toggle only after theme resolution works
 
-- [ ] T002 [P] Add HC light+dark token bags and export `createHighContrastTheme(mode)` in `src/theme/theme.ts` (internal id `highContrast`; NOT a `PaletteId`; AA-strong near-black/near-white; HC-safe green moss)
-- [ ] T003 [P] Add `getHighContrastAtmosphere(mode)` with simplified low-wash atmosphere in `src/theme/atmosphere.ts`
-- [ ] T004 Wire `usePersistentState("frog-garden:high-contrast-v1", false)`, `useHighContrast()` context, theme resolution (`HC ? createHighContrastTheme(mode) : createZenTheme(mode, palette)`), and pass HC into backdrop in `src/theme/ThemeRegistry.tsx`
-- [ ] T005 Update `src/components/GardenBackdrop.tsx` to use HC atmosphere when `highContrast` is true
+- [x] T002 [P] Add HC light+dark token bags and export `createHighContrastTheme(mode)` in `src/theme/theme.ts` (internal id `highContrast`; NOT a `PaletteId`; AA-strong near-black/near-white; HC-safe green moss)
+- [x] T003 [P] Add `getHighContrastAtmosphere(mode)` with simplified low-wash atmosphere in `src/theme/atmosphere.ts`
+- [x] T004 Wire `usePersistentState("frog-garden:high-contrast-v1", false)`, `useHighContrast()` context, theme resolution (`HC ? createHighContrastTheme(mode) : createZenTheme(mode, palette)`), and pass HC into backdrop in `src/theme/ThemeRegistry.tsx`
+- [x] T005 Update `src/components/GardenBackdrop.tsx` to use HC atmosphere when `highContrast` is true
 
 **Checkpoint**: Programmatic HC theme applies for light/dark; palette preference untouched in storage
 
@@ -43,9 +43,9 @@
 
 **Independent Test**: Toggle HC on → HC theme, Palette disabled, Options open, reload persists
 
-- [ ] T006 [US1] Add High Contrast `Switch` labelled “High Contrast” near Appearance/Dev in `src/components/OptionsPanel.tsx`; toggling MUST NOT close Popover
-- [ ] T007 [US1] Disable Palette `Select` when HC on; show calm secondary hint “Using high contrast”; keep displayed value as stored palette in `src/components/OptionsPanel.tsx`
-- [ ] T008 [US1] When HC on, skip wordmark gradient in `src/app/page.tsx` (solid primary) so contrast stays strong
+- [x] T006 [US1] Add High Contrast `Switch` labelled “High Contrast” near Appearance/Dev in `src/components/OptionsPanel.tsx`; toggling MUST NOT close Popover
+- [x] T007 [US1] Disable Palette `Select` when HC on; show calm secondary hint “Using high contrast”; keep displayed value as stored palette in `src/components/OptionsPanel.tsx`
+- [x] T008 [US1] When HC on, skip wordmark gradient in `src/app/page.tsx` (solid primary) so contrast stays strong
 
 ---
 
@@ -55,8 +55,8 @@
 
 **Independent Test**: Enable HC with Prism (or any) stored → disable HC → Prism returns; Palette interactive
 
-- [ ] T009 [US2] Verify ThemeRegistry off-path restores `createZenTheme(mode, palette)` without clearing `frog-garden:palette-v1` in `src/theme/ThemeRegistry.tsx` (fix if any wipe exists)
-- [ ] T010 [US2] Confirm Palette Select re-enables when HC off and change handlers apply in `src/components/OptionsPanel.tsx`
+- [x] T009 [US2] Verify ThemeRegistry off-path restores `createZenTheme(mode, palette)` without clearing `frog-garden:palette-v1` in `src/theme/ThemeRegistry.tsx` (fix if any wipe exists)
+- [x] T010 [US2] Confirm Palette Select re-enables when HC off and change handlers apply in `src/components/OptionsPanel.tsx`
 
 ---
 
@@ -66,8 +66,8 @@
 
 **Independent Test**: With HC on, toggle Appearance → HC light ↔ HC dark both readable
 
-- [ ] T011 [US3] Contrast-tune HC light+dark tokens in `src/theme/theme.ts` for text, primary chrome, focus/selected (Options toggles use primary)
-- [ ] T012 [US3] Confirm Appearance ToggleButtonGroup stays enabled while HC on in `src/components/OptionsPanel.tsx` (no lock)
+- [x] T011 [US3] Contrast-tune HC light+dark tokens in `src/theme/theme.ts` for text, primary chrome, focus/selected (Options toggles use primary)
+- [x] T012 [US3] Confirm Appearance ToggleButtonGroup stays enabled while HC on in `src/components/OptionsPanel.tsx` (no lock)
 
 ---
 
@@ -75,10 +75,10 @@
 
 **Purpose**: Gates, contract alignment, manual quickstart
 
-- [ ] T013 Confirm HC is absent from `PALETTE_OPTIONS` / dropdown in `src/theme/theme.ts` and `src/components/OptionsPanel.tsx`
-- [ ] T014 Run `npx tsc --noEmit` and `npm run lint`; fix issues
-- [ ] T015 Manual pass of `specs/018-high-contrast/quickstart.md`
-- [ ] T016 Mark tasks complete; keep scope to HC toggle + override + Palette disable only
+- [x] T013 Confirm HC is absent from `PALETTE_OPTIONS` / dropdown in `src/theme/theme.ts` and `src/components/OptionsPanel.tsx`
+- [x] T014 Run `npx tsc --noEmit` and `npm run lint`; fix issues
+- [x] T015 Manual pass of `specs/018-high-contrast/quickstart.md`
+- [x] T016 Mark tasks complete; keep scope to HC toggle + override + Palette disable only
 
 ---
 
