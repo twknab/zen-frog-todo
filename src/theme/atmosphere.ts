@@ -563,6 +563,27 @@ const atmospheres: Record<PaletteId, AtmospherePair> = {
       grainOpacity: 0.055,
     },
   ),
+
+  blackout: pair(
+    {
+      wash: [
+        "radial-gradient(ellipse 70% 50% at 20% 0%, rgba(27, 138, 69, 0.08), transparent 55%)",
+        "radial-gradient(ellipse 50% 40% at 90% 90%, rgba(42, 42, 42, 0.06), transparent 55%)",
+        "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 50%, #F5F5F5 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 40% 28% at 45% 55%, rgba(232, 232, 232, 0.45), transparent 70%)",
+      grainOpacity: 0.03,
+    },
+    {
+      wash: [
+        "radial-gradient(ellipse 80% 55% at 15% 0%, rgba(61, 220, 132, 0.1), transparent 50%)",
+        "radial-gradient(ellipse 45% 35% at 85% 90%, rgba(200, 200, 200, 0.04), transparent 50%)",
+        "linear-gradient(180deg, #000000 0%, #000000 55%, #050505 100%)",
+      ].join(", "),
+      mist: "radial-gradient(ellipse 35% 24% at 50% 60%, rgba(255, 255, 255, 0.03), transparent 65%)",
+      grainOpacity: 0.08,
+    },
+  ),
 };
 
 export function getGardenAtmosphere(

@@ -34,7 +34,8 @@ export type PaletteId =
   | "inkwell"
   | "ashterrace"
   | "obsidian"
-  | "bone";
+  | "bone"
+  | "blackout";
 
 export const PALETTE_IDS: readonly PaletteId[] = [
   "natural",
@@ -57,6 +58,7 @@ export const PALETTE_IDS: readonly PaletteId[] = [
   "ashterrace",
   "obsidian",
   "bone",
+  "blackout",
 ] as const;
 
 /** Display labels for Options + a11y — single source of truth. */
@@ -81,6 +83,7 @@ export const PALETTE_OPTIONS: readonly { id: PaletteId; label: string }[] = [
   { id: "ashterrace", label: "Ash Terrace" },
   { id: "obsidian", label: "Obsidian Pond" },
   { id: "bone", label: "Bone Quiet" },
+  { id: "blackout", label: "Blackout" },
 ] as const;
 
 /**
@@ -111,6 +114,7 @@ export const PALETTE_PREVIEWS: Record<
   ashterrace: ["#5A8A52", "#8A7E72", "#A09890"],
   obsidian: ["#2F8A50", "#6A7480", "#7AB8C8"],
   bone: ["#4A7A52", "#9A958C", "#6E6A62"],
+  blackout: ["#1B8A45", "#2A2A2A", "#9A9A9A"],
 };
 
 /** Older persisted ids → current canonical ids (016 renames). */
@@ -137,7 +141,8 @@ export function normalizePaletteId(value: unknown): PaletteId {
 
 /**
  * Zen palettes — token bags shared across all garden palettes.
- * No pure black/white; Natural stays muted (constitution Principle V default).
+ * Natural stays muted (constitution Principle V default). Most palettes avoid
+ * pure black/white; Blackout intentionally uses OLED true black (#000).
  */
 type ZenPalette = {
   bgDefault: string;
@@ -976,6 +981,49 @@ const boneDark: ZenPalette = {
   contrastText: "#161513",
 };
 
+/**
+ * Blackout — OLED true black (#000), highest-contrast basically-black option.
+ * Differentiates from Ink Well (near-black charcoal), Obsidian Pond (void + teal),
+ * and Graphite Grove (cool slate). Light is stark high-contrast paper.
+ */
+const blackoutLight: ZenPalette = {
+  bgDefault: "#FFFFFF",
+  bgPaper: "#FFFFFF",
+  ink: "#000000",
+  inkSoft: "#3D3D3D",
+  mist: "#E8E8E8",
+  tooltipBg: "#000000",
+  moss: "#1B8A45",
+  mossLight: "#2AAA5A",
+  mossDark: "#126632",
+  clay: "#2A2A2A",
+  clayLight: "#4A4A4A",
+  clayDark: "#1A1A1A",
+  rust: "#505050",
+  ochre: "#6E6E6E",
+  dusk: "#9A9A9A",
+  contrastText: "#FFFFFF",
+};
+
+const blackoutDark: ZenPalette = {
+  bgDefault: "#000000",
+  bgPaper: "#0A0A0A",
+  ink: "#FFFFFF",
+  inkSoft: "#B8B8B8",
+  mist: "rgba(255, 255, 255, 0.08)",
+  tooltipBg: "#1A1A1A",
+  moss: "#3DDC84",
+  mossLight: "#6EE7A8",
+  mossDark: "#22B86A",
+  clay: "#C8C8C8",
+  clayLight: "#E0E0E0",
+  clayDark: "#A0A0A0",
+  rust: "#9A9A9A",
+  ochre: "#B0B0B0",
+  dusk: "#D0D0D0",
+  contrastText: "#000000",
+};
+
 const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }> =
   {
     natural: { light: naturalLight, dark: naturalDark },
@@ -998,6 +1046,7 @@ const tokensByPalette: Record<PaletteId, { light: ZenPalette; dark: ZenPalette }
     ashterrace: { light: ashterraceLight, dark: ashterraceDark },
     obsidian: { light: obsidianLight, dark: obsidianDark },
     bone: { light: boneLight, dark: boneDark },
+    blackout: { light: blackoutLight, dark: blackoutDark },
   };
 
 const bodyFontFamily = `${zenBodyFont.style.fontFamily}, "Helvetica Neue", Arial, sans-serif`;
@@ -1027,7 +1076,7 @@ function headingFontFamilyFor(palette: PaletteId): string {
 /**
  * Joyful gradient wordmark for opt-in palettes.
  * Quiet Grove, Violet Hour, Ash Terrace, and Bone Quiet stay solid primary.
- * High-contrast greyscale themes use a subtle moss→steel wash (premium, not carnival).
+ * High-contrast greyscale/black themes use a subtle moss→steel wash (premium, not carnival).
  */
 export function gardenWordmarkGradient(
   palette: PaletteId,
@@ -1073,6 +1122,8 @@ export function gardenWordmarkGradient(
       return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
     case "obsidian":
       return `linear-gradient(100deg, ${primary.main} 0%, ${info.main} 55%, ${secondary.main} 100%)`;
+    case "blackout":
+      return `linear-gradient(100deg, ${primary.main} 0%, ${secondary.main} 50%, ${info.main} 100%)`;
     default:
       return null;
   }
