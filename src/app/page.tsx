@@ -266,19 +266,11 @@ export default function Home() {
             aria-label="Dashboard mode"
             size="small"
           >
-            <ToggleButton value="flow" aria-label="Flow mode">
+            <ToggleButton value="flow" aria-label="Flow">
               Flow
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {" "}
-                Mode
-              </Box>
             </ToggleButton>
-            <ToggleButton value="frog" aria-label="Focus mode">
+            <ToggleButton value="frog" aria-label="Focus">
               Focus
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {" "}
-                Mode
-              </Box>
             </ToggleButton>
           </ToggleButtonGroup>
 
