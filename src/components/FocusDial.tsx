@@ -24,7 +24,7 @@ type FocusDialProps = {
 export default function FocusDial({
   fraction,
   size = 176,
-  strokeWidth = 10,
+  strokeWidth = 18,
   interactive = false,
   minutes = 25,
   minMinutes = 5,
@@ -138,6 +138,7 @@ export default function FocusDial({
           touchAction: "none",
           cursor: interactive ? "pointer" : "default",
           outline: "none",
+          overflow: "visible",
         }}
       >
         <defs>
