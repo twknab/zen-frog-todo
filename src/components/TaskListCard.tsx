@@ -7,7 +7,7 @@ import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, PointerEvent } from "react";
 import { FaFrog } from "react-icons/fa6";
 import { useCelebration } from "@/components/Celebration";
@@ -25,6 +25,22 @@ type TaskListCardProps = {
   onReorder: (draggedId: string, targetId: string) => void;
 };
 
+/** Keep the pre-completion visual order until celebrations finish settling. */
+function orderTasks(tasks: Task[], pinnedOrder: string[] | null): Task[] {
+  if (!pinnedOrder) return tasks;
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const ordered: Task[] = [];
+  for (const id of pinnedOrder) {
+    const task = byId.get(id);
+    if (task) {
+      ordered.push(task);
+      byId.delete(id);
+    }
+  }
+  for (const task of byId.values()) ordered.push(task);
+  return ordered;
+}
+
 export default function TaskListCard({
   tasks,
   locked = false,
@@ -38,12 +54,25 @@ export default function TaskListCard({
   const [draft, setDraft] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  // Pin row order while completion celebrations play so the row doesn't jump
+  // out from under the burst (storage still updates immediately).
+  const [pinnedOrder, setPinnedOrder] = useState<string[] | null>(null);
+  const pendingSettles = useRef(0);
   const celebrate = useCelebration();
+
+  const displayTasks = orderTasks(tasks, pinnedOrder);
 
   function handleToggle(id: string, event: ChangeEvent<HTMLInputElement>) {
     if (event.target.checked) {
       const rect = event.currentTarget.getBoundingClientRect();
-      celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      if (pendingSettles.current === 0) {
+        setPinnedOrder(displayTasks.map((task) => task.id));
+      }
+      pendingSettles.current += 1;
+      celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "task", () => {
+        pendingSettles.current = Math.max(0, pendingSettles.current - 1);
+        if (pendingSettles.current === 0) setPinnedOrder(null);
+      });
     }
     onToggleCompleted(id);
   }
@@ -86,7 +115,7 @@ export default function TaskListCard({
 
   return (
     <Stack spacing={1}>
-      {tasks.map((task) => (
+      {displayTasks.map((task) => (
         <Stack
           key={task.id}
           data-task-id={task.id}

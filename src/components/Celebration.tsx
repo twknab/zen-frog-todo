@@ -16,15 +16,29 @@ import ribbonData from "@/assets/lottie/ribbon.json";
 
 /** Fire a celebratory animation at a viewport coordinate. */
 type CelebrationKind = "frog" | "task";
-type Celebrate = (x: number, y: number, kind?: CelebrationKind) => void;
+/** Optional `onComplete` runs once when the effect finishes (or hits the safety timeout). */
+type Celebrate = (
+  x: number,
+  y: number,
+  kind?: CelebrationKind,
+  onComplete?: () => void,
+) => void;
 
-const CelebrationContext = createContext<Celebrate>(() => {});
+const CelebrationContext = createContext<Celebrate>((_x, _y, _kind, onComplete) => {
+  onComplete?.();
+});
 
 export function useCelebration(): Celebrate {
   return useContext(CelebrationContext);
 }
 
-type Celebration = { id: number; x: number; y: number; kind: CelebrationKind };
+type Celebration = {
+  id: number;
+  x: number;
+  y: number;
+  kind: CelebrationKind;
+  finish: () => void;
+};
 
 // A ribbon flourish greets the day's frog (full-screen, see LottieBurst);
 // confetti marks the rest, sized here to keep its 940×752 aspect ratio.
@@ -40,19 +54,19 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   const nextId = useRef(0);
   const reduceMotion = useReducedMotion();
 
-  const remove = useCallback((id: number) => {
-    setItems((current) => current.filter((c) => c.id !== id));
+  const celebrate = useCallback<Celebrate>((x, y, kind = "task", onComplete) => {
+    const id = nextId.current;
+    nextId.current += 1;
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      setItems((current) => current.filter((c) => c.id !== id));
+      onComplete?.();
+    };
+    setItems((current) => [...current, { id, x, y, kind, finish }]);
+    window.setTimeout(finish, MAX_MS);
   }, []);
-
-  const celebrate = useCallback<Celebrate>(
-    (x, y, kind = "task") => {
-      const id = nextId.current;
-      nextId.current += 1;
-      setItems((current) => [...current, { id, x, y, kind }]);
-      window.setTimeout(() => remove(id), MAX_MS);
-    },
-    [remove],
-  );
 
   return (
     <CelebrationContext.Provider value={celebrate}>
@@ -69,9 +83,9 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
       >
         {items.map((item) =>
           reduceMotion ? (
-            <SoftRing key={item.id} item={item} onDone={() => remove(item.id)} />
+            <SoftRing key={item.id} item={item} onDone={item.finish} />
           ) : (
-            <LottieBurst key={item.id} item={item} onDone={() => remove(item.id)} />
+            <LottieBurst key={item.id} item={item} onDone={item.finish} />
           ),
         )}
       </Box>
