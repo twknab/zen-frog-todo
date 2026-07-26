@@ -138,6 +138,7 @@ export default function FocusDial({
           touchAction: "none",
           cursor: interactive ? "pointer" : "default",
           outline: "none",
+          overflow: "visible",
         }}
       >
         <defs>
