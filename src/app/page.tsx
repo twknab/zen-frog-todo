@@ -79,7 +79,7 @@ export default function Home() {
     reorderTasks,
   } = useTasks();
   const [notes, setNotes] = usePersistentState("frog-garden:reflection-v1", "");
-  const [notepad, setNotepad] = useNotepad();
+  const notepad = useNotepad();
   const [notepadOpen, setNotepadOpen] = useState(false);
   const celebrate = useCelebration();
   const { recordSessionComplete } = useFocusStats();
@@ -563,8 +563,7 @@ export default function Home() {
       <NotepadShell
         open={notepadOpen}
         onClose={() => setNotepadOpen(false)}
-        value={notepad}
-        onChange={setNotepad}
+        notepad={notepad}
       />
 
       <AnimatePresence>

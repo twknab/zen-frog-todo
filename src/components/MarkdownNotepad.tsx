@@ -1,9 +1,9 @@
 "use client";
 
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
+import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import MarkdownPreview from "@/components/MarkdownPreview";
@@ -14,6 +14,9 @@ type MarkdownNotepadProps = {
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
+  /** When provided with onModeChange, mode is controlled by the parent (shared across tabs). */
+  mode?: NotepadMode;
+  onModeChange?: (mode: NotepadMode) => void;
 };
 
 const DEFAULT_PLACEHOLDER =
@@ -21,42 +24,68 @@ const DEFAULT_PLACEHOLDER =
 
 /**
  * Controlled engineering markdown notepad with exclusive Write / Preview modes.
- * Mode is session-only (defaults to Write on mount). See
- * specs/011-markdown-notepad/contracts/notepad-ui-contract.md.
+ * Mode may be lifted to the shell so tab switches keep write vs preview.
+ * See specs/021-notepad-tabs-grove-rows (extends 011 notepad UI).
  */
 export default function MarkdownNotepad({
   value,
   onChange,
   placeholder = DEFAULT_PLACEHOLDER,
+  mode: modeProp,
+  onModeChange,
 }: MarkdownNotepadProps) {
-  const [mode, setMode] = useState<NotepadMode>("write");
+  const [internalMode, setInternalMode] = useState<NotepadMode>("write");
+  const mode = modeProp ?? internalMode;
+  const setMode = onModeChange ?? setInternalMode;
   const reduce = useReducedMotion();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}>
-      <ToggleButtonGroup
-        value={mode}
-        exclusive
-        size="small"
+      <Stack
+        direction="row"
+        role="group"
         aria-label="Notepad display mode"
-        onChange={(_, next: NotepadMode | null) => {
-          if (next) setMode(next);
-        }}
+        spacing={1.5}
         sx={{
-          // Breathing room above Write/Preview — DialogContent already pads
-          // the shell; keep a clear gap before the writing surface.
-          mt: 0.5,
-          mb: 2.5,
+          mb: 0.75,
           alignSelf: "flex-start",
         }}
       >
-        <ToggleButton value="write" aria-label="Write mode">
-          Write
-        </ToggleButton>
-        <ToggleButton value="preview" aria-label="Preview mode">
-          Preview
-        </ToggleButton>
-      </ToggleButtonGroup>
+        {(["write", "preview"] as const).map((option) => {
+          const active = mode === option;
+          return (
+            <ButtonBase
+              key={option}
+              aria-label={`${option === "write" ? "Write" : "Preview"} mode`}
+              aria-pressed={active}
+              onClick={() => setMode(option)}
+              sx={{
+                position: "relative",
+                minHeight: 24,
+                px: 0,
+                py: 0.25,
+                borderRadius: 0,
+                color: active ? "text.primary" : "text.secondary",
+                typography: "caption",
+                fontWeight: active ? 650 : 500,
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 1.5,
+                  borderRadius: 1,
+                  bgcolor: active ? "primary.main" : "transparent",
+                },
+                "&:hover": { color: "text.primary" },
+              }}
+            >
+              {option === "write" ? "Write" : "Preview"}
+            </ButtonBase>
+          );
+        })}
+      </Stack>
 
       <Box sx={{ position: "relative", flexGrow: 1, minHeight: 200 }}>
         <AnimatePresence mode="wait" initial={false}>
