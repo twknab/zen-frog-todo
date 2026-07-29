@@ -7,7 +7,7 @@ Client UI — observable behavior for tabbed engineering notepad. Extends `specs
 | Contract | Detail |
 |---|---|
 | Props | `open`, `onClose`, document value + change API (or granular tab mutators), not a bare string alone |
-| Chrome | Title “Notepad”, close, **tab strip**, add-tab, import control; then `MarkdownNotepad` for active body |
+| Chrome | **Tab strip is the top header**; no redundant “Notepad” title/icon. Import and close remain anchored at the right; `MarkdownNotepad` follows below. |
 | Persist | Close never discards; no Save/Discard |
 | Motion | `useReducedMotion` → instant dialog transition |
 

@@ -2,16 +2,13 @@
 
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
-import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import MarkdownNotepad, { type NotepadMode } from "@/components/MarkdownNotepad";
@@ -114,7 +111,7 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
       onClose={onClose}
       fullScreen
       transitionDuration={reduce ? 0 : undefined}
-      aria-labelledby="notepad-title"
+      aria-label="Notepad"
       slotProps={{
         paper: {
           sx: {
@@ -124,34 +121,40 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
         },
       }}
     >
-      <DialogTitle
-        id="notepad-title"
+      <Box
+        component="header"
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: 1,
+          gap: 0.75,
           borderBottom: 1,
           borderColor: "divider",
-          py: 1,
-          px: { xs: 2, md: 3 },
-          minHeight: 48,
+          pt: 0.75,
+          px: { xs: 1, md: 2 },
+          minHeight: 44,
         }}
       >
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <StickyNote2OutlinedIcon
-            sx={{ color: "text.secondary", fontSize: "1.25rem" }}
-            aria-hidden
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <NotepadTabStrip
+            tabs={document.tabs}
+            activeTabId={document.activeTabId}
+            onSelect={setActiveTabId}
+            onAdd={addTab}
+            onRename={renameTab}
+            onMove={moveTab}
+            onDelete={deleteTab}
           />
-          <Typography
-            variant="subtitle1"
-            component="span"
-            sx={{ fontWeight: 600, color: "text.primary" }}
-          >
-            Notepad
-          </Typography>
-        </Stack>
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+        </Box>
+        <Stack
+          direction="row"
+          spacing={0.25}
+          sx={{
+            alignItems: "center",
+            flexShrink: 0,
+            pb: 0.75,
+            "& .MuiIconButton-root": { width: 30, height: 30, p: 0.5 },
+          }}
+        >
           <input
             ref={fileRef}
             type="file"
@@ -175,27 +178,17 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
             <CloseOutlinedIcon />
           </IconButton>
         </Stack>
-      </DialogTitle>
+      </Box>
       <DialogContent
         sx={{
           display: "flex",
           flexDirection: "column",
-          pt: 2,
+          pt: 1.5,
           px: { xs: 2, md: 3 },
           pb: 3,
-          gap: 2,
+          gap: 1.5,
         }}
       >
-        <NotepadTabStrip
-          tabs={document.tabs}
-          activeTabId={document.activeTabId}
-          onSelect={setActiveTabId}
-          onAdd={addTab}
-          onRename={renameTab}
-          onMove={moveTab}
-          onDelete={deleteTab}
-        />
-
         {importError && (
           <Alert
             severity="info"
