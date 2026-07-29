@@ -14,6 +14,9 @@ type MarkdownNotepadProps = {
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
+  /** When provided with onModeChange, mode is controlled by the parent (shared across tabs). */
+  mode?: NotepadMode;
+  onModeChange?: (mode: NotepadMode) => void;
 };
 
 const DEFAULT_PLACEHOLDER =
@@ -21,15 +24,19 @@ const DEFAULT_PLACEHOLDER =
 
 /**
  * Controlled engineering markdown notepad with exclusive Write / Preview modes.
- * Mode is session-only (defaults to Write on mount). See
- * specs/011-markdown-notepad/contracts/notepad-ui-contract.md.
+ * Mode may be lifted to the shell so tab switches keep write vs preview.
+ * See specs/021-notepad-tabs-grove-rows (extends 011 notepad UI).
  */
 export default function MarkdownNotepad({
   value,
   onChange,
   placeholder = DEFAULT_PLACEHOLDER,
+  mode: modeProp,
+  onModeChange,
 }: MarkdownNotepadProps) {
-  const [mode, setMode] = useState<NotepadMode>("write");
+  const [internalMode, setInternalMode] = useState<NotepadMode>("write");
+  const mode = modeProp ?? internalMode;
+  const setMode = onModeChange ?? setInternalMode;
   const reduce = useReducedMotion();
 
   return (

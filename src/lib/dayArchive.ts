@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { deriveBonsai, useBonsai, type GrowthEvent } from "./bonsai";
 import { useFocusStats } from "./focusStats";
-import { NOTEPAD_KEY } from "./notepad";
+import { NOTEPAD_KEY, createEmptyDocument, migrateNotepadValue, type NotepadDocument } from "./notepad";
 import {
   clearTodaySandDrawings,
   readTodaySandDrawings,
@@ -114,8 +114,8 @@ export type FullExport = {
     focusSessions: number;
     bonsai: { leaves: number; stage: string };
   };
-  /** Persistent eng notepad (frog-garden:notepad-v1); not day-scoped. */
-  notepad: string;
+  /** Persistent eng notepad tabs (frog-garden:notepad-v1); not day-scoped. */
+  notepad: NotepadDocument;
 };
 
 // --- Small pure helpers ---------------------------------------------------
@@ -203,7 +203,7 @@ export function archiveEntryLabel(day: ArchivedDay, sameDateCount: number): stri
 export function buildFullExport(
   archive: ArchivedDay[],
   live: FullExport["live"],
-  notepad: string = "",
+  notepad: NotepadDocument,
 ): FullExport {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -231,9 +231,12 @@ export function useExportEverything(): () => void {
   const { events, idleOffsetHours } = useBonsai();
   const { completedSessions } = useFocusStats();
   const [reflection] = usePersistentState(REFLECTION_KEY, "");
-  // Notepad is independent of the day; read at click time (missing → "").
+  // Notepad is independent of the day; read at click time (legacy string → migrate).
   // Never cleared by useStartNewDay / auto-rollover (FR-005–006).
-  const [notepad] = usePersistentState(NOTEPAD_KEY, "");
+  const [notepadStored] = usePersistentState<NotepadDocument | string>(
+    NOTEPAD_KEY,
+    createEmptyDocument(),
+  );
 
   return useCallback(() => {
     const now = new Date();
@@ -246,7 +249,8 @@ export function useExportEverything(): () => void {
       focusSessions: completedSessions,
       bonsai: { leaves: derived.leaves, stage: derived.stage },
     };
-    downloadJson(fullExportFilename(now), buildFullExport(archive, live, notepad ?? ""));
+    const notepad = migrateNotepadValue(notepadStored);
+    downloadJson(fullExportFilename(now), buildFullExport(archive, live, notepad));
   }, [
     archive,
     tasks,
@@ -256,7 +260,7 @@ export function useExportEverything(): () => void {
     idleOffsetHours,
     completedSessions,
     reflection,
-    notepad,
+    notepadStored,
   ]);
 }
 
