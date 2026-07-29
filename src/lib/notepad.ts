@@ -34,7 +34,13 @@ export function createTab(title: string, body = ""): NotepadTab {
 
 /** Default empty collection — one My Note tab (used for missing storage). */
 export function createEmptyDocument(title = "My Note"): NotepadDocument {
-  const tab = createTab(title, "");
+  // Deterministic initial id keeps the server/client first render identical.
+  // User-created and imported tabs still receive random stable ids via createTab().
+  const tab: NotepadTab = {
+    id: "tab-my-note",
+    title: normalizeTabTitle(title),
+    body: "",
+  };
   return { v: 1, tabs: [tab], activeTabId: tab.id };
 }
 

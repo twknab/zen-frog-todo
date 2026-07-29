@@ -115,12 +115,11 @@ export default function NotepadTabStrip({
           aria-label="Notepad tabs"
           sx={{
             display: "flex",
-            gap: 0.5,
+            gap: 0.25,
             flexGrow: 1,
             minWidth: 0,
             overflowX: "auto",
             scrollbarWidth: "thin",
-            pt: 0.25,
             borderBottom: "1px solid",
             borderColor: "divider",
           }}
@@ -185,14 +184,15 @@ export default function NotepadTabStrip({
                   alignItems: "center",
                   gap: 0.25,
                   flexShrink: 0,
-                  maxWidth: 200,
-                  px: 1.25,
-                  py: 0.5,
+                  height: 32,
+                  maxWidth: 168,
+                  px: 1,
+                  py: 0,
                   mb: "-1px",
-                  borderRadius: "6px 6px 0 0",
+                  borderRadius: "5px 5px 0 0",
                   cursor: draggedId === tab.id ? "grabbing" : "grab",
                   opacity: draggedId === tab.id ? 0.55 : 1,
-                  bgcolor: selected ? "action.selected" : "transparent",
+                  bgcolor: selected ? "background.default" : "transparent",
                   border: "1px solid",
                   borderColor: selected ? "divider" : "transparent",
                   borderBottomColor: selected ? "background.default" : "divider",
@@ -224,11 +224,11 @@ export default function NotepadTabStrip({
                     aria-label="Rename tab"
                     slotProps={{ input: { disableUnderline: true } }}
                     sx={{
-                      minWidth: 80,
+                      minWidth: 64,
                       "& .MuiInputBase-input": {
-                        typography: "body2",
+                        typography: "caption",
                         py: 0,
-                        fontWeight: 500,
+                        fontWeight: 600,
                       },
                     }}
                   />
@@ -237,7 +237,11 @@ export default function NotepadTabStrip({
                     variant="body2"
                     noWrap
                     title={tab.title}
-                    sx={{ fontWeight: selected ? 600 : 500, maxWidth: 140 }}
+                    sx={{
+                      typography: "caption",
+                      fontWeight: selected ? 600 : 500,
+                      maxWidth: 116,
+                    }}
                   >
                     {tab.title}
                   </Typography>
@@ -250,9 +254,15 @@ export default function NotepadTabStrip({
                       e.stopPropagation();
                       requestDelete(tab);
                     }}
-                    sx={{ p: 0.25, color: "text.secondary" }}
+                    sx={{
+                      width: 18,
+                      height: 18,
+                      p: 0,
+                      ml: 0.25,
+                      color: "text.secondary",
+                    }}
                   >
-                    <CloseOutlinedIcon sx={{ fontSize: "0.95rem" }} />
+                    <CloseOutlinedIcon sx={{ fontSize: "0.78rem" }} />
                   </IconButton>
                 )}
               </Box>
@@ -260,7 +270,18 @@ export default function NotepadTabStrip({
           })}
         </Box>
 
-        <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
+        <Stack
+          direction="row"
+          spacing={0.125}
+          sx={{
+            flexShrink: 0,
+            "& .MuiIconButton-root": {
+              width: 28,
+              height: 28,
+              p: 0.5,
+            },
+          }}
+        >
           <Tooltip title="Previous tab">
             <IconButton
               size="small"

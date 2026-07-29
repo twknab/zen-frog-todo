@@ -1,9 +1,9 @@
 "use client";
 
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
+import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import MarkdownPreview from "@/components/MarkdownPreview";
@@ -41,36 +41,51 @@ export default function MarkdownNotepad({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}>
-      <ToggleButtonGroup
-        value={mode}
-        exclusive
-        size="small"
+      <Stack
+        direction="row"
+        role="group"
         aria-label="Notepad display mode"
-        onChange={(_, next: NotepadMode | null) => {
-          if (next) setMode(next);
-        }}
+        spacing={1.5}
         sx={{
-          mb: 1.5,
+          mb: 1.25,
           alignSelf: "flex-start",
-          "& .MuiToggleButton-root": {
-            minHeight: 26,
-            minWidth: 0,
-            px: 1,
-            py: 0.125,
-            borderRadius: 1,
-            typography: "caption",
-            lineHeight: 1.4,
-            textTransform: "none",
-          },
         }}
       >
-        <ToggleButton value="write" aria-label="Write mode">
-          Write
-        </ToggleButton>
-        <ToggleButton value="preview" aria-label="Preview mode">
-          Preview
-        </ToggleButton>
-      </ToggleButtonGroup>
+        {(["write", "preview"] as const).map((option) => {
+          const active = mode === option;
+          return (
+            <ButtonBase
+              key={option}
+              aria-label={`${option === "write" ? "Write" : "Preview"} mode`}
+              aria-pressed={active}
+              onClick={() => setMode(option)}
+              sx={{
+                position: "relative",
+                minHeight: 24,
+                px: 0,
+                py: 0.25,
+                borderRadius: 0,
+                color: active ? "text.primary" : "text.secondary",
+                typography: "caption",
+                fontWeight: active ? 650 : 500,
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 1.5,
+                  borderRadius: 1,
+                  bgcolor: active ? "primary.main" : "transparent",
+                },
+                "&:hover": { color: "text.primary" },
+              }}
+            >
+              {option === "write" ? "Write" : "Preview"}
+            </ButtonBase>
+          );
+        })}
+      </Stack>
 
       <Box sx={{ position: "relative", flexGrow: 1, minHeight: 200 }}>
         <AnimatePresence mode="wait" initial={false}>
