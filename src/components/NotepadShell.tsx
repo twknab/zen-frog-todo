@@ -125,13 +125,13 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
         component="header"
         sx={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-end",
           gap: 0.75,
           borderBottom: 1,
           borderColor: "divider",
-          pt: 0.75,
+          pt: 0.5,
           px: { xs: 1, md: 2 },
-          minHeight: 44,
+          minHeight: 40,
         }}
       >
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -151,7 +151,7 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
           sx={{
             alignItems: "center",
             flexShrink: 0,
-            pb: 0.75,
+            pb: 0.25,
             "& .MuiIconButton-root": { width: 30, height: 30, p: 0.5 },
           }}
         >
@@ -183,7 +183,7 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
         sx={{
           display: "flex",
           flexDirection: "column",
-          pt: 1.5,
+          pt: 0.75,
           px: { xs: 2, md: 3 },
           pb: 3,
           gap: 1.5,

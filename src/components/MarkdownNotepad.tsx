@@ -47,7 +47,7 @@ export default function MarkdownNotepad({
         aria-label="Notepad display mode"
         spacing={1.5}
         sx={{
-          mb: 1.25,
+          mb: 0.75,
           alignSelf: "flex-start",
         }}
       >
