@@ -23,9 +23,10 @@ Seed data: at least one existing notepad string in localStorage (pre-upgrade) **
 2. Rename to a project name; reload → name persists.
 3. Type markdown; Preview → render; Write → source intact.
 4. Add a second tab; switch back and forth → bodies isolated.
-5. Move left/right → order persists after reload.
-6. Delete empty tab → gone immediately; delete non-empty → confirm; last tab cannot delete.
-7. Keyboard-only: add, rename, switch, reorder, delete, Write/Preview.
+5. Drag a tab to reorder → order persists after reload; previous/next arrows cycle selection without reordering.
+6. Keyboard reorder with `Alt+Left` / `Alt+Right`; plain arrows cycle selection.
+7. Delete empty tab → gone immediately; delete non-empty → confirm; last tab cannot delete.
+8. Keyboard-only: add, rename, switch, reorder, delete, Write/Preview.
 
 ## C — Import / export
 

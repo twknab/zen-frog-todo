@@ -47,6 +47,7 @@ export default function NotepadTabStrip({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeIndex = tabs.findIndex((t) => t.id === activeTabId);
@@ -84,6 +85,24 @@ export default function NotepadTabStrip({
     setConfirmId(tab.id);
   };
 
+  const selectRelativeTab = (direction: -1 | 1) => {
+    if (tabs.length < 2 || activeIndex < 0) return;
+    const nextIndex = (activeIndex + direction + tabs.length) % tabs.length;
+    onSelect(tabs[nextIndex].id);
+  };
+
+  const reorderOnto = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) return;
+    const from = tabs.findIndex((tab) => tab.id === draggedId);
+    const to = tabs.findIndex((tab) => tab.id === targetId);
+    if (from < 0 || to < 0) return;
+    const direction: -1 | 1 = from < to ? 1 : -1;
+    for (let step = 0; step < Math.abs(to - from); step += 1) {
+      onMove(draggedId, direction);
+    }
+    onSelect(draggedId);
+  };
+
   return (
     <>
       <Stack
@@ -96,12 +115,14 @@ export default function NotepadTabStrip({
           aria-label="Notepad tabs"
           sx={{
             display: "flex",
-            gap: 0.75,
+            gap: 0.5,
             flexGrow: 1,
             minWidth: 0,
             overflowX: "auto",
             scrollbarWidth: "thin",
-            py: 0.25,
+            pt: 0.25,
+            borderBottom: "1px solid",
+            borderColor: "divider",
           }}
         >
           {tabs.map((tab) => {
@@ -112,10 +133,27 @@ export default function NotepadTabStrip({
                 key={tab.id}
                 role="tab"
                 aria-selected={selected}
+                aria-label={`${tab.title}. Drag to reorder; Alt plus arrow keys also reorder.`}
                 tabIndex={selected ? 0 : -1}
+                draggable={!editing}
                 onClick={() => {
                   if (!editing) onSelect(tab.id);
                 }}
+                onDragStart={(event) => {
+                  setDraggedId(tab.id);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", tab.id);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  reorderOnto(tab.id);
+                  setDraggedId(null);
+                }}
+                onDragEnd={() => setDraggedId(null)}
                 onDoubleClick={(e) => {
                   e.preventDefault();
                   startRename(tab);
@@ -128,6 +166,18 @@ export default function NotepadTabStrip({
                   } else if (e.key === "F2") {
                     e.preventDefault();
                     startRename(tab);
+                  } else if (e.altKey && e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    onMove(tab.id, -1);
+                  } else if (e.altKey && e.key === "ArrowRight") {
+                    e.preventDefault();
+                    onMove(tab.id, 1);
+                  } else if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    selectRelativeTab(-1);
+                  } else if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    selectRelativeTab(1);
                   }
                 }}
                 sx={{
@@ -138,11 +188,14 @@ export default function NotepadTabStrip({
                   maxWidth: 200,
                   px: 1.25,
                   py: 0.5,
-                  borderRadius: 2,
-                  cursor: "pointer",
+                  mb: "-1px",
+                  borderRadius: "6px 6px 0 0",
+                  cursor: draggedId === tab.id ? "grabbing" : "grab",
+                  opacity: draggedId === tab.id ? 0.55 : 1,
                   bgcolor: selected ? "action.selected" : "transparent",
                   border: "1px solid",
                   borderColor: selected ? "divider" : "transparent",
+                  borderBottomColor: selected ? "background.default" : "divider",
                   color: selected ? "text.primary" : "text.secondary",
                   "&:hover": {
                     bgcolor: selected ? "action.selected" : "action.hover",
@@ -208,29 +261,25 @@ export default function NotepadTabStrip({
         </Box>
 
         <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
-          <Tooltip title="Move tab left">
-            <span>
-              <IconButton
-                size="small"
-                aria-label="Move active tab left"
-                disabled={activeIndex <= 0}
-                onClick={() => onMove(activeTabId, -1)}
-              >
-                <ChevronLeftOutlinedIcon fontSize="small" />
-              </IconButton>
-            </span>
+          <Tooltip title="Previous tab">
+            <IconButton
+              size="small"
+              aria-label="Select previous tab"
+              disabled={tabs.length < 2}
+              onClick={() => selectRelativeTab(-1)}
+            >
+              <ChevronLeftOutlinedIcon fontSize="small" />
+            </IconButton>
           </Tooltip>
-          <Tooltip title="Move tab right">
-            <span>
-              <IconButton
-                size="small"
-                aria-label="Move active tab right"
-                disabled={activeIndex < 0 || activeIndex >= tabs.length - 1}
-                onClick={() => onMove(activeTabId, 1)}
-              >
-                <ChevronRightOutlinedIcon fontSize="small" />
-              </IconButton>
-            </span>
+          <Tooltip title="Next tab">
+            <IconButton
+              size="small"
+              aria-label="Select next tab"
+              disabled={tabs.length < 2}
+              onClick={() => selectRelativeTab(1)}
+            >
+              <ChevronRightOutlinedIcon fontSize="small" />
+            </IconButton>
           </Tooltip>
           <Tooltip title="New tab">
             <IconButton size="small" aria-label="Add notepad tab" onClick={onAdd} color="inherit">

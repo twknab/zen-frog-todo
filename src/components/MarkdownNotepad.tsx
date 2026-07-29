@@ -50,11 +50,18 @@ export default function MarkdownNotepad({
           if (next) setMode(next);
         }}
         sx={{
-          // Breathing room above Write/Preview — DialogContent already pads
-          // the shell; keep a clear gap before the writing surface.
-          mt: 0.5,
-          mb: 2.5,
+          mb: 1.5,
           alignSelf: "flex-start",
+          "& .MuiToggleButton-root": {
+            minHeight: 26,
+            minWidth: 0,
+            px: 1,
+            py: 0.125,
+            borderRadius: 1,
+            typography: "caption",
+            lineHeight: 1.4,
+            textTransform: "none",
+          },
         }}
       >
         <ToggleButton value="write" aria-label="Write mode">

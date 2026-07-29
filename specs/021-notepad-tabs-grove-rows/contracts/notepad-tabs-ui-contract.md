@@ -19,11 +19,12 @@ Client UI — observable behavior for tabbed engineering notepad. Extends `specs
 | Switch | Activate tab → `activeTabId` updates; body below follows |
 | Add | Creates **Untitled** empty tab, selects it |
 | Rename | Inline edit; commit Enter/blur; Escape cancel; blank → **Untitled** |
-| Reorder | Move left / Move right (disabled at ends); persists order |
+| Reorder | Pointer drag-and-drop persists order. Keyboard users use `Alt+Left` / `Alt+Right` on a tab. |
+| Navigate | Previous / next arrow controls cycle through tabs without changing their order; plain Left / Right keys do the same when a tab is focused. |
 | Delete | Hidden/disabled when only one tab; empty → immediate; non-empty → calm confirm dialog |
 | Overflow | Horizontal scroll **within** strip only if needed; must not crowd writing surface |
 
-**A11y**: All controls keyboard-operable and labelled; announce selected tab / rename / delete outcomes where practical (`aria-live` sparingly).
+**A11y**: All controls keyboard-operable and labelled; drag is never the only reorder path; announce selected tab / rename / delete outcomes where practical (`aria-live` sparingly).
 
 ## Component: `MarkdownNotepad` (extended binding)
 
