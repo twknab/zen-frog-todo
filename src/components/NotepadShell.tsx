@@ -183,7 +183,7 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
         sx={{
           display: "flex",
           flexDirection: "column",
-          pt: 0.75,
+          pt: 0,
           px: { xs: 2, md: 3 },
           pb: 3,
           gap: 1.5,

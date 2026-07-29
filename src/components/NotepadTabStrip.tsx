@@ -108,7 +108,7 @@ export default function NotepadTabStrip({
       <Stack
         direction="row"
         spacing={1}
-        sx={{ alignItems: "center", minWidth: 0, width: "100%" }}
+        sx={{ alignItems: "flex-end", minWidth: 0, width: "100%" }}
       >
         <Box
           role="tablist"
