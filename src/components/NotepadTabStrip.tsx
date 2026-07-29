@@ -120,8 +120,6 @@ export default function NotepadTabStrip({
             minWidth: 0,
             overflowX: "auto",
             scrollbarWidth: "thin",
-            borderBottom: "1px solid",
-            borderColor: "divider",
           }}
         >
           {tabs.map((tab) => {
@@ -195,7 +193,7 @@ export default function NotepadTabStrip({
                   bgcolor: selected ? "background.default" : "transparent",
                   border: "1px solid",
                   borderColor: selected ? "divider" : "transparent",
-                  borderBottomColor: selected ? "background.default" : "divider",
+                  borderBottomColor: "transparent",
                   color: selected ? "text.primary" : "text.secondary",
                   "&:hover": {
                     bgcolor: selected ? "action.selected" : "action.hover",
