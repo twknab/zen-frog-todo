@@ -119,6 +119,9 @@ export default function NotepadTabStrip({
             flexGrow: 1,
             minWidth: 0,
             overflowX: "auto",
+            // overflow-x: auto would otherwise compute overflow-y to auto too,
+            // which shows a stray vertical scrollbar for the tab row.
+            overflowY: "hidden",
             scrollbarWidth: "thin",
           }}
         >
@@ -186,7 +189,6 @@ export default function NotepadTabStrip({
                   maxWidth: 168,
                   px: 1,
                   py: 0,
-                  mb: "-1px",
                   borderRadius: "5px 5px 0 0",
                   cursor: draggedId === tab.id ? "grabbing" : "grab",
                   opacity: draggedId === tab.id ? 0.55 : 1,
