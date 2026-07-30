@@ -1,11 +1,14 @@
 "use client";
 
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
@@ -18,18 +21,23 @@ import {
   downloadJson,
   useArchive,
   useExportEverything,
+  useExportEverythingXlsx,
   type ArchivedDay,
 } from "@/lib/dayArchive";
+import { downloadNoteMarkdown, useNotepadTabs, type NotepadTab } from "@/lib/notepad";
 
 /**
- * Header menu for exporting archived days as JSON (spec 007, US2). Lists each
- * archived day (date, plus a time when a date repeats), each downloadable on
- * its own. A calm empty-state shows when nothing is archived yet. Fully
- * on-device — no network. ("Export everything" is added in US3.)
+ * Header menu for exporting your data (specs 007 + 022). Lists each archived
+ * day (date, plus a time when a date repeats) as its own JSON download, an
+ * "Export everything" spreadsheet (.xlsx) for reading outside the app, a JSON
+ * full backup (the re-importable format), and each notepad note as its own
+ * Markdown file. Fully on-device — no network.
  */
 export default function ExportMenu() {
   const archive = useArchive();
   const exportEverything = useExportEverything();
+  const exportEverythingXlsx = useExportEverythingXlsx();
+  const noteTabs = useNotepadTabs();
   const reduce = useReducedMotion();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -49,8 +57,18 @@ export default function ExportMenu() {
     close();
   };
 
-  const exportAll = () => {
+  const exportAllXlsx = () => {
+    exportEverythingXlsx();
+    close();
+  };
+
+  const exportAllJson = () => {
     exportEverything();
+    close();
+  };
+
+  const exportNote = (tab: NotepadTab) => {
+    downloadNoteMarkdown(tab);
     close();
   };
 
@@ -59,7 +77,7 @@ export default function ExportMenu() {
       <Tooltip title="Export your days">
         <IconButton
           onClick={(event) => setAnchorEl(event.currentTarget)}
-          aria-label="Export archived days"
+          aria-label="Export archived days and notes"
           aria-haspopup="menu"
           aria-expanded={open}
           sx={{ color: "text.secondary" }}
@@ -73,7 +91,7 @@ export default function ExportMenu() {
         open={open}
         onClose={close}
         transitionDuration={reduce ? 0 : undefined}
-        slotProps={{ list: { "aria-label": "Export archived days", dense: true } }}
+        slotProps={{ list: { "aria-label": "Export archived days and notes", dense: true } }}
       >
         {archive.length === 0 ? (
           <MenuItem disabled>
@@ -92,12 +110,40 @@ export default function ExportMenu() {
 
         <Divider />
 
-        <MenuItem onClick={exportAll}>
+        <MenuItem onClick={exportAllXlsx}>
+          <ListItemIcon>
+            <TableChartOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary="Export everything (Excel)"
+            secondary="All days + today, one spreadsheet"
+          />
+        </MenuItem>
+
+        <MenuItem onClick={exportAllJson}>
           <ListItemIcon>
             <Inventory2OutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Export everything" secondary="All days + today, as one file" />
+          <ListItemText
+            primary="Full backup (JSON)"
+            secondary="Everything, re-importable"
+          />
         </MenuItem>
+
+        <Divider />
+
+        <ListSubheader component="div" sx={{ lineHeight: "32px", bgcolor: "transparent" }}>
+          Notes as Markdown
+        </ListSubheader>
+
+        {noteTabs.map((tab) => (
+          <MenuItem key={tab.id} onClick={() => exportNote(tab)}>
+            <ListItemIcon>
+              <DescriptionOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary={tab.title} />
+          </MenuItem>
+        ))}
       </Menu>
     </>
   );

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { deriveBonsai, useBonsai, type GrowthEvent } from "./bonsai";
+import { downloadText } from "./download";
+import { downloadXlsxExport, xlsxExportFilename } from "./exportXlsx";
 import { useFocusStats } from "./focusStats";
 import { NOTEPAD_KEY, createEmptyDocument, migrateNotepadValue, type NotepadDocument } from "./notepad";
 import {
@@ -221,11 +223,12 @@ export function fullExportFilename(now: Date): string {
 }
 
 /**
- * Returns a callback that exports EVERYTHING — all archived days plus the
- * current live state — as one JSON file. Live state is gathered lazily at click
- * time (not every render) from the domain stores. Works with an empty archive.
+ * Returns a callback that gathers EVERYTHING — all archived days plus the
+ * current live state and notepad — into one FullExport document. Gathered
+ * lazily at click time (not every render) from the domain stores. Works with
+ * an empty archive. Shared by the JSON-backup and XLSX export paths.
  */
-export function useExportEverything(): () => void {
+function useGatherFullExport(): () => FullExport {
   const [archive] = usePersistentState<ArchivedDay[]>(ARCHIVE_KEY, []);
   const { tasks, frogTaskId, completedLog } = useTasks();
   const { events, idleOffsetHours } = useBonsai();
@@ -250,7 +253,7 @@ export function useExportEverything(): () => void {
       bonsai: { leaves: derived.leaves, stage: derived.stage },
     };
     const notepad = migrateNotepadValue(notepadStored);
-    downloadJson(fullExportFilename(now), buildFullExport(archive, live, notepad));
+    return buildFullExport(archive, live, notepad);
   }, [
     archive,
     tasks,
@@ -265,20 +268,30 @@ export function useExportEverything(): () => void {
 }
 
 /**
- * Download `data` as a pretty-printed JSON file, entirely on-device: build a
- * Blob, click a temporary object-URL anchor, then revoke the URL. No network.
+ * Export everything as one JSON file — the re-importable full backup
+ * (NotepadShell's import understands this document).
  */
+export function useExportEverything(): () => void {
+  const gather = useGatherFullExport();
+  return useCallback(() => {
+    downloadJson(fullExportFilename(new Date()), gather());
+  }, [gather]);
+}
+
+/**
+ * Export everything as one human-readable .xlsx workbook (spec 022). Same
+ * gathered document as the JSON backup, rendered for reading outside the app.
+ */
+export function useExportEverythingXlsx(): () => void {
+  const gather = useGatherFullExport();
+  return useCallback(() => {
+    void downloadXlsxExport(xlsxExportFilename(new Date()), gather());
+  }, [gather]);
+}
+
+/** Download `data` as a pretty-printed JSON file, entirely on-device. */
 export function downloadJson(filename: string, data: unknown): void {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  downloadText(filename, JSON.stringify(data, null, 2), "application/json");
 }
 
 // --- The "start a new day" orchestration ----------------------------------
