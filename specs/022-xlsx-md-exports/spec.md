@@ -13,8 +13,10 @@ it is the re-importable format the notepad import understands.
 - **In:** "Export everything (Excel)" menu item — one `.xlsx` workbook with
   sheets for Days, Completed tasks, Open tasks, Notes, and Today, built from
   the same `FullExport` document as the JSON backup.
-- **In:** A "Notes as Markdown" section in the export menu — one item per
-  notepad tab, downloading `<title>.md` (title sanitized for filesystems).
+- **In:** A "Notes" section in the export menu — one item per notepad tab,
+  downloading the note as `<title>.md` or `<title>.txt` (title sanitized for
+  filesystems), with a small `.md` / `.txt` toggle in the section header to
+  pick the format (default Markdown).
 - **In:** Keep the JSON full backup (relabelled "Full backup (JSON)") and the
   per-day JSON exports unchanged.
 - **Out:** XLSX import; per-day XLSX; exporting sand drawings into the
@@ -24,8 +26,8 @@ it is the re-importable format the notepad import understands.
 
 - [ ] Export menu shows "Export everything (Excel)"; clicking downloads
       `frog-garden-all-<date>.xlsx` with the five sheets above.
-- [ ] Each notepad tab appears under "Notes as Markdown"; clicking downloads
-      that tab's body as a `.md` file named from its title.
+- [ ] Each notepad tab appears under "Notes"; clicking downloads that tab's
+      body as a `.md` or `.txt` file (per the toggle) named from its title.
 - [ ] JSON full backup and per-day JSON exports behave exactly as before, and
       the JSON backup still round-trips through the notepad import.
 - [ ] Everything stays on-device (constitution: local-first; SheetJS is
@@ -37,7 +39,7 @@ it is the re-importable format the notepad import understands.
 - `src/lib/download.ts` — shared blob-download helper (JSON/MD/XLSX paths).
 - `src/lib/dayArchive.ts` — `useGatherFullExport()` shared by
   `useExportEverything()` (JSON) and `useExportEverythingXlsx()`.
-- `src/lib/notepad.ts` — `noteMarkdownFilename()`, `downloadNoteMarkdown()`,
+- `src/lib/notepad.ts` — `noteExportFilename()`, `downloadNote()` (md/txt),
   read-only `useNotepadTabs()`.
 - Dependency: `xlsx` 0.20.3 from the SheetJS CDN tarball (the npm-registry
   0.18.5 has unfixed advisories; 0.20.x fixes them, and we only write, never

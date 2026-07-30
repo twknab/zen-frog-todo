@@ -11,6 +11,8 @@ import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import { useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
@@ -24,14 +26,20 @@ import {
   useExportEverythingXlsx,
   type ArchivedDay,
 } from "@/lib/dayArchive";
-import { downloadNoteMarkdown, useNotepadTabs, type NotepadTab } from "@/lib/notepad";
+import {
+  downloadNote,
+  useNotepadTabs,
+  type NoteExportFormat,
+  type NotepadTab,
+} from "@/lib/notepad";
 
 /**
  * Header menu for exporting your data (specs 007 + 022). Lists each archived
  * day (date, plus a time when a date repeats) as its own JSON download, an
  * "Export everything" spreadsheet (.xlsx) for reading outside the app, a JSON
  * full backup (the re-importable format), and each notepad note as its own
- * Markdown file. Fully on-device — no network.
+ * file — Markdown or plain text, picked via the toggle in the Notes section
+ * header. Fully on-device — no network.
  */
 export default function ExportMenu() {
   const archive = useArchive();
@@ -39,6 +47,7 @@ export default function ExportMenu() {
   const exportEverythingXlsx = useExportEverythingXlsx();
   const noteTabs = useNotepadTabs();
   const reduce = useReducedMotion();
+  const [noteFormat, setNoteFormat] = useState<NoteExportFormat>("md");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -68,7 +77,7 @@ export default function ExportMenu() {
   };
 
   const exportNote = (tab: NotepadTab) => {
-    downloadNoteMarkdown(tab);
+    downloadNote(tab, noteFormat);
     close();
   };
 
@@ -132,8 +141,35 @@ export default function ExportMenu() {
 
         <Divider />
 
-        <ListSubheader component="div" sx={{ lineHeight: "32px", bgcolor: "transparent" }}>
-          Notes as Markdown
+        <ListSubheader
+          component="div"
+          sx={{
+            lineHeight: "32px",
+            bgcolor: "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+          }}
+        >
+          Notes
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={noteFormat}
+            aria-label="Note download format"
+            onChange={(_event, next: NoteExportFormat | null) => {
+              if (next !== null) setNoteFormat(next);
+            }}
+            sx={{ "& .MuiToggleButton-root": { px: 1, py: 0.25, fontSize: "0.7rem" } }}
+          >
+            <ToggleButton value="md" aria-label="Markdown (.md)">
+              .md
+            </ToggleButton>
+            <ToggleButton value="txt" aria-label="Plain text (.txt)">
+              .txt
+            </ToggleButton>
+          </ToggleButtonGroup>
         </ListSubheader>
 
         {noteTabs.map((tab) => (
