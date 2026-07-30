@@ -8,6 +8,14 @@
 
 **Input**: User description: "Enhance the notepad with a full WYSIWYG rich-text editor while keeping markdown as the raw stored format. Replace the static read-only Preview with a real, live editable rich surface where I can type and build richer documents in real time; still support markdown as raw."
 
+## Clarifications
+
+### Session 2026-07-30
+
+- Q: How should markdown constructs the rich editor doesn't natively support be handled on a round-trip? → A: Preserve verbatim (Option A) — unsupported/raw markdown round-trips unchanged; nothing is silently dropped or rewritten. The rich editor must pass through constructs it doesn't model rather than corrupting them.
+- Q: Is the rich-vs-raw mode shared across all notepad tabs or remembered per-tab? → A: Shared across all tabs (Option A) — matches today's Write/Preview behavior exactly; the mode is a single UI state, not per-tab.
+- Q: Is the Grove's read-only archived-reflection rendering in scope? → A: Out of scope (Option A) — the Grove continues to render archived reflections as static read-only markdown, unchanged by this feature.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Write rich documents directly, no markdown syntax required (Priority: P1)
@@ -39,7 +47,7 @@ A user who relies on markdown (for portability, for pasting into other tools, fo
 1. **Given** the user has created formatted content in the rich editor, **When** they switch to the raw-markdown view, **Then** they see the equivalent markdown source text, editable.
 2. **Given** the user edits the raw markdown source directly, **When** they switch back to the rich editing view, **Then** the rich view reflects those edits (the two views operate on one shared document).
 3. **Given** any notepad content (created via either view), **When** the app data is exported, **Then** the notepad content appears in the export as markdown, in the same shape/format as before this feature (the stored format is unchanged).
-4. **Given** existing notepad content authored before this feature (free-form markdown), **When** the user opens it in the rich editor, **Then** its meaning is preserved — content is not silently dropped or corrupted [NEEDS CLARIFICATION: for markdown constructs the rich editor does not natively support, should such raw/unsupported markdown be preserved verbatim (round-trips unchanged) or is some loss acceptable — and if loss is possible, how is the user protected from silently losing content?].
+4. **Given** existing notepad content authored before this feature (free-form markdown), including constructs the rich editor does not natively model, **When** the user opens and round-trips it through the rich editor, **Then** its meaning is preserved and unsupported/raw markdown is passed through verbatim — content is never silently dropped, rewritten, or corrupted.
 
 ---
 
@@ -54,7 +62,7 @@ A user fluidly switches between the rich editing surface (for composing and form
 **Acceptance Scenarios**:
 
 1. **Given** the notepad's two modes, **When** the user looks at the notepad, **Then** it is clear which mode is active and how to switch, with a control consistent with the app's existing notepad affordances.
-2. **Given** the user is working in one mode, **When** they switch notepad tabs and come back, **Then** the mode behaves per the app's established tab/mode convention [NEEDS CLARIFICATION: should the chosen mode (rich vs raw) be shared across all notepad tabs like the current Write/Preview mode is, or remembered per-tab?].
+2. **Given** the user is working in one mode, **When** they switch notepad tabs and come back, **Then** the active mode (rich vs raw) is shared across all tabs — exactly as today's Write/Preview mode is — so the whole notepad is in one mode at a time.
 3. **Given** the user switches modes, **When** the switch happens, **Then** it is smooth and does not lose unsaved keystrokes or scroll the user somewhere disorienting.
 
 ---
@@ -63,7 +71,7 @@ A user fluidly switches between the rich editing surface (for composing and form
 
 - What happens when a user pastes rich content (e.g. copied from a web page or word processor) into the rich editor? It should be captured as sensible formatted content that still round-trips to markdown, rather than raw HTML leaking into the stored markdown.
 - What happens with a very large note? The editor must stay responsive; typing latency must not degrade noticeably.
-- What happens to markdown features the rich editor doesn't support (see Story 2 clarification) — are they preserved when the document round-trips?
+- What happens to markdown features the rich editor doesn't support? They are preserved verbatim across a round-trip (passed through unchanged) — never dropped or rewritten.
 - What happens on first open of the notepad after this feature ships, given the rich editor is a heavier component? Loading it must not slow down the rest of the app's initial load (it should load on demand when the notepad is opened, not before).
 - What happens if the rich editor fails to load (e.g. an unusual browser)? The user must still be able to read and edit their notes via the raw-markdown mode — notes are never inaccessible.
 - What happens with keyboard-only and screen-reader users? The rich surface and any formatting controls must be fully operable without a mouse and properly announced.
@@ -76,7 +84,8 @@ A user fluidly switches between the rich editing surface (for composing and form
 - **FR-002**: The rich editor MUST support, at minimum, this formatting set: headings, bold, italic, strikethrough, ordered and unordered lists, checkbox/task-list items, links, inline code, fenced code blocks, blockquotes, and horizontal rules. Tables are desirable if they round-trip cleanly. (This bounds scope — an exhaustive editor is explicitly out of scope.)
 - **FR-003**: The notepad MUST retain an editable raw-markdown mode; both the rich mode and the raw-markdown mode operate on the same underlying document.
 - **FR-004**: Markdown MUST remain the single persisted and exported format for notepad content — the rich editor's internal representation MUST NOT be persisted or change the shape of what is stored in local storage or included in the data export.
-- **FR-005**: Switching between the rich mode and the raw-markdown mode MUST show the same content in both directions (rich→raw and raw→rich reflect each other), with no content lost on switch.
+- **FR-005**: Switching between the rich mode and the raw-markdown mode MUST show the same content in both directions (rich→raw and raw→rich reflect each other), with no content lost on switch. The active mode is shared across all notepad tabs (a single UI state), matching the current Write/Preview behavior.
+- **FR-005a**: Markdown constructs the rich editor does not natively model MUST be preserved verbatim across a round-trip — passed through unchanged rather than dropped or rewritten — so a user's existing free-form markdown is never corrupted by viewing/editing it in the rich mode.
 - **FR-006**: Content authored in either mode MUST persist automatically using the app's existing notepad persistence, with no new manual save step and no change to the storage key/shape.
 - **FR-007**: Pre-existing notepad content (authored as free-form markdown before this feature) MUST open in the rich editor with its meaning preserved, not silently dropped or corrupted (see Story 2 clarification for the handling of unsupported constructs).
 - **FR-008**: The feature MUST be entirely client-side — no backend, no network calls, no telemetry; notepad content never leaves the device.
@@ -85,7 +94,7 @@ A user fluidly switches between the rich editing surface (for composing and form
 - **FR-011**: The rich editor and any formatting controls MUST be fully keyboard-operable and screen-reader labelled, respect reduced-motion preferences, and meet WCAG AA contrast.
 - **FR-012**: The rich editor's visual styling MUST match the app's re-themed look (typography, spacing, rounded corners, palette) — no stock/default editor chrome.
 - **FR-013**: The formatting controls MUST feel calm and unobtrusive, consistent with the app's tone (no urgency/anxiety UI).
-- **FR-014**: The archived-reflection display in the Grove (historical, read-only) is out of scope for editable rich editing and MUST continue to render as it does today [NEEDS CLARIFICATION: confirm the Grove's read-only reflection rendering is unchanged by this feature].
+- **FR-014**: The archived-reflection display in the Grove (historical, read-only) is out of scope for editable rich editing and MUST continue to render exactly as it does today (static read-only markdown), unaffected by this feature.
 
 ### Key Entities
 
