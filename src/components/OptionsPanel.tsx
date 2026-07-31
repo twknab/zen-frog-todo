@@ -1,8 +1,11 @@
 "use client";
 
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import CloudOffOutlinedIcon from "@mui/icons-material/CloudOffOutlined";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -24,6 +27,7 @@ import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
+import { useExportEverything } from "@/lib/dayArchive";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
 import {
   useColorMode,
@@ -138,6 +142,7 @@ export default function OptionsPanel({
   const { palette, setPalette } = useGardenPalette();
   const [hyperMinimal, setHyperMinimal] = useHyperMinimal();
   const { highContrast, setHighContrast } = useHighContrast();
+  const exportEverything = useExportEverything();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const titleId = useId();
@@ -300,6 +305,47 @@ export default function OptionsPanel({
           }}
           sx={{ ml: 0, mr: 0 }}
         />
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+      <OptionsSection label="Your data">
+        <Stack spacing={1.25}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+            <CloudOffOutlinedIcon
+              aria-hidden
+              sx={{ color: "text.secondary", fontSize: "1.15rem", mt: "1px", flexShrink: 0 }}
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+              Your tasks, notes, and garden live only in this browser, on this device.
+              Nothing is sent anywhere — no account, no server, no tracking. What you
+              write never leaves your machine.
+            </Typography>
+          </Stack>
+
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+            Because it lives in your browser&rsquo;s storage, clearing your browser data
+            will erase it. If something&rsquo;s worth keeping, export a backup from time
+            to time.
+          </Typography>
+
+          <Button
+            variant="outlined"
+            size="small"
+            color="inherit"
+            startIcon={<FileDownloadOutlinedIcon />}
+            onClick={exportEverything}
+            sx={{ alignSelf: "flex-start", borderColor: "divider", color: "text.primary" }}
+          >
+            Export a backup
+          </Button>
+
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+            The notepad suits quick, in-the-moment thoughts around your tasks — treat
+            notes here as ephemeral. For documents you want to keep long-term, reach for
+            a dedicated notes app.
+          </Typography>
+        </Stack>
       </OptionsSection>
 
       <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
