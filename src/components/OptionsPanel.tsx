@@ -31,7 +31,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
-import { useId, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useExportEverything, useExportEverythingXlsx } from "@/lib/dayArchive";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
 import {
@@ -50,6 +50,11 @@ import {
 type OptionsPanelProps = {
   devMode: boolean;
   onDevModeChange: (next: boolean) => void;
+  /**
+   * Increment to programmatically open Options (e.g. from the privacy notice
+   * CTA). Anchors to the gear button so the desktop Popover still has a target.
+   */
+  openRequestKey?: number;
 };
 
 /**
@@ -140,6 +145,7 @@ function OptionsSection({
 export default function OptionsPanel({
   devMode,
   onDevModeChange,
+  openRequestKey = 0,
 }: OptionsPanelProps) {
   const theme = useTheme();
   const isPhone = useMediaQuery(theme.breakpoints.down("md"));
@@ -152,10 +158,26 @@ export default function OptionsPanel({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [backupMenuAnchor, setBackupMenuAnchor] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const paletteLabelId = useId();
   const paletteHintId = useId();
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (openRequestKey <= 0) return;
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    setAnchorEl(trigger);
+    setOpen(true);
+    // Soft-scroll Your data into view after the panel paints (phone Dialog especially).
+    requestAnimationFrame(() => {
+      document.getElementById("options-your-data")?.scrollIntoView({
+        block: "nearest",
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+    });
+  }, [openRequestKey, reduceMotion]);
 
   function handleOpen(event: MouseEvent<HTMLElement>) {
     setAnchorEl(event.currentTarget);
@@ -318,7 +340,7 @@ export default function OptionsPanel({
       <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
 
       <OptionsSection label="Your data">
-        <Stack spacing={1.25}>
+        <Stack id="options-your-data" spacing={1.25} tabIndex={-1}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
             <CloudOffOutlinedIcon
               aria-hidden
@@ -417,6 +439,7 @@ export default function OptionsPanel({
     <>
       <Tooltip title="Options">
         <IconButton
+          ref={triggerRef}
           onClick={handleOpen}
           aria-label="Options"
           aria-haspopup="true"

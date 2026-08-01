@@ -32,6 +32,7 @@ import DeleteIncompleteTaskControl from "@/components/DeleteIncompleteTaskContro
 import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
+import LocalDataNotice from "@/components/LocalDataNotice";
 import NewDayAction from "@/components/NewDayAction";
 import NotepadButton from "@/components/NotepadButton";
 import NotepadShell from "@/components/NotepadShell";
@@ -90,6 +91,7 @@ export default function Home() {
   const { resetSand } = useSandReset();
   const [sandSpin, setSandSpin] = useState(0);
   const reduceMotion = useReducedMotion();
+  const [optionsOpenRequest, setOptionsOpenRequest] = useState(0);
 
   // Auto-archive + reset the board when a new calendar day begins (not only when
   // "Start a new day" is pressed). Called after the domain hooks above so its
@@ -184,6 +186,8 @@ export default function Home() {
         mx: "auto",
       }}
     >
+      <LocalDataNotice onExportCta={() => setOptionsOpenRequest((n) => n + 1)} />
+
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
@@ -282,6 +286,7 @@ export default function Home() {
           <OptionsPanel
             devMode={devMode}
             onDevModeChange={setDevMode}
+            openRequestKey={optionsOpenRequest}
           />
         </Stack>
       </Stack>
