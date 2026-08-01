@@ -6,7 +6,7 @@ import { usePersistentState } from "./storage";
  * Bump this when the privacy / local-first notice copy or CTA should reappear
  * for users who already dismissed an earlier version (e.g. after a product update).
  */
-export const PRIVACY_NOTICE_VERSION = 1;
+export const PRIVACY_NOTICE_VERSION = 2;
 
 export const PRIVACY_NOTICE_ACK_KEY = "frog-garden:privacy-notice-ack-v1";
 
