@@ -2,13 +2,15 @@
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useState } from "react";
-import MarkdownPreview from "@/components/MarkdownPreview";
+import dynamic from "next/dynamic";
+import { Component, useState, type ReactNode } from "react";
 
-export type NotepadMode = "write" | "preview";
+export type NotepadMode = "write" | "rich";
 
 type MarkdownNotepadProps = {
   value: string;
@@ -22,10 +24,27 @@ type MarkdownNotepadProps = {
 const DEFAULT_PLACEHOLDER =
   "Scratchpad for notes, plans, and scraps — markdown welcome. Nothing here is graded.";
 
+const MODE_LABELS: Record<NotepadMode, string> = {
+  rich: "Rich",
+  write: "Markdown",
+};
+
+// The TipTap editor is a meaningfully heavy chunk — load it only when the
+// rich mode actually renders (notepad open), never on the dashboard path
+// (spec 022, FR-009).
+const RichNotepadEditor = dynamic(() => import("./RichNotepadEditor"), {
+  ssr: false,
+  loading: () => (
+    <Stack sx={{ alignItems: "center", justifyContent: "center", minHeight: 200 }}>
+      <CircularProgress size={20} color="inherit" sx={{ color: "text.disabled" }} />
+    </Stack>
+  ),
+});
+
 /**
- * Controlled engineering markdown notepad with exclusive Write / Preview modes.
- * Mode may be lifted to the shell so tab switches keep write vs preview.
- * See specs/021-notepad-tabs-grove-rows (extends 011 notepad UI).
+ * Controlled engineering notepad with exclusive Rich (WYSIWYG) / Markdown
+ * (raw source) modes over one markdown document (spec 022, extends 021/011).
+ * Mode may be lifted to the shell so tab switches keep the chosen mode.
  */
 export default function MarkdownNotepad({
   value,
@@ -34,7 +53,7 @@ export default function MarkdownNotepad({
   mode: modeProp,
   onModeChange,
 }: MarkdownNotepadProps) {
-  const [internalMode, setInternalMode] = useState<NotepadMode>("write");
+  const [internalMode, setInternalMode] = useState<NotepadMode>("rich");
   const mode = modeProp ?? internalMode;
   const setMode = onModeChange ?? setInternalMode;
   const reduce = useReducedMotion();
@@ -44,19 +63,19 @@ export default function MarkdownNotepad({
       <Stack
         direction="row"
         role="group"
-        aria-label="Notepad display mode"
+        aria-label="Notepad editing mode"
         spacing={1.5}
         sx={{
           mb: 0.75,
           alignSelf: "flex-start",
         }}
       >
-        {(["write", "preview"] as const).map((option) => {
+        {(["rich", "write"] as const).map((option) => {
           const active = mode === option;
           return (
             <ButtonBase
               key={option}
-              aria-label={`${option === "write" ? "Write" : "Preview"} mode`}
+              aria-label={`${MODE_LABELS[option]} mode`}
               aria-pressed={active}
               onClick={() => setMode(option)}
               sx={{
@@ -81,13 +100,21 @@ export default function MarkdownNotepad({
                 "&:hover": { color: "text.primary" },
               }}
             >
-              {option === "write" ? "Write" : "Preview"}
+              {MODE_LABELS[option]}
             </ButtonBase>
           );
         })}
       </Stack>
 
-      <Box sx={{ position: "relative", flexGrow: 1, minHeight: 200 }}>
+      <Box
+        sx={{
+          position: "relative",
+          flexGrow: 1,
+          minHeight: 200,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <AnimatePresence mode="wait" initial={false}>
           {mode === "write" ? (
             <motion.div
@@ -106,8 +133,12 @@ export default function MarkdownNotepad({
                 minRows={16}
                 fullWidth
                 variant="standard"
-                aria-label="Notepad"
-                slotProps={{ input: { disableUnderline: true } }}
+                slotProps={{
+                  input: { disableUnderline: true },
+                  // htmlInput so the label lands on the real <textarea> —
+                  // a top-level aria-label stops at MUI's wrapper div.
+                  htmlInput: { "aria-label": "Notepad markdown source" },
+                }}
                 sx={{
                   height: "100%",
                   "& .MuiInputBase-root": {
@@ -122,17 +153,56 @@ export default function MarkdownNotepad({
             </motion.div>
           ) : (
             <motion.div
-              key="preview"
+              key="rich"
               initial={reduce ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={reduce ? undefined : { opacity: 0 }}
               transition={reduce ? { duration: 0 } : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              style={{ display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}
             >
-              <MarkdownPreview markdown={value} sx={{ minHeight: 200 }} />
+              <RichEditorBoundary>
+                <RichNotepadEditor
+                  value={value}
+                  onChange={onChange}
+                  placeholder={placeholder}
+                />
+              </RichEditorBoundary>
             </motion.div>
           )}
         </AnimatePresence>
       </Box>
     </Box>
   );
+}
+
+/**
+ * If the rich editor chunk fails to load or init, keep the notepad usable:
+ * a quiet message — the Markdown mode remains one tap away (FR-010). Notes
+ * are never inaccessible.
+ */
+class RichEditorBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ py: 3, textAlign: "center" }}
+        >
+          Rich editing couldn&rsquo;t load here — your notes are safe. Switch to
+          the Markdown tab above to keep writing.
+        </Typography>
+      );
+    }
+    return this.props.children;
+  }
 }

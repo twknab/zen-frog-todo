@@ -32,7 +32,7 @@ The TipTap editor holds a ProseMirror document derived from the tab's markdown. 
 type NotepadMode = "write" /* raw markdown */ | "rich" /* WYSIWYG */;
 ```
 
-Currently `"write" | "preview"`; `"preview"` is renamed to `"rich"` and becomes editable. A single UI state, shared across all tabs (FR-005), owned by `NotepadShell`, defaulting to `"write"` (raw) each time the notepad opens. Not persisted document data.
+Currently `"write" | "preview"`; `"preview"` is renamed to `"rich"` and becomes editable. A single UI state, shared across all tabs (FR-005), owned by `NotepadShell`, defaulting to `"rich"` each time the notepad opens (revised 2026-08-01 — the markdown-free path is the first-class default; raw stays one tap away). Not persisted document data.
 
 ## Validation / integrity rules
 

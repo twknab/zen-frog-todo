@@ -16,6 +16,10 @@
 - Q: Is the rich-vs-raw mode shared across all notepad tabs or remembered per-tab? → A: Shared across all tabs (Option A) — matches today's Write/Preview behavior exactly; the mode is a single UI state, not per-tab.
 - Q: Is the Grove's read-only archived-reflection rendering in scope? → A: Out of scope (Option A) — the Grove continues to render archived reflections as static read-only markdown, unchanged by this feature.
 
+### Session 2026-08-01
+
+- Direction (user): the whole notes experience should get a UI/UX pass as part of this feature — **mobile-first, first-class**. Formatting controls must use the **classic, universally recognized word-editing toolbar pattern** ("as old as time": B/I/S icon buttons, list buttons, link, etc. — the visual grammar of Word/Google Docs/Apple Notes) rather than a hidden/novel affordance, so zero learning curve. On phones the toolbar must stay reachable while the on-screen keyboard is open.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Write rich documents directly, no markdown syntax required (Priority: P1)
@@ -93,7 +97,8 @@ A user fluidly switches between the rich editing surface (for composing and form
 - **FR-010**: If the rich editor cannot load or initialise, the user MUST still be able to view and edit their notes via the raw-markdown mode (notes are never rendered inaccessible).
 - **FR-011**: The rich editor and any formatting controls MUST be fully keyboard-operable and screen-reader labelled, respect reduced-motion preferences, and meet WCAG AA contrast.
 - **FR-012**: The rich editor's visual styling MUST match the app's re-themed look (typography, spacing, rounded corners, palette) — no stock/default editor chrome.
-- **FR-013**: The formatting controls MUST feel calm and unobtrusive, consistent with the app's tone (no urgency/anxiety UI).
+- **FR-013**: The formatting controls MUST use the classic, universally recognized text-editing toolbar pattern — a compact bar of icon buttons (bold, italic, strikethrough, headings, lists, checkbox list, link, quote, code) with the standard iconography users already know from every mainstream editor — while still feeling calm and unobtrusive, consistent with the app's tone (no urgency/anxiety UI). Recognition over novelty: no hidden-only affordances for core formatting.
+- **FR-015**: The notepad MUST be a first-class mobile experience (mobile-first): on phone-width viewports the formatting toolbar remains visible and reachable while the on-screen keyboard is open (docked to the editing surface, not scrolled away), touch targets meet a ~44px minimum, the toolbar scrolls horizontally rather than wrapping into clutter, and the tab strip + mode toggle remain fully usable at small widths.
 - **FR-014**: The archived-reflection display in the Grove (historical, read-only) is out of scope for editable rich editing and MUST continue to render exactly as it does today (static read-only markdown), unaffected by this feature.
 
 ### Key Entities
