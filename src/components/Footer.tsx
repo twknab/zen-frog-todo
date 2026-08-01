@@ -46,7 +46,7 @@ export default function Footer() {
           underline="hover"
           color="text.secondary"
         >
-          Made with ❤️ by TK
+          ⚡️ by TK & Ty
         </Link>
       </Stack>
     </Stack>
