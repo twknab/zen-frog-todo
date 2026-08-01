@@ -4,11 +4,12 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useState } from "react";
-import MarkdownPreview from "@/components/MarkdownPreview";
+import dynamic from "next/dynamic";
+import { Component, useState, type ReactNode } from "react";
 
-export type NotepadMode = "write" | "preview";
+export type NotepadMode = "write" | "rich";
 
 type MarkdownNotepadProps = {
   value: string;
@@ -22,10 +23,64 @@ type MarkdownNotepadProps = {
 const DEFAULT_PLACEHOLDER =
   "Scratchpad for notes, plans, and scraps — markdown welcome. Nothing here is graded.";
 
+const RichNotepadEditor = dynamic(() => import("@/components/RichNotepadEditor"), {
+  ssr: false,
+  loading: () => (
+    <Box sx={{ height: "100%", minHeight: 0, typography: "body2", color: "text.secondary", py: 1 }}>
+      Loading editor…
+    </Box>
+  ),
+});
+
+class RichEditorBoundary extends Component<
+  { children: ReactNode; onFallback: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    // Keep notes reachable via Write mode — no telemetry (FR-010).
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <Stack spacing={1} sx={{ height: "100%", minHeight: 0, py: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Rich editing is unavailable right now. Switch to Write to keep editing your notes as
+            markdown.
+          </Typography>
+          <ButtonBase
+            onClick={this.props.onFallback}
+            sx={{
+              alignSelf: "flex-start",
+              typography: "caption",
+              fontWeight: 650,
+              color: "primary.main",
+              py: 0.5,
+            }}
+          >
+            Switch to Write
+          </ButtonBase>
+        </Stack>
+      );
+    }
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, flexGrow: 1 }}>
+        {this.props.children}
+      </Box>
+    );
+  }
+}
+
 /**
- * Controlled engineering markdown notepad with exclusive Write / Preview modes.
- * Mode may be lifted to the shell so tab switches keep write vs preview.
- * See specs/021-notepad-tabs-grove-rows (extends 011 notepad UI).
+ * Controlled engineering notepad: raw markdown Write mode + live TipTap Rich mode.
+ * Mode may be lifted to the shell so tab switches keep write vs rich.
+ * See specs/022-wysiwyg-notepad.
  */
 export default function MarkdownNotepad({
   value,
@@ -51,12 +106,13 @@ export default function MarkdownNotepad({
           alignSelf: "flex-start",
         }}
       >
-        {(["write", "preview"] as const).map((option) => {
+        {(["write", "rich"] as const).map((option) => {
           const active = mode === option;
+          const label = option === "write" ? "Write" : "Rich";
           return (
             <ButtonBase
               key={option}
-              aria-label={`${option === "write" ? "Write" : "Preview"} mode`}
+              aria-label={`${label} mode`}
               aria-pressed={active}
               onClick={() => setMode(option)}
               sx={{
@@ -81,13 +137,13 @@ export default function MarkdownNotepad({
                 "&:hover": { color: "text.primary" },
               }}
             >
-              {option === "write" ? "Write" : "Preview"}
+              {label}
             </ButtonBase>
           );
         })}
       </Stack>
 
-      <Box sx={{ position: "relative", flexGrow: 1, minHeight: 200 }}>
+      <Box sx={{ position: "relative", flexGrow: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <AnimatePresence mode="wait" initial={false}>
           {mode === "write" ? (
             <motion.div
@@ -96,7 +152,7 @@ export default function MarkdownNotepad({
               animate={{ opacity: 1 }}
               exit={reduce ? undefined : { opacity: 0 }}
               transition={reduce ? { duration: 0 } : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              style={{ height: "100%" }}
+              style={{ height: "100%", display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}
             >
               <TextField
                 value={value}
@@ -110,25 +166,38 @@ export default function MarkdownNotepad({
                 slotProps={{ input: { disableUnderline: true } }}
                 sx={{
                   height: "100%",
+                  flexGrow: 1,
                   "& .MuiInputBase-root": {
+                    height: "100%",
                     typography: "body2",
                     lineHeight: 1.65,
                     alignItems: "flex-start",
                     fontFamily:
                       "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                   },
+                  "& .MuiInputBase-input": {
+                    height: "100% !important",
+                    overflow: "auto !important",
+                  },
                 }}
               />
             </motion.div>
           ) : (
             <motion.div
-              key="preview"
+              key="rich"
               initial={reduce ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={reduce ? undefined : { opacity: 0 }}
               transition={reduce ? { duration: 0 } : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              style={{ height: "100%", display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}
             >
-              <MarkdownPreview markdown={value} sx={{ minHeight: 200 }} />
+              <RichEditorBoundary onFallback={() => setMode("write")}>
+                <RichNotepadEditor
+                  value={value}
+                  onChange={onChange}
+                  placeholder={placeholder}
+                />
+              </RichEditorBoundary>
             </motion.div>
           )}
         </AnimatePresence>

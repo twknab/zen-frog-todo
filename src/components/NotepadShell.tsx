@@ -37,6 +37,7 @@ export default function NotepadShell({ open, onClose, notepad }: NotepadShellPro
   const wasOpen = useRef(false);
 
   // Default to Write each time the shell opens (session mode shared across tabs while open).
+  // Mode is "write" | "rich" — one shared UI state for all tabs (FR-005).
   useEffect(() => {
     if (open && !wasOpen.current) {
       setMode("write");
