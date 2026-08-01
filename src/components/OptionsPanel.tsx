@@ -3,7 +3,9 @@
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import CloudOffOutlinedIcon from "@mui/icons-material/CloudOffOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -14,6 +16,9 @@ import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import IconButton from "@mui/material/IconButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Popover from "@mui/material/Popover";
 import Select, { type SelectChangeEvent } from "@mui/material/Select";
@@ -144,8 +149,8 @@ export default function OptionsPanel({
   const { highContrast, setHighContrast } = useHighContrast();
   const exportEverything = useExportEverything();
   const exportEverythingXlsx = useExportEverythingXlsx();
-  const [backupFormat, setBackupFormat] = useState<"json" | "xlsx">("json");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [backupMenuAnchor, setBackupMenuAnchor] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const paletteLabelId = useId();
@@ -160,6 +165,7 @@ export default function OptionsPanel({
   function handleClose() {
     setOpen(false);
     setAnchorEl(null);
+    setBackupMenuAnchor(null);
   }
 
   function handlePaletteChange(event: SelectChangeEvent<PaletteId>) {
@@ -331,36 +337,58 @@ export default function OptionsPanel({
             to time.
           </Typography>
 
-          <ToggleButtonGroup
-            exclusive
-            fullWidth
-            size="small"
-            value={backupFormat}
-            aria-label="Backup file format"
-            onChange={(_event, next: "json" | "xlsx" | null) => {
-              if (next !== null) setBackupFormat(next);
-            }}
-            sx={optionsToggleSx}
-          >
-            <ToggleButton value="json" aria-label="JSON">
-              JSON
-            </ToggleButton>
-            <ToggleButton value="xlsx" aria-label="Excel">
-              XLSX
-            </ToggleButton>
-          </ToggleButtonGroup>
-
           <Button
             fullWidth
             variant="outlined"
             size="small"
             color="inherit"
             startIcon={<FileDownloadOutlinedIcon />}
-            onClick={backupFormat === "json" ? exportEverything : exportEverythingXlsx}
+            onClick={(event) => setBackupMenuAnchor(event.currentTarget)}
+            aria-haspopup="menu"
+            aria-expanded={Boolean(backupMenuAnchor)}
+            aria-controls={backupMenuAnchor ? "backup-format-menu" : undefined}
             sx={{ borderColor: "divider", color: "text.primary" }}
           >
             Export a backup
           </Button>
+
+          <Menu
+            id="backup-format-menu"
+            anchorEl={backupMenuAnchor}
+            open={Boolean(backupMenuAnchor)}
+            onClose={() => setBackupMenuAnchor(null)}
+            transitionDuration={reduceMotion ? 0 : undefined}
+            slotProps={{ list: { "aria-label": "Backup file format", dense: true } }}
+          >
+            <MenuItem
+              onClick={() => {
+                exportEverythingXlsx();
+                setBackupMenuAnchor(null);
+              }}
+            >
+              <ListItemIcon>
+                <TableChartOutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Excel (.xlsx)"
+                secondary="All days + today, one spreadsheet"
+              />
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                exportEverything();
+                setBackupMenuAnchor(null);
+              }}
+            >
+              <ListItemIcon>
+                <Inventory2OutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="JSON"
+                secondary="Everything, re-importable"
+              />
+            </MenuItem>
+          </Menu>
         </Stack>
       </OptionsSection>
 
