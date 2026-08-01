@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Footer from "@/components/Footer";
 import ThemeRegistry from "@/theme/ThemeRegistry";
 import "./globals.css";
 
@@ -21,7 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <ThemeRegistry>
+          {children}
+          <Footer />
+        </ThemeRegistry>
       </body>
     </html>
   );
