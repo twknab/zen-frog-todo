@@ -27,7 +27,7 @@ import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
-import { useExportEverything } from "@/lib/dayArchive";
+import { useExportEverything, useExportEverythingXlsx } from "@/lib/dayArchive";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
 import {
   useColorMode,
@@ -143,6 +143,8 @@ export default function OptionsPanel({
   const [hyperMinimal, setHyperMinimal] = useHyperMinimal();
   const { highContrast, setHighContrast } = useHighContrast();
   const exportEverything = useExportEverything();
+  const exportEverythingXlsx = useExportEverythingXlsx();
+  const [backupFormat, setBackupFormat] = useState<"json" | "xlsx">("json");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const titleId = useId();
@@ -329,13 +331,32 @@ export default function OptionsPanel({
             to time.
           </Typography>
 
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size="small"
+            value={backupFormat}
+            aria-label="Backup file format"
+            onChange={(_event, next: "json" | "xlsx" | null) => {
+              if (next !== null) setBackupFormat(next);
+            }}
+            sx={optionsToggleSx}
+          >
+            <ToggleButton value="json" aria-label="JSON">
+              JSON
+            </ToggleButton>
+            <ToggleButton value="xlsx" aria-label="Excel">
+              XLSX
+            </ToggleButton>
+          </ToggleButtonGroup>
+
           <Button
             fullWidth
             variant="outlined"
             size="small"
             color="inherit"
             startIcon={<FileDownloadOutlinedIcon />}
-            onClick={exportEverything}
+            onClick={backupFormat === "json" ? exportEverything : exportEverythingXlsx}
             sx={{ borderColor: "divider", color: "text.primary" }}
           >
             Export a backup
