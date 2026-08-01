@@ -330,21 +330,16 @@ export default function OptionsPanel({
           </Typography>
 
           <Button
+            fullWidth
             variant="outlined"
             size="small"
             color="inherit"
             startIcon={<FileDownloadOutlinedIcon />}
             onClick={exportEverything}
-            sx={{ alignSelf: "flex-start", borderColor: "divider", color: "text.primary" }}
+            sx={{ borderColor: "divider", color: "text.primary" }}
           >
             Export a backup
           </Button>
-
-          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-            The notepad suits quick, in-the-moment thoughts around your tasks — treat
-            notes here as ephemeral. For documents you want to keep long-term, reach for
-            a dedicated notes app.
-          </Typography>
         </Stack>
       </OptionsSection>
 
