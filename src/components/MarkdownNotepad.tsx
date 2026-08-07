@@ -25,8 +25,9 @@ const DEFAULT_PLACEHOLDER =
   "Scratchpad for notes, plans, and scraps — markdown welcome. Nothing here is graded.";
 
 const MODE_LABELS: Record<NotepadMode, string> = {
-  rich: "Rich",
-  write: "Markdown",
+  // Common CMS pairing: Visual = WYSIWYG, Text = plain markdown source.
+  rich: "Visual",
+  write: "Text",
 };
 
 // The TipTap editor is a meaningfully heavy chunk — load it only when the
@@ -42,8 +43,8 @@ const RichNotepadEditor = dynamic(() => import("./RichNotepadEditor"), {
 });
 
 /**
- * Controlled engineering notepad with exclusive Rich (WYSIWYG) / Markdown
- * (raw source) modes over one markdown document (spec 022, extends 021/011).
+ * Controlled engineering notepad with exclusive Visual (WYSIWYG) / Text
+ * (raw markdown) modes over one markdown document (spec 022, extends 021/011).
  * Mode may be lifted to the shell so tab switches keep the chosen mode.
  */
 export default function MarkdownNotepad({
@@ -177,7 +178,7 @@ export default function MarkdownNotepad({
 
 /**
  * If the rich editor chunk fails to load or init, keep the notepad usable:
- * a quiet message — the Markdown mode remains one tap away (FR-010). Notes
+ * a quiet message — Text mode remains one tap away (FR-010). Notes
  * are never inaccessible.
  */
 class RichEditorBoundary extends Component<
@@ -198,8 +199,8 @@ class RichEditorBoundary extends Component<
           color="text.secondary"
           sx={{ py: 3, textAlign: "center" }}
         >
-          Rich editing couldn&rsquo;t load here — your notes are safe. Switch to
-          the Markdown tab above to keep writing.
+          Visual editing couldn&rsquo;t load here — your notes are safe. Switch to
+          Text above to keep writing.
         </Typography>
       );
     }

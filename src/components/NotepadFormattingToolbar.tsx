@@ -213,7 +213,6 @@ export default function NotepadFormattingToolbar({
           borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
-          bgcolor: "background.paper",
           px: 0.5,
           py: 0.25,
           width: "fit-content",

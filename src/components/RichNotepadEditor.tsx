@@ -111,8 +111,6 @@ export default function RichNotepadEditor({
           bottom: { xs: 0, md: "auto" },
           top: { md: 0 },
           zIndex: 2,
-          bgcolor: "background.default",
-          py: 0.5,
         }}
       >
         {editor ? <NotepadFormattingToolbar editor={editor} /> : null}
