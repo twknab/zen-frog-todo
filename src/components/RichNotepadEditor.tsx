@@ -123,8 +123,9 @@ export default function RichNotepadEditor({
             variant="body2"
             sx={{
               position: "absolute",
-              top: 2,
-              left: 1,
+              top: 12,
+              left: 14,
+              right: 14,
               color: "text.disabled",
               pointerEvents: "none",
               lineHeight: 1.65,
@@ -138,6 +139,8 @@ export default function RichNotepadEditor({
           sx={{
             height: "100%",
             borderRadius: 2,
+            // Keep caret/text inside the curve of the focus ring.
+            overflow: "hidden",
             transition: theme.transitions.create("box-shadow", {
               duration: 120,
             }),
@@ -151,7 +154,7 @@ export default function RichNotepadEditor({
             "& .ProseMirror": {
               outline: "none",
               minHeight: 200,
-              padding: "2px 4px",
+              padding: "12px 14px",
               ...theme.typography.body2,
               lineHeight: 1.65,
               caretColor: theme.palette.primary.main,
