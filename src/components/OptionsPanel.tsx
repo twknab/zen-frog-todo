@@ -35,6 +35,10 @@ import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } f
 import { useExportEverything, useExportEverythingXlsx } from "@/lib/dayArchive";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
 import {
+  getPlausibleDomain,
+  useTelemetryConsent,
+} from "@/lib/telemetryConsent";
+import {
   useColorMode,
   useGardenPalette,
   useHighContrast,
@@ -155,6 +159,9 @@ export default function OptionsPanel({
   const { highContrast, setHighContrast } = useHighContrast();
   const exportEverything = useExportEverything();
   const exportEverythingXlsx = useExportEverythingXlsx();
+  const { consented: telemetryConsented, setConsented: setTelemetryConsented } =
+    useTelemetryConsent();
+  const plausibleConfigured = Boolean(getPlausibleDomain());
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [backupMenuAnchor, setBackupMenuAnchor] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -348,8 +355,7 @@ export default function OptionsPanel({
             />
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               Your tasks, notes, and garden live only in this browser, on this device.
-              Nothing is sent anywhere — no account, no server, no tracking. What you
-              write never leaves your machine.
+              No account, no sync server. What you write never leaves your machine.
             </Typography>
           </Stack>
 
@@ -357,6 +363,27 @@ export default function OptionsPanel({
             Because it lives in your browser&rsquo;s storage, clearing your browser data
             will erase it. If something&rsquo;s worth keeping, export a backup from time
             to time.
+          </Typography>
+
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={telemetryConsented}
+                disabled={!plausibleConfigured}
+                onChange={(event) => setTelemetryConsented(event.target.checked)}
+              />
+            }
+            label="Share anonymous visit stats"
+            slotProps={{
+              typography: { variant: "body2", color: "text.secondary" },
+            }}
+            sx={{ ml: 0, mr: 0, alignItems: "flex-start", gap: 1 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5, pl: 0.25 }}>
+            {plausibleConfigured
+              ? "Off by default. When on, only coarse visit counts (via Plausible) — never your lists or notes. Details in Privacy Policy."
+              : "Visit metrics aren’t configured on this deploy, so this toggle stays inactive."}
           </Typography>
 
           <Button

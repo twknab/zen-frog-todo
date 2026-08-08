@@ -82,8 +82,8 @@ export default function LocalDataNotice({ onExportCta }: LocalDataNoticeProps) {
               color="text.secondary"
               sx={{ lineHeight: 1.5, mt: 0.25 }}
             >
-              Your garden stays in this browser — no account, no servers, no tracking.
-              Export a backup from Options whenever you want one.
+              Your garden stays in this browser — no account, no servers, and no visit
+              metrics unless you opt in under Options. Export a backup whenever you want one.
             </Typography>
           </Box>
 
