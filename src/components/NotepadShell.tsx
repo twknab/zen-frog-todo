@@ -31,15 +31,17 @@ type NotepadShellProps = {
  */
 export default function NotepadShell({ open, onClose, notepad }: NotepadShellProps) {
   const reduce = useReducedMotion();
-  const [mode, setMode] = useState<NotepadMode>("write");
+  const [mode, setMode] = useState<NotepadMode>("rich");
   const [importError, setImportError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const wasOpen = useRef(false);
 
-  // Default to Write each time the shell opens (session mode shared across tabs while open).
+  // Default to Rich each time the shell opens — the recognizable, markdown-free
+  // path (spec 022 US3); raw Markdown mode stays one tap away. Mode is shared
+  // across tabs while open.
   useEffect(() => {
     if (open && !wasOpen.current) {
-      setMode("write");
+      setMode("rich");
       setImportError(null);
     }
     wasOpen.current = open;
