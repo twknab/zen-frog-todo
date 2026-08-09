@@ -4,10 +4,13 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import CloudOffOutlinedIcon from "@mui/icons-material/CloudOffOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import PolicyOutlinedIcon from "@mui/icons-material/PolicyOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -16,6 +19,7 @@ import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import IconButton from "@mui/material/IconButton";
+import Link from "@mui/material/Link";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
@@ -32,8 +36,124 @@ import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
 import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import LegalDocsDialog from "@/components/LegalDocsDialog";
 import { useExportEverything, useExportEverythingXlsx } from "@/lib/dayArchive";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
+import type { LegalDocId } from "@/lib/legalDocs";
+import {
+  getPlausibleDomain,
+  useTelemetryConsent,
+} from "@/lib/telemetryConsent";
+
+const TK_SITE_URL = "https://timknab.dev";
+const TY_SITE_URL = "https://www.linkedin.com/in/tyler-w/";
+
+/** Shared “Built by” name mark — calm at rest, loud on hover/focus. */
+const builderNameSx = {
+  fontWeight: 800,
+  letterSpacing: "0.14em",
+  display: "inline-block",
+  px: 0.2,
+  cursor: "pointer",
+  backgroundImage:
+    "linear-gradient(120deg, #5eead4 0%, #34d399 28%, #a78bfa 58%, #f472b6 82%, #fbbf24 100%)",
+  backgroundSize: "100% 100%",
+  backgroundPosition: "0% 50%",
+  backgroundClip: "text",
+  WebkitBackgroundClip: "text",
+  color: "transparent",
+  borderBottom: "1.5px solid",
+  borderColor: "transparent",
+  transition:
+    "transform 240ms cubic-bezier(0.22, 1, 0.36, 1), filter 240ms ease, border-color 180ms ease",
+  "@keyframes builderNameShine": {
+    "0%": { backgroundPosition: "0% 50%" },
+    "50%": { backgroundPosition: "100% 50%" },
+    "100%": { backgroundPosition: "0% 50%" },
+  },
+  "@media (prefers-reduced-motion: reduce)": {
+    transition: "border-color 120ms ease, filter 120ms ease",
+  },
+  "&:hover, &:focus-visible": {
+    transform: "scale(1.14) translateY(-1px)",
+    backgroundSize: "260% 100%",
+    backgroundImage:
+      "linear-gradient(105deg, #22d3ee 0%, #4ade80 16%, #a3e635 32%, #facc15 48%, #fb923c 64%, #f472b6 80%, #c084fc 100%)",
+    borderImage:
+      "linear-gradient(90deg, #22d3ee, #facc15, #f472b6, #c084fc) 1",
+    borderBottom: "1.5px solid",
+    borderColor: "transparent",
+    filter:
+      "drop-shadow(0 0 5px rgba(34, 211, 238, 0.95)) drop-shadow(0 0 10px rgba(250, 204, 21, 0.7)) drop-shadow(0 0 16px rgba(244, 114, 182, 0.75)) drop-shadow(0 0 22px rgba(192, 132, 252, 0.55))",
+    animation: "builderNameShine 1.4s ease-in-out infinite",
+    "@media (prefers-reduced-motion: reduce)": {
+      transform: "none",
+      animation: "none",
+      filter:
+        "drop-shadow(0 0 5px rgba(34, 211, 238, 0.8)) drop-shadow(0 0 10px rgba(244, 114, 182, 0.6))",
+    },
+  },
+} as const;
+
+function BuilderName({
+  href,
+  label,
+  children,
+}: {
+  href?: string;
+  label: string;
+  children: string;
+}) {
+  if (href) {
+    return (
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="none"
+        aria-label={label}
+        sx={builderNameSx}
+      >
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <Box component="span" aria-label={label} sx={builderNameSx}>
+      {children}
+    </Box>
+  );
+}
+
+const legalLinkSx = {
+  position: "relative",
+  alignSelf: "flex-start",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 0.75,
+  px: 0.25,
+  py: 0.5,
+  borderRadius: 1,
+  typography: "body2",
+  color: "text.secondary",
+  fontWeight: 500,
+  transition: "color 180ms ease",
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    left: 0,
+    right: "100%",
+    bottom: 2,
+    height: 1.5,
+    borderRadius: 1,
+    bgcolor: "primary.main",
+    transition: "right 220ms ease",
+  },
+  "&:hover, &:focus-visible": {
+    color: "text.primary",
+    "&::after": { right: 0 },
+  },
+} as const;
 import {
   useColorMode,
   useGardenPalette,
@@ -155,9 +275,19 @@ export default function OptionsPanel({
   const { highContrast, setHighContrast } = useHighContrast();
   const exportEverything = useExportEverything();
   const exportEverythingXlsx = useExportEverythingXlsx();
+  const { consented: telemetryConsented, setConsented: setTelemetryConsented } =
+    useTelemetryConsent();
+  const plausibleConfigured = Boolean(getPlausibleDomain());
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [backupMenuAnchor, setBackupMenuAnchor] = useState<HTMLElement | null>(null);
+  const [legalOpen, setLegalOpen] = useState(false);
+  const [legalDocId, setLegalDocId] = useState<LegalDocId>("privacy");
   const [open, setOpen] = useState(false);
+
+  const openLegal = (id: LegalDocId) => {
+    setLegalDocId(id);
+    setLegalOpen(true);
+  };
   const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const paletteLabelId = useId();
@@ -348,8 +478,7 @@ export default function OptionsPanel({
             />
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               Your tasks, notes, and garden live only in this browser, on this device.
-              Nothing is sent anywhere — no account, no server, no tracking. What you
-              write never leaves your machine.
+              No account, no sync server. What you write never leaves your machine.
             </Typography>
           </Stack>
 
@@ -358,6 +487,28 @@ export default function OptionsPanel({
             will erase it. If something&rsquo;s worth keeping, export a backup from time
             to time.
           </Typography>
+
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={telemetryConsented}
+                disabled={!plausibleConfigured}
+                onChange={(event) => setTelemetryConsented(event.target.checked)}
+              />
+            }
+            label="Share anonymous visit stats"
+            slotProps={{
+              typography: { variant: "body2", color: "text.secondary" },
+            }}
+            sx={{ ml: 0, mr: 0, alignItems: "flex-start", gap: 1 }}
+          />
+          {plausibleConfigured ? (
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5, pl: 0.25 }}>
+              Off by default. When on, only coarse visit counts (via Plausible) — never your lists or
+              notes. Details in Privacy Policy.
+            </Typography>
+          ) : null}
 
           <Button
             fullWidth
@@ -431,6 +582,50 @@ export default function OptionsPanel({
           }}
           sx={{ ml: 0, mr: 0 }}
         />
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
+      <OptionsSection label="About & legal">
+        <Stack spacing={0.5}>
+          <ButtonBase
+            onClick={() => openLegal("privacy")}
+            aria-haspopup="dialog"
+            sx={legalLinkSx}
+          >
+            <PolicyOutlinedIcon sx={{ fontSize: "1.05rem" }} aria-hidden />
+            Privacy Policy
+          </ButtonBase>
+          <ButtonBase
+            onClick={() => openLegal("about")}
+            aria-haspopup="dialog"
+            sx={legalLinkSx}
+          >
+            <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} aria-hidden />
+            About
+          </ButtonBase>
+          <Typography
+            variant="caption"
+            component="p"
+            sx={{
+              pt: 1.25,
+              width: "100%",
+              textAlign: "center",
+              color: "text.disabled",
+              letterSpacing: "0.06em",
+              fontWeight: 500,
+            }}
+          >
+            Built by{" "}
+            <BuilderName href={TK_SITE_URL} label="TK — timknab.dev">
+              TK
+            </BuilderName>
+            {" & "}
+            <BuilderName href={TY_SITE_URL} label="Ty — LinkedIn">
+              Ty
+            </BuilderName>
+          </Typography>
+        </Stack>
       </OptionsSection>
     </Stack>
   );
@@ -538,6 +733,13 @@ export default function OptionsPanel({
           {optionsBody}
         </Popover>
       )}
+
+      <LegalDocsDialog
+        key={legalOpen ? `legal-${legalDocId}` : "legal-closed"}
+        open={legalOpen}
+        onClose={() => setLegalOpen(false)}
+        initialDocId={legalDocId}
+      />
     </>
   );
 }
