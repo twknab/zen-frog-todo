@@ -2,8 +2,10 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { alpha, useTheme } from "@mui/material/styles";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
@@ -30,6 +32,9 @@ export default function RichNotepadEditor({
   placeholder,
 }: RichNotepadEditorProps) {
   const theme = useTheme();
+  // Phones: selection bubble (native-feeling). Desktop: always-visible top bar.
+  // Editor is already dynamic(ssr:false), so media-query hydration isn't a concern.
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"), { noSsr: true });
   // Ref so the editor's onUpdate always sees the latest handler without re-init.
   const onChangeRef = useRef(onChange);
   useEffect(() => {
@@ -102,21 +107,44 @@ export default function RichNotepadEditor({
         gap: 0.5,
       }}
     >
-      {/* Classic formatting toolbar — top at md+, docked bottom on phones
-          (thumb + on-screen-keyboard reachable). Order handles the swap. */}
-      <Box
-        sx={{
-          order: { xs: 2, md: 0 },
-          position: "sticky",
-          bottom: { xs: 0, md: "auto" },
-          top: { md: 0 },
-          zIndex: 2,
-        }}
-      >
-        {editor ? <NotepadFormattingToolbar editor={editor} /> : null}
-      </Box>
+      {/* Desktop: always-visible sticky top bar. Phones use a selection bubble
+          instead — sticky bottom chrome gets crushed by iOS focus-zoom + keyboard. */}
+      {editor && isDesktop ? (
+        <Box sx={{ position: "sticky", top: 0, zIndex: 2 }}>
+          <NotepadFormattingToolbar editor={editor} variant="bar" />
+        </Box>
+      ) : null}
 
-      <Box sx={{ position: "relative", flexGrow: 1, order: 1 }}>
+      {editor && !isDesktop ? (
+        <BubbleMenu
+          editor={editor}
+          // Escape Dialog overflow clipping; float above the selection.
+          appendTo={() => document.body}
+          options={{
+            strategy: "fixed",
+            placement: "top",
+            offset: 10,
+            flip: true,
+            shift: { padding: 8 },
+          }}
+          shouldShow={({ editor: current, state }) => {
+            const { from, to, empty } = state.selection;
+            return (
+              !empty &&
+              from !== to &&
+              current.isEditable &&
+              !current.isDestroyed &&
+              current.view.hasFocus()
+            );
+          }}
+        >
+          <Box>
+            <NotepadFormattingToolbar editor={editor} variant="bubble" />
+          </Box>
+        </BubbleMenu>
+      ) : null}
+
+      <Box sx={{ position: "relative", flexGrow: 1 }}>
         {isEmpty && placeholder ? (
           <Typography
             aria-hidden
@@ -156,6 +184,9 @@ export default function RichNotepadEditor({
               minHeight: 200,
               padding: "12px 14px",
               ...theme.typography.body2,
+              // ≥16px on phones — iOS Safari otherwise auto-zooms on focus and
+              // hides any nearby chrome (the old bottom toolbar symptom).
+              fontSize: { xs: "1rem", md: theme.typography.body2.fontSize },
               lineHeight: 1.65,
               caretColor: theme.palette.primary.main,
               wordBreak: "break-word",

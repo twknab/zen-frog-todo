@@ -32,6 +32,8 @@ import {
 
 type NotepadFormattingToolbarProps = {
   editor: Editor;
+  /** `bar` = always-visible strip; `bubble` = selection popover chrome (phones). */
+  variant?: "bar" | "bubble";
 };
 
 /**
@@ -42,7 +44,9 @@ type NotepadFormattingToolbarProps = {
  */
 export default function NotepadFormattingToolbar({
   editor,
+  variant = "bar",
 }: NotepadFormattingToolbarProps) {
+  const isBubble = variant === "bubble";
   const reduce = useReducedMotion();
   const [linkAnchor, setLinkAnchor] = useState<HTMLElement | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
@@ -216,7 +220,15 @@ export default function NotepadFormattingToolbar({
           px: 0.5,
           py: 0.25,
           width: "fit-content",
-          maxWidth: "100%",
+          maxWidth: isBubble ? "min(100vw - 24px, 420px)" : "100%",
+          bgcolor: "background.paper",
+          ...(isBubble
+            ? {
+                boxShadow: 6,
+                // Keep the bubble readable above selection / keyboard chrome.
+                borderColor: "divider",
+              }
+            : null),
         }}
       >
         {buttons.map((item, index) =>
@@ -262,8 +274,15 @@ export default function NotepadFormattingToolbar({
         anchorEl={linkAnchor}
         onClose={() => setLinkAnchor(null)}
         transitionDuration={reduce ? 0 : undefined}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+        // Bubble already sits above the selection — open the link sheet below it.
+        anchorOrigin={{
+          vertical: isBubble ? "bottom" : "top",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: isBubble ? "top" : "bottom",
+          horizontal: "center",
+        }}
         slotProps={{
           paper: {
             sx: {
@@ -286,6 +305,10 @@ export default function NotepadFormattingToolbar({
               fullWidth
               aria-label="Link URL"
               type="url"
+              sx={{
+                // Avoid iOS focus-zoom when the link sheet opens on a phone.
+                "& .MuiInputBase-input": { fontSize: { xs: "1rem", md: "0.875rem" } },
+              }}
             />
             <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
               {state.link ? (
