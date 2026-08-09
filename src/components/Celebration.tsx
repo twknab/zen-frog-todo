@@ -56,18 +56,26 @@ const MAX_MS = 7000;
 export function CelebrationProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Celebration[]>([]);
   const nextId = useRef(0);
+  // Rapid adds should feel calm — one add-burst at a time, extras are skipped.
+  const addBurstActive = useRef(false);
   const reduceMotion = useReducedMotion();
 
   const celebrate = useCallback<Celebrate>((x, y, kind = "task", onComplete) => {
+    if (kind === "add" && addBurstActive.current) {
+      onComplete?.();
+      return;
+    }
     const id = nextId.current;
     nextId.current += 1;
     let settled = false;
     const finish = () => {
       if (settled) return;
       settled = true;
+      if (kind === "add") addBurstActive.current = false;
       setItems((current) => current.filter((c) => c.id !== id));
       onComplete?.();
     };
+    if (kind === "add") addBurstActive.current = true;
     setItems((current) => [...current, { id, x, y, kind, finish }]);
     window.setTimeout(finish, MAX_MS);
   }, []);

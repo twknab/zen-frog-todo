@@ -82,16 +82,14 @@ export default function TaskListCard({
     const id = onAddTask(draft);
     setDraft("");
     if (!id) return;
-    // Wait for the new row to paint, then bloom the add celebration on it.
+    // Wait for the new row to paint, then stream celebration from its title.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const row = document.querySelector<HTMLElement>(`[data-task-id="${id}"]`);
         if (!row) return;
-        const rect = row.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-        celebrate(x, y, "pounce");
-        celebrate(x, y, "add");
+        const title = row.querySelector<HTMLElement>("input");
+        const rect = (title ?? row).getBoundingClientRect();
+        celebrate(rect.left + Math.min(rect.width * 0.35, 120), rect.top + rect.height / 2, "add");
       });
     });
   }
