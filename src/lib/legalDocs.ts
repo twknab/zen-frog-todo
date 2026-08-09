@@ -1,13 +1,15 @@
 /**
- * Registry of in-app legal / policy documents. Add new entries here — the
+ * Registry of in-app legal / about documents. Add new entries here — the
  * LegalDocsDialog picks them up as a nav list without layout redesign (023).
  */
 
-export type LegalDocId = "privacy";
+export type LegalDocId = "privacy" | "about";
 
 export type LegalDocSection = {
   heading: string;
   paragraphs: string[];
+  /** Optional outbound links shown after the paragraphs */
+  links?: { label: string; href: string }[];
 };
 
 export type LegalDoc = {
@@ -18,6 +20,9 @@ export type LegalDoc = {
   updatedLabel: string;
   sections: LegalDocSection[];
 };
+
+export const ISSUES_BOARD_URL =
+  "https://github.com/twknab/zen-frog-todo/issues";
 
 export const LEGAL_DOCS: LegalDoc[] = [
   {
@@ -42,9 +47,8 @@ export const LEGAL_DOCS: LegalDoc[] = [
       {
         heading: "Optional anonymous visit metrics",
         paragraphs: [
-          "If you turn on “Share anonymous visit stats” in Options → Your data, Frog Garden may load a privacy-oriented analytics script (Plausible) that records coarse, cookieless visit signals — for example that the site was opened, roughly how many unique browsers visited, and generic referrer/page information.",
-          "That signal is anonymized and aggregated. It does not include your garden contents. The toggle is off by default; if you leave it off, no analytics script is loaded.",
-          "If the analytics domain is not configured for a given deploy, the toggle has no effect and nothing is sent.",
+          "If you turn on “Share anonymous visit stats” in Options → Your data, Frog Garden can send simple, cookieless visit signals (for example that the app was opened, and rough unique-visitor counts). These help us understand how the product is used and what to improve.",
+          "They are anonymized and aggregated. Your garden contents are never included. The toggle is off by default — leave it off and nothing is sent.",
         ],
       },
       {
@@ -58,6 +62,36 @@ export const LEGAL_DOCS: LegalDoc[] = [
         paragraphs: [
           "This policy may grow as we add related notices (for example terms of use). The garden’s promise stays the same: your lists and notes are yours, on your machine, unless you opt into anonymous visit stats.",
         ],
+      },
+    ],
+  },
+  {
+    id: "about",
+    title: "About Frog Garden",
+    navLabel: "About",
+    updatedLabel: "A calm place to swallow the frog first",
+    sections: [
+      {
+        heading: "What this is",
+        paragraphs: [
+          "Frog Garden is not a Jira replacement. It is a minimal pointer to your most important task — the frog — so you have a single focus while other tools hold the granular details.",
+          "Use it for coarse management of larger workflows: pick what matters today, finish it, let the garden grow. Incomplete days are never framed as failure.",
+        ],
+      },
+      {
+        heading: "How we think about it",
+        paragraphs: [
+          "Calm technology: generous space, gentle motion, no shame UI, no “you’re behind” language.",
+          "Local-first and private: your garden lives on this device unless you export it or opt into anonymous visit stats.",
+          "Subtle gamification: a bonsai and critters that respond to real work — not scoreboards or leaderboards.",
+        ],
+      },
+      {
+        heading: "Feature requests",
+        paragraphs: [
+          "We welcome ideas. If something would help your garden, you’re invited to open an issue on our board.",
+        ],
+        links: [{ label: "Open the issues board", href: ISSUES_BOARD_URL }],
       },
     ],
   },

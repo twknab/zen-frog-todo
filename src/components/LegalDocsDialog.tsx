@@ -6,6 +6,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useReducedMotion } from "framer-motion";
@@ -160,6 +161,19 @@ export default function LegalDocsDialog({
                       >
                         {paragraph}
                       </Typography>
+                    ))}
+                    {section.links?.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="body2"
+                        underline="hover"
+                        sx={{ fontWeight: 650, width: "fit-content" }}
+                      >
+                        {item.label}
+                      </Link>
                     ))}
                   </Stack>
                 </Box>
