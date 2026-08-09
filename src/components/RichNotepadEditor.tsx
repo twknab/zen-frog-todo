@@ -4,14 +4,17 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { alpha, useTheme } from "@mui/material/styles";
+import type { Editor } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Markdown } from "tiptap-markdown";
 import NotepadFormattingToolbar from "@/components/NotepadFormattingToolbar";
+
+const MOBILE_FORMAT_ROOT_SELECTOR = "[data-notepad-mobile-format]";
 
 type RichNotepadEditorProps = {
   /** Markdown — the canonical stored form (see specs/022 contract). */
@@ -107,42 +110,15 @@ export default function RichNotepadEditor({
         gap: 0.5,
       }}
     >
-      {/* Desktop: always-visible sticky top bar. Phones use a selection bubble
-          instead — sticky bottom chrome gets crushed by iOS focus-zoom + keyboard. */}
+      {/* Desktop: always-visible sticky top bar. Phones: keyboard-docked
+          format strip (BubbleMenu is unreliable with iOS touch selection). */}
       {editor && isDesktop ? (
         <Box sx={{ position: "sticky", top: 0, zIndex: 2 }}>
           <NotepadFormattingToolbar editor={editor} variant="bar" />
         </Box>
       ) : null}
 
-      {editor && !isDesktop ? (
-        <BubbleMenu
-          editor={editor}
-          // Escape Dialog overflow clipping; float above the selection.
-          appendTo={() => document.body}
-          options={{
-            strategy: "fixed",
-            placement: "top",
-            offset: 10,
-            flip: true,
-            shift: { padding: 8 },
-          }}
-          shouldShow={({ editor: current, state }) => {
-            const { from, to, empty } = state.selection;
-            return (
-              !empty &&
-              from !== to &&
-              current.isEditable &&
-              !current.isDestroyed &&
-              current.view.hasFocus()
-            );
-          }}
-        >
-          <Box>
-            <NotepadFormattingToolbar editor={editor} variant="bubble" />
-          </Box>
-        </BubbleMenu>
-      ) : null}
+      {editor && !isDesktop ? <MobileFormatDock editor={editor} /> : null}
 
       <Box sx={{ position: "relative", flexGrow: 1 }}>
         {isEmpty && placeholder ? (
@@ -276,5 +252,114 @@ export default function RichNotepadEditor({
         </Box>
       </Box>
     </Box>
+  );
+}
+
+/**
+ * Phone formatting chrome: fixed above the soft keyboard while the editor is
+ * focused or has a text selection. TipTap's BubbleMenu often never appears on
+ * iOS touch selections; pinning to visualViewport is the reliable pattern.
+ */
+function MobileFormatDock({ editor }: { editor: Editor }) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const blurTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const syncOpen = () => {
+      if (blurTimer.current != null) {
+        window.clearTimeout(blurTimer.current);
+        blurTimer.current = null;
+      }
+      const focused = editor.isFocused;
+      const hasSelection = !editor.state.selection.empty;
+      // Stay open while the link popover (ported to body) holds focus.
+      const inFormatUi = Boolean(
+        document.activeElement?.closest(MOBILE_FORMAT_ROOT_SELECTOR) ||
+          document.activeElement?.closest(".MuiPopover-root"),
+      );
+      if (focused || hasSelection || inFormatUi) {
+        setOpen(true);
+        return;
+      }
+      // Delay hide so toolbar taps (mousedown→blur→click) don't flash away.
+      blurTimer.current = window.setTimeout(() => {
+        const stillInUi = Boolean(
+          document.activeElement?.closest(MOBILE_FORMAT_ROOT_SELECTOR) ||
+            document.activeElement?.closest(".MuiPopover-root"),
+        );
+        if (!editor.isFocused && editor.state.selection.empty && !stillInUi) {
+          setOpen(false);
+        }
+      }, 180);
+    };
+
+    editor.on("focus", syncOpen);
+    editor.on("blur", syncOpen);
+    editor.on("selectionUpdate", syncOpen);
+    editor.on("transaction", syncOpen);
+    document.addEventListener("selectionchange", syncOpen);
+    syncOpen();
+
+    return () => {
+      editor.off("focus", syncOpen);
+      editor.off("blur", syncOpen);
+      editor.off("selectionUpdate", syncOpen);
+      editor.off("transaction", syncOpen);
+      document.removeEventListener("selectionchange", syncOpen);
+      if (blurTimer.current != null) window.clearTimeout(blurTimer.current);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const syncKeyboard = () => {
+      // Layout bottom minus visible viewport bottom ≈ on-screen keyboard height.
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardInset(inset);
+    };
+
+    vv.addEventListener("resize", syncKeyboard);
+    vv.addEventListener("scroll", syncKeyboard);
+    syncKeyboard();
+    return () => {
+      vv.removeEventListener("resize", syncKeyboard);
+      vv.removeEventListener("scroll", syncKeyboard);
+    };
+  }, []);
+
+  if (!mounted || !open) return null;
+
+  return createPortal(
+    <Box
+      data-notepad-mobile-format=""
+      sx={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: keyboardInset,
+        zIndex: theme.zIndex.modal + 2,
+        display: "flex",
+        justifyContent: "center",
+        px: 1,
+        pt: 0.75,
+        pb: `max(8px, env(safe-area-inset-bottom))`,
+        // Soft scrim so the strip reads as keyboard-accessory chrome.
+        background: `linear-gradient(to top, ${alpha(theme.palette.background.default, 0.96)} 55%, ${alpha(theme.palette.background.default, 0)})`,
+        pointerEvents: "none",
+        "& > *": { pointerEvents: "auto" },
+      }}
+    >
+      <NotepadFormattingToolbar editor={editor} variant="bubble" />
+    </Box>,
+    document.body,
   );
 }
