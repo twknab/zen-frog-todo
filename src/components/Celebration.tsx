@@ -42,11 +42,10 @@ type Celebration = {
   finish: () => void;
 };
 
-// A ribbon flourish greets the day's frog (full-screen, see LottieBurst);
-// confetti marks the rest, sized here to keep its 940×752 aspect ratio.
-const TASK_SIZE = { w: 320, h: 256 };
-// Portrait add-burst (1620×2160) — keep it modest so it blooms near the new row.
-const ADD_SIZE = { w: 180, h: 240 };
+// Snappy confetti on add (940×752) — short positive ping while drafting.
+const ADD_SIZE = { w: 320, h: 256 };
+// Bigger portrait burst on complete (1620×2160) — the dopamine payoff.
+const TASK_SIZE = { w: 180, h: 240 };
 
 const PALETTE = ["#6B8F71", "#B98C5B", "#7A93A6", "#C79A4B", "#8FB49A"];
 // Safety net: remove a celebration even if Lottie's onComplete never fires
@@ -138,8 +137,9 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
     return <FrogHop onDone={onDone} />;
   }
 
+  // Add gets the quick confetti; complete gets the richer celebration burst.
   const { w, h } = item.kind === "add" ? ADD_SIZE : TASK_SIZE;
-  const animationData = item.kind === "add" ? addCelebrationData : confettiData;
+  const animationData = item.kind === "add" ? confettiData : addCelebrationData;
   return (
     <div
       style={{
