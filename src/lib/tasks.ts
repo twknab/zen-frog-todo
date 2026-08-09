@@ -54,17 +54,19 @@ export function useTasks() {
   );
   const { recordGrowth } = useBonsai();
 
-  function addTask(title: string) {
+  function addTask(title: string): string | null {
     const trimmed = title.trim();
-    if (!trimmed) return;
+    if (!trimmed) return null;
+    const id = makeId("task");
     setState((current) => ({
       ...current,
       tasks: partitionCompletedToBottom([
         ...current.tasks,
-        { id: makeId("task"), title: trimmed, completed: false },
+        { id, title: trimmed, completed: false },
       ]),
     }));
     playTaskAdded();
+    return id;
   }
 
   function updateTaskTitle(id: string, title: string) {

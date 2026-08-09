@@ -18,7 +18,7 @@ type TaskListCardProps = {
   tasks: Task[];
   locked?: boolean;
   onUpdateTitle: (id: string, title: string) => void;
-  onAddTask: (title: string) => void;
+  onAddTask: (title: string) => string | null;
   onSetFrog: (id: string) => void;
   onToggleCompleted: (id: string) => void;
   onDeleteTask: (id: string) => void;
@@ -79,8 +79,18 @@ export default function TaskListCard({
 
   function submitDraft() {
     if (!draft.trim()) return;
-    onAddTask(draft);
+    const id = onAddTask(draft);
     setDraft("");
+    if (!id) return;
+    // Wait for the new row to paint, then bloom the add celebration on it.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const row = document.querySelector<HTMLElement>(`[data-task-id="${id}"]`);
+        if (!row) return;
+        const rect = row.getBoundingClientRect();
+        celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "add");
+      });
+    });
   }
 
   function handleDraftKeyDown(event: KeyboardEvent<HTMLInputElement>) {

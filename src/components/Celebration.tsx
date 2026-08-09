@@ -11,11 +11,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import addCelebrationData from "@/assets/lottie/add-celebration.json";
 import confettiData from "@/assets/lottie/confetti.json";
 import ribbonData from "@/assets/lottie/ribbon.json";
 
 /** Fire a celebratory animation at a viewport coordinate. */
-type CelebrationKind = "frog" | "task";
+type CelebrationKind = "frog" | "task" | "add";
 /** Optional `onComplete` runs once when the effect finishes (or hits the safety timeout). */
 type Celebrate = (
   x: number,
@@ -43,11 +44,13 @@ type Celebration = {
 // A ribbon flourish greets the day's frog (full-screen, see LottieBurst);
 // confetti marks the rest, sized here to keep its 940×752 aspect ratio.
 const TASK_SIZE = { w: 320, h: 256 };
+// Portrait add-burst (1620×2160) — keep it modest so it blooms near the new row.
+const ADD_SIZE = { w: 180, h: 240 };
 
 const PALETTE = ["#6B8F71", "#B98C5B", "#7A93A6", "#C79A4B", "#8FB49A"];
 // Safety net: remove a celebration even if Lottie's onComplete never fires
-// (e.g. a backgrounded tab pausing rAF). Longer than the longest clip (~3.2s).
-const MAX_MS = 4200;
+// (e.g. a backgrounded tab pausing rAF). Longer than the longest clip (~5.9s add).
+const MAX_MS = 7000;
 
 export function CelebrationProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Celebration[]>([]);
@@ -122,7 +125,8 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
     );
   }
 
-  const { w, h } = TASK_SIZE;
+  const { w, h } = item.kind === "add" ? ADD_SIZE : TASK_SIZE;
+  const animationData = item.kind === "add" ? addCelebrationData : confettiData;
   return (
     <div
       style={{
@@ -136,7 +140,7 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
       }}
     >
       <Lottie
-        animationData={confettiData}
+        animationData={animationData}
         loop={false}
         autoplay
         onComplete={onDone}
