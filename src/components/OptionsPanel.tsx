@@ -503,11 +503,12 @@ export default function OptionsPanel({
             }}
             sx={{ ml: 0, mr: 0, alignItems: "flex-start", gap: 1 }}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5, pl: 0.25 }}>
-            {plausibleConfigured
-              ? "Off by default. When on, only coarse visit counts (via Plausible) — never your lists or notes. Details in Privacy Policy."
-              : "Visit metrics aren’t configured on this deploy, so this toggle stays inactive."}
-          </Typography>
+          {plausibleConfigured ? (
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5, pl: 0.25 }}>
+              Off by default. When on, only coarse visit counts (via Plausible) — never your lists or
+              notes. Details in Privacy Policy.
+            </Typography>
+          ) : null}
 
           <Button
             fullWidth
