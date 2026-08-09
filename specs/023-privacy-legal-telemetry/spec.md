@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add a scalable legal-docs modal (Privacy Policy first), a calm center-footer entry point, and **opt-in** anonymous visit metrics via Plausible (default OFF). Garden data never leaves the browser.
+Add a scalable legal-docs modal (Privacy Policy first), opened from Options → **About & legal** (ready for an About entry later), and **opt-in** anonymous visit metrics via Plausible (default OFF). Garden data never leaves the browser.
 
 ## Constraints
 

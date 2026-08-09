@@ -33,7 +33,6 @@ import ExportMenu from "@/components/ExportMenu";
 import FocusTimer from "@/components/FocusTimer";
 import Grove from "@/components/Grove";
 import LocalDataNotice from "@/components/LocalDataNotice";
-import SiteFooter from "@/components/SiteFooter";
 import NewDayAction from "@/components/NewDayAction";
 import NotepadButton from "@/components/NotepadButton";
 import NotepadShell from "@/components/NotepadShell";
@@ -643,8 +642,6 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {!isFocus ? <SiteFooter /> : null}
     </Box>
   );
 }

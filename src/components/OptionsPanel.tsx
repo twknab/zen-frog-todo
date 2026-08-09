@@ -4,10 +4,12 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import CloudOffOutlinedIcon from "@mui/icons-material/CloudOffOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import PolicyOutlinedIcon from "@mui/icons-material/PolicyOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -32,6 +34,7 @@ import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useReducedMotion } from "framer-motion";
 import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import LegalDocsDialog from "@/components/LegalDocsDialog";
 import { useExportEverything, useExportEverythingXlsx } from "@/lib/dayArchive";
 import { useHyperMinimal } from "@/lib/hyperMinimal";
 import {
@@ -164,6 +167,7 @@ export default function OptionsPanel({
   const plausibleConfigured = Boolean(getPlausibleDomain());
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [backupMenuAnchor, setBackupMenuAnchor] = useState<HTMLElement | null>(null);
+  const [legalOpen, setLegalOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -443,6 +447,48 @@ export default function OptionsPanel({
 
       <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
 
+      {/* About lands here later — legal docs share this calm section. */}
+      <OptionsSection label="About & legal">
+        <ButtonBase
+          onClick={() => setLegalOpen(true)}
+          aria-haspopup="dialog"
+          sx={{
+            position: "relative",
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.75,
+            px: 0.25,
+            py: 0.5,
+            borderRadius: 1,
+            typography: "body2",
+            color: "text.secondary",
+            fontWeight: 500,
+            transition: "color 180ms ease",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              left: 0,
+              right: "100%",
+              bottom: 2,
+              height: 1.5,
+              borderRadius: 1,
+              bgcolor: "primary.main",
+              transition: "right 220ms ease",
+            },
+            "&:hover, &:focus-visible": {
+              color: "text.primary",
+              "&::after": { right: 0 },
+            },
+          }}
+        >
+          <PolicyOutlinedIcon sx={{ fontSize: "1.05rem" }} aria-hidden />
+          Privacy Policy
+        </ButtonBase>
+      </OptionsSection>
+
+      <Divider sx={{ my: 2, borderColor: "divider", opacity: 0.7 }} />
+
       <OptionsSection label="Dev">
         <FormControlLabel
           control={
@@ -565,6 +611,12 @@ export default function OptionsPanel({
           {optionsBody}
         </Popover>
       )}
+
+      <LegalDocsDialog
+        key={legalOpen ? "legal-open" : "legal-closed"}
+        open={legalOpen}
+        onClose={() => setLegalOpen(false)}
+      />
     </>
   );
 }
