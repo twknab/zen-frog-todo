@@ -264,12 +264,7 @@ function MobileFormatDock({ editor }: { editor: Editor }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const blurTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const syncOpen = () => {
@@ -336,7 +331,8 @@ function MobileFormatDock({ editor }: { editor: Editor }) {
     };
   }, []);
 
-  if (!mounted || !open) return null;
+  // Parent is already dynamic(ssr:false); document is always available here.
+  if (!open) return null;
 
   return createPortal(
     <Box
