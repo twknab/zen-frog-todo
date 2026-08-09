@@ -18,7 +18,7 @@ type TaskListCardProps = {
   tasks: Task[];
   locked?: boolean;
   onUpdateTitle: (id: string, title: string) => void;
-  onAddTask: (title: string) => void;
+  onAddTask: (title: string) => string | null;
   onSetFrog: (id: string) => void;
   onToggleCompleted: (id: string) => void;
   onDeleteTask: (id: string) => void;
@@ -79,8 +79,19 @@ export default function TaskListCard({
 
   function submitDraft() {
     if (!draft.trim()) return;
-    onAddTask(draft);
+    const id = onAddTask(draft);
     setDraft("");
+    if (!id) return;
+    // Wait for the new row to paint, then stream celebration from its title.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const row = document.querySelector<HTMLElement>(`[data-task-id="${id}"]`);
+        if (!row) return;
+        const checkbox = row.querySelector<HTMLElement>("input[type='checkbox']");
+        const rect = (checkbox ?? row).getBoundingClientRect();
+        celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "add");
+      });
+    });
   }
 
   function handleDraftKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -192,7 +203,11 @@ export default function TaskListCard({
               <IconButton
                 className="frog-toggle"
                 size="small"
-                onClick={() => onSetFrog(task.id)}
+                onClick={() => {
+                  onSetFrog(task.id);
+                  // Designating today's frog — logo mark hops the viewport.
+                  celebrate(window.innerWidth / 2, window.innerHeight / 2, "pounce");
+                }}
                 aria-label={`Make "${task.title}" today's frog`}
               >
                 <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1rem" }} />
