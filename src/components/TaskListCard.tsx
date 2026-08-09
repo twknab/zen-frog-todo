@@ -87,9 +87,9 @@ export default function TaskListCard({
       requestAnimationFrame(() => {
         const row = document.querySelector<HTMLElement>(`[data-task-id="${id}"]`);
         if (!row) return;
-        const title = row.querySelector<HTMLElement>("input");
-        const rect = (title ?? row).getBoundingClientRect();
-        celebrate(rect.left + Math.min(rect.width * 0.35, 120), rect.top + rect.height / 2, "add");
+        const checkbox = row.querySelector<HTMLElement>("input[type='checkbox']");
+        const rect = (checkbox ?? row).getBoundingClientRect();
+        celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "add");
       });
     });
   }

@@ -616,7 +616,7 @@ export default function OptionsPanel({
               fontWeight: 500,
             }}
           >
-            Built by{" "}
+            <span aria-hidden>🌊</span> By{" "}
             <BuilderName href={TK_SITE_URL} label="TK — timknab.dev">
               TK
             </BuilderName>
