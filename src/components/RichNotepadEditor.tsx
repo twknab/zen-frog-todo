@@ -2,14 +2,19 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { alpha, useTheme } from "@mui/material/styles";
+import type { Editor } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Markdown } from "tiptap-markdown";
 import NotepadFormattingToolbar from "@/components/NotepadFormattingToolbar";
+
+const MOBILE_FORMAT_ROOT_SELECTOR = "[data-notepad-mobile-format]";
 
 type RichNotepadEditorProps = {
   /** Markdown — the canonical stored form (see specs/022 contract). */
@@ -30,6 +35,9 @@ export default function RichNotepadEditor({
   placeholder,
 }: RichNotepadEditorProps) {
   const theme = useTheme();
+  // Phones: selection bubble (native-feeling). Desktop: always-visible top bar.
+  // Editor is already dynamic(ssr:false), so media-query hydration isn't a concern.
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"), { noSsr: true });
   // Ref so the editor's onUpdate always sees the latest handler without re-init.
   const onChangeRef = useRef(onChange);
   useEffect(() => {
@@ -102,21 +110,17 @@ export default function RichNotepadEditor({
         gap: 0.5,
       }}
     >
-      {/* Classic formatting toolbar — top at md+, docked bottom on phones
-          (thumb + on-screen-keyboard reachable). Order handles the swap. */}
-      <Box
-        sx={{
-          order: { xs: 2, md: 0 },
-          position: "sticky",
-          bottom: { xs: 0, md: "auto" },
-          top: { md: 0 },
-          zIndex: 2,
-        }}
-      >
-        {editor ? <NotepadFormattingToolbar editor={editor} /> : null}
-      </Box>
+      {/* Desktop: always-visible sticky top bar. Phones: keyboard-docked
+          format strip (BubbleMenu is unreliable with iOS touch selection). */}
+      {editor && isDesktop ? (
+        <Box sx={{ position: "sticky", top: 0, zIndex: 2 }}>
+          <NotepadFormattingToolbar editor={editor} variant="bar" />
+        </Box>
+      ) : null}
 
-      <Box sx={{ position: "relative", flexGrow: 1, order: 1 }}>
+      {editor && !isDesktop ? <MobileFormatDock editor={editor} /> : null}
+
+      <Box sx={{ position: "relative", flexGrow: 1 }}>
         {isEmpty && placeholder ? (
           <Typography
             aria-hidden
@@ -156,6 +160,9 @@ export default function RichNotepadEditor({
               minHeight: 200,
               padding: "12px 14px",
               ...theme.typography.body2,
+              // ≥16px on phones — iOS Safari otherwise auto-zooms on focus and
+              // hides any nearby chrome (the old bottom toolbar symptom).
+              fontSize: { xs: "1rem", md: theme.typography.body2.fontSize },
               lineHeight: 1.65,
               caretColor: theme.palette.primary.main,
               wordBreak: "break-word",
@@ -245,5 +252,110 @@ export default function RichNotepadEditor({
         </Box>
       </Box>
     </Box>
+  );
+}
+
+/**
+ * Phone formatting chrome: fixed above the soft keyboard while the editor is
+ * focused or has a text selection. TipTap's BubbleMenu often never appears on
+ * iOS touch selections; pinning to visualViewport is the reliable pattern.
+ */
+function MobileFormatDock({ editor }: { editor: Editor }) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  const blurTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const syncOpen = () => {
+      if (blurTimer.current != null) {
+        window.clearTimeout(blurTimer.current);
+        blurTimer.current = null;
+      }
+      const focused = editor.isFocused;
+      const hasSelection = !editor.state.selection.empty;
+      // Stay open while the link popover (ported to body) holds focus.
+      const inFormatUi = Boolean(
+        document.activeElement?.closest(MOBILE_FORMAT_ROOT_SELECTOR) ||
+          document.activeElement?.closest(".MuiPopover-root"),
+      );
+      if (focused || hasSelection || inFormatUi) {
+        setOpen(true);
+        return;
+      }
+      // Delay hide so toolbar taps (mousedown→blur→click) don't flash away.
+      blurTimer.current = window.setTimeout(() => {
+        const stillInUi = Boolean(
+          document.activeElement?.closest(MOBILE_FORMAT_ROOT_SELECTOR) ||
+            document.activeElement?.closest(".MuiPopover-root"),
+        );
+        if (!editor.isFocused && editor.state.selection.empty && !stillInUi) {
+          setOpen(false);
+        }
+      }, 180);
+    };
+
+    editor.on("focus", syncOpen);
+    editor.on("blur", syncOpen);
+    editor.on("selectionUpdate", syncOpen);
+    editor.on("transaction", syncOpen);
+    document.addEventListener("selectionchange", syncOpen);
+    syncOpen();
+
+    return () => {
+      editor.off("focus", syncOpen);
+      editor.off("blur", syncOpen);
+      editor.off("selectionUpdate", syncOpen);
+      editor.off("transaction", syncOpen);
+      document.removeEventListener("selectionchange", syncOpen);
+      if (blurTimer.current != null) window.clearTimeout(blurTimer.current);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const syncKeyboard = () => {
+      // Layout bottom minus visible viewport bottom ≈ on-screen keyboard height.
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardInset(inset);
+    };
+
+    vv.addEventListener("resize", syncKeyboard);
+    vv.addEventListener("scroll", syncKeyboard);
+    syncKeyboard();
+    return () => {
+      vv.removeEventListener("resize", syncKeyboard);
+      vv.removeEventListener("scroll", syncKeyboard);
+    };
+  }, []);
+
+  // Parent is already dynamic(ssr:false); document is always available here.
+  if (!open) return null;
+
+  return createPortal(
+    <Box
+      data-notepad-mobile-format=""
+      sx={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: keyboardInset,
+        zIndex: theme.zIndex.modal + 2,
+        display: "flex",
+        justifyContent: "center",
+        px: 1,
+        pt: 0.75,
+        pb: `max(8px, env(safe-area-inset-bottom))`,
+        // Soft scrim so the strip reads as keyboard-accessory chrome.
+        background: `linear-gradient(to top, ${alpha(theme.palette.background.default, 0.96)} 55%, ${alpha(theme.palette.background.default, 0)})`,
+        pointerEvents: "none",
+        "& > *": { pointerEvents: "auto" },
+      }}
+    >
+      <NotepadFormattingToolbar editor={editor} variant="bubble" />
+    </Box>,
+    document.body,
   );
 }

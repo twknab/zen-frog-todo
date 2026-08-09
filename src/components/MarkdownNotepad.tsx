@@ -144,6 +144,8 @@ export default function MarkdownNotepad({
                   height: "100%",
                   "& .MuiInputBase-root": {
                     typography: "body2",
+                    // Match rich editor: ≥16px on phones so iOS won't focus-zoom.
+                    fontSize: { xs: "1rem", md: "0.875rem" },
                     lineHeight: 1.65,
                     alignItems: "flex-start",
                     fontFamily:
