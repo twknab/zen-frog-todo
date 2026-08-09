@@ -88,7 +88,10 @@ export default function TaskListCard({
         const row = document.querySelector<HTMLElement>(`[data-task-id="${id}"]`);
         if (!row) return;
         const rect = row.getBoundingClientRect();
-        celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, "add");
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        celebrate(x, y, "pounce");
+        celebrate(x, y, "add");
       });
     });
   }

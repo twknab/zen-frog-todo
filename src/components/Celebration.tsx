@@ -13,10 +13,11 @@ import {
 } from "react";
 import addCelebrationData from "@/assets/lottie/add-celebration.json";
 import confettiData from "@/assets/lottie/confetti.json";
+import frogPounceData from "@/assets/lottie/frog-pounce.json";
 import ribbonData from "@/assets/lottie/ribbon.json";
 
 /** Fire a celebratory animation at a viewport coordinate. */
-type CelebrationKind = "frog" | "task" | "add";
+type CelebrationKind = "frog" | "task" | "add" | "pounce";
 /** Optional `onComplete` runs once when the effect finishes (or hits the safety timeout). */
 type Celebrate = (
   x: number,
@@ -122,6 +123,44 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
           />
         </div>
       </div>
+    );
+  }
+
+  if (item.kind === "pounce") {
+    // Wide band at the new task's row: the asset already leaps L→R, so sizing
+    // near viewport width lets the frog read as crossing the screen.
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: item.y,
+          height: 0,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "min(100vw, 560px)",
+            height: "min(100vw, 560px)",
+            marginTop: "calc(min(100vw, 560px) / -2)",
+          }}
+        >
+          <Lottie
+            animationData={frogPounceData}
+            loop={false}
+            autoplay
+            onComplete={onDone}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
+      </motion.div>
     );
   }
 
