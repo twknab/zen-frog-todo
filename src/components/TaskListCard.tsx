@@ -203,7 +203,11 @@ export default function TaskListCard({
               <IconButton
                 className="frog-toggle"
                 size="small"
-                onClick={() => onSetFrog(task.id)}
+                onClick={() => {
+                  onSetFrog(task.id);
+                  // Designating today's frog — logo mark hops the viewport.
+                  celebrate(window.innerWidth / 2, window.innerHeight / 2, "pounce");
+                }}
                 aria-label={`Make "${task.title}" today's frog`}
               >
                 <Box component={FaFrog} aria-hidden sx={{ color: "primary.main", fontSize: "1rem" }} />

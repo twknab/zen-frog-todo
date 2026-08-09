@@ -11,9 +11,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { FaFrog } from "react-icons/fa6";
 import addCelebrationData from "@/assets/lottie/add-celebration.json";
 import confettiData from "@/assets/lottie/confetti.json";
-import frogPounceData from "@/assets/lottie/frog-pounce.json";
 import ribbonData from "@/assets/lottie/ribbon.json";
 
 /** Fire a celebratory animation at a viewport coordinate. */
@@ -135,41 +135,7 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
   }
 
   if (item.kind === "pounce") {
-    // Wide band at the new task's row: the asset already leaps L→R, so sizing
-    // near viewport width lets the frog read as crossing the screen.
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: item.y,
-          height: 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            width: "min(100vw, 560px)",
-            height: "min(100vw, 560px)",
-            marginTop: "calc(min(100vw, 560px) / -2)",
-          }}
-        >
-          <Lottie
-            animationData={frogPounceData}
-            loop={false}
-            autoplay
-            onComplete={onDone}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
-      </motion.div>
-    );
+    return <FrogHop onDone={onDone} />;
   }
 
   const { w, h } = item.kind === "add" ? ADD_SIZE : TASK_SIZE;
@@ -194,6 +160,42 @@ function LottieBurst({ item, onDone }: { item: Celebration; onDone: () => void }
         style={{ width: "100%", height: "100%" }}
       />
     </div>
+  );
+}
+
+/** Logo frog hops the full viewport width across vertical center. */
+function FrogHop({ onDone }: { onDone: () => void }) {
+  const size = 72;
+  return (
+    <motion.div
+      initial={{ x: -size, y: 0, opacity: 0, rotate: -8 }}
+      animate={{
+        x: `calc(100vw + ${size}px)`,
+        // A few soft hops — organic, not a bounce house.
+        y: [0, -36, 0, -28, 0, -18, 0],
+        opacity: [0, 1, 1, 1, 1, 1, 0],
+        rotate: [-8, 6, -4, 5, -2, 3, 0],
+      }}
+      transition={{
+        duration: 1.7,
+        ease: "easeInOut",
+        y: { duration: 1.7, times: [0, 0.18, 0.36, 0.52, 0.68, 0.84, 1] },
+        opacity: { duration: 1.7, times: [0, 0.08, 0.2, 0.5, 0.8, 0.92, 1] },
+      }}
+      onAnimationComplete={onDone}
+      style={{
+        position: "absolute",
+        left: 0,
+        top: "50%",
+        width: size,
+        height: size,
+        marginTop: -size / 2,
+        color: PALETTE[0],
+        filter: "drop-shadow(0 4px 10px rgba(75, 107, 82, 0.28))",
+      }}
+    >
+      <FaFrog aria-hidden style={{ width: "100%", height: "100%" }} />
+    </motion.div>
   );
 }
 
